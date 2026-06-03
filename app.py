@@ -10,13 +10,13 @@ and appending it to TOPICS below — nothing else changes.
 """
 import streamlit as st
 
-from topics import t02_transformations
+from topics import t01_vectors, t02_transformations
 
 st.set_page_config(page_title="Linear Algebra, Seen", layout="wide")
 
 # Registry. The learnable order; uncomment modules as you build them.
 TOPICS = [
-    # ("1 · Vectors & Combinations", t01_vectors),
+    (t01_vectors.TITLE, t01_vectors),
     (t02_transformations.TITLE, t02_transformations),
     # ("3 · Determinant", t03_determinant),
     # ("4 · Inverse Transformations", t04_inverse),

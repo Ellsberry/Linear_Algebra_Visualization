@@ -143,3 +143,50 @@ def figure_3d(M, show_vector=False, v=None, vt=None):
         ),
     )
     return fig
+
+
+# ---------- generic 2D primitives (for multi-vector topics: combinations, subspaces) ----------
+
+def new_figure_2d(rng=8, x_title="x", y_title="y", height=560, equal=True):
+    """A blank 2D canvas with origin axes, fixed range, and equal aspect."""
+    fig = go.Figure()
+    fig.update_xaxes(range=[-rng, rng], zeroline=True, zerolinecolor="#888",
+                     gridcolor="rgba(0,0,0,0.06)", title=x_title)
+    yaxis = dict(range=[-rng, rng], zeroline=True, zerolinecolor="#888",
+                 gridcolor="rgba(0,0,0,0.06)", title=y_title)
+    if equal:
+        yaxis.update(scaleanchor="x", scaleratio=1)
+    fig.update_yaxes(**yaxis)
+    fig.update_layout(height=height, margin=dict(l=10, r=10, t=10, b=10),
+                      legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0))
+    return fig
+
+
+def add_vector_2d(fig, start, end, color, name, width=4, dash=None,
+                  arrow=True, showlegend=True):
+    """Draw an arrow from start to end (both length-2 sequences)."""
+    fig.add_trace(go.Scatter(
+        x=[start[0], end[0]], y=[start[1], end[1]], mode="lines",
+        line=dict(color=color, width=width, dash=dash),
+        name=name, showlegend=showlegend, hoverinfo="skip"))
+    if arrow:
+        fig.add_annotation(x=end[0], y=end[1], ax=start[0], ay=start[1],
+                           xref="x", yref="y", axref="x", ayref="y",
+                           showarrow=True, arrowhead=3, arrowsize=1.3,
+                           arrowwidth=3, arrowcolor=color)
+
+
+def add_point_2d(fig, p, color, name, size=13, symbol="circle"):
+    fig.add_trace(go.Scatter(x=[p[0]], y=[p[1]], mode="markers",
+                             marker=dict(color=color, size=size, symbol=symbol,
+                                         line=dict(color="white", width=1)),
+                             name=name))
+
+
+def shade_polygon(fig, pts, fillcolor, name=None):
+    """Shade a filled region given its corner points."""
+    xs = [p[0] for p in pts] + [pts[0][0]]
+    ys = [p[1] for p in pts] + [pts[0][1]]
+    fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines", fill="toself",
+                             fillcolor=fillcolor, line=dict(color="rgba(0,0,0,0)"),
+                             name=name, hoverinfo="skip", showlegend=bool(name)))

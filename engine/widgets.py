@@ -73,3 +73,9 @@ def bmatrix(M: np.ndarray) -> str:
     M = np.atleast_2d(M)
     rows = r" \\ ".join(" & ".join(f"{val:.2f}" for val in row) for row in M)
     return r"\begin{bmatrix}" + rows + r"\end{bmatrix}"
+
+
+def set_vector_state(state_key: str, v) -> None:
+    """Write a vector into session_state so vector_editor picks it up (presets/Reset)."""
+    for i in range(len(v)):
+        st.session_state[f"{state_key}__{i}"] = float(v[i])

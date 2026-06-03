@@ -34,9 +34,34 @@ terminal, or a Run Configuration with module `streamlit`, parameters `run app.py
 ## The topic contract
 
 Each topic module exposes `TITLE: str`, `SLUG: str`, and `render() -> None`.
-To add one: copy `t02_transformations.py` and change (1) TITLE/SLUG, (2) INTRO,
-(3) the presets + their "notice" lines (these are the 2–3 examples per topic),
-(4) the body of `render()`. Then register it in `app.py`.
+To add one: copy a template and change (1) TITLE/SLUG, (2) intro text, (3) the
+presets / examples, (4) the body of `render()`. Then register it in `app.py`.
+
+## Two topic patterns (pick the one that fits)
+
+- **Single surface + presets** — template `t02_transformations.py`. One set of
+  inputs and one visual; a preset dropdown swaps the *values* (via
+  `widgets.set_matrix_state` / `set_vector_state`). Use when every example is the
+  same picture with different numbers. Aim ~100 lines.
+- **Multi-example selector** — template `t01_vectors.py`. A top `st.radio`
+  chooses Example 1/2/3; each example is its own helper (`_example_one()`, ...)
+  with its *own* inputs, visual, text, and "Show the math". Only the selected
+  branch renders, so the student sees only the lesson being discussed. Pin a
+  short `OVERVIEW` at the top and put `HOWTO` in a collapsed expander. These
+  topics are naturally longer than ~100 lines — that's expected; keep each
+  example helper small instead.
+
+Within either pattern, apply presets only when the selection *changes* (track a
+`..._last` key) so manual edits persist, and use `on_click` callbacks for Reset.
+
+## Shared helpers (reuse; don't re-roll per topic)
+
+- `widgets.py`: `matrix_editor`, `vector_editor`, `scalar_slider`,
+  `set_matrix_state`, `set_vector_state`, `bmatrix`.
+- `plotting.py`: transformation visuals `figure_2d` / `figure_3d`; generic 2D
+  primitives `new_figure_2d`, `add_vector_2d`, `add_point_2d`, `shade_polygon`
+  (used by combinations/subspaces-style topics).
+- `animate.py`: `interpolate(M, t)`.
 
 ## Conventions
 
@@ -52,7 +77,7 @@ To add one: copy `t02_transformations.py` and change (1) TITLE/SLUG, (2) INTRO,
 
 ## Learnable order (build in this sequence; each depends on the prior)
 
-1 Vectors & combinations · **2 Linear transformations (built)** · 3 Determinant ·
+1 Vectors & combinations **(built)** · **2 Linear transformations (built)** · 3 Determinant ·
 4 Inverse · 5 Linear systems (Ax=b) · 6 Subspaces/basis/dimension ·
 7 Projection & least squares · 8 Eigenvalues & eigenvectors · 9 Complex numbers ·
 10 Fourier (DFT) · 11 AI/ML (PCA & image/SVD).

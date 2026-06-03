@@ -39,19 +39,26 @@ topics/
 
 ## Adding a topic (the contract)
 
-Copy `topics/t02_transformations.py`, then change four things:
+Copy a topic module, then change four things:
 
 1. `TITLE` and `SLUG`
-2. `INTRO` — the short lesson blurb
-3. The **presets** (your 2–3 examples per topic) and their "notice" lines
-4. The body of `render()` — which inputs to show and what to draw
+2. the intro / overview text
+3. the **presets** or **examples** (your 2–3 examples per topic)
+4. the body of `render()` — which inputs to show and what to draw
 
 Then import it in `app.py` and add it to the `TOPICS` list. Reuse
 `engine.widgets` and `engine.plotting` so every topic looks and behaves the same.
 
+There are two templates depending on the topic:
+
+- `topics/t02_transformations.py` — **one visual, presets swap the numbers.**
+- `topics/t01_vectors.py` — **several distinct examples** chosen by a selector at
+  the top; only the selected example's text, inputs, and visual show. The
+  Overview is pinned and "How to use" sits in a collapsed expander.
+
 ## Learnable order
 
-1. Vectors & combinations → 2. **Linear transformations** (built) →
+1. Vectors & combinations **(built)** → 2. **Linear transformations (built)** →
 3. Determinant → 4. Inverse → 5. Linear systems (Ax=b) →
 6. Subspaces, basis, dimension → 7. Projection & least squares →
 8. Eigenvalues & eigenvectors → 9. Complex numbers → 10. Fourier (DFT) →
