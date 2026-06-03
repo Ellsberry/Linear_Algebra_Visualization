@@ -21,6 +21,24 @@ _SQUARE_FILL = "rgba(0,150,136,0.22)"
 _GRIDLINE = "rgba(120,120,200,0.35)"
 _VEC = "darkorange"
 
+# An asymmetric "rocket" outline (2xN points) used as an alternative object to
+# the unit square. Asymmetric on purpose: a reflection makes a backwards rocket,
+# a shear tips it, a rotation tumbles it -- orientation changes are unmissable.
+_ROCKET = np.array([
+    [0.00, 2.20],   # nose
+    [0.60, 0.90],   # right shoulder
+    [0.60, -0.60],  # right body
+    [1.30, -1.50],  # right fin tip (long)
+    [0.60, -1.10],  # right fin notch
+    [0.50, -1.60],  # bottom right
+    [-0.50, -1.60],  # bottom left
+    [-0.60, -1.10],  # left fin notch
+    [-0.90, -1.50],  # left fin tip (shorter -> asymmetric)
+    [-0.60, -0.60],  # left body
+    [-0.60, 0.90],  # left shoulder
+]).T * 0.9
+_ROCKET_WINDOW = np.array([0.0, 0.27]) * 0.9
+
 
 # ---------- 2D ----------
 
@@ -36,7 +54,7 @@ def _arrow2d(fig, end, color, name):
     )
 
 
-def figure_2d(M, show_vector=False, v=None, vt=None):
+def figure_2d(M, show_vector=False, v=None, vt=None, obj="square"):
     fig = go.Figure()
 
     # deformed grid
@@ -51,14 +69,27 @@ def figure_2d(M, show_vector=False, v=None, vt=None):
                 hoverinfo="skip", showlegend=False,
             ))
 
-    # unit square
-    sq = np.array([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]).T
-    tsq = M @ sq
-    fig.add_trace(go.Scatter(
-        x=tsq[0], y=tsq[1], mode="lines", fill="toself",
-        fillcolor=_SQUARE_FILL, line=dict(color=_SQUARE, width=2),
-        name="unit square", hoverinfo="skip",
-    ))
+    if obj == "rocket":
+        pts = M @ _ROCKET
+        fig.add_trace(go.Scatter(
+            x=np.append(pts[0], pts[0][0]), y=np.append(pts[1], pts[1][0]),
+            mode="lines", fill="toself", fillcolor=_SQUARE_FILL,
+            line=dict(color=_SQUARE, width=2), name="rocket", hoverinfo="skip",
+        ))
+        win = M @ _ROCKET_WINDOW
+        fig.add_trace(go.Scatter(
+            x=[win[0]], y=[win[1]], mode="markers",
+            marker=dict(color="white", size=9, line=dict(color=_SQUARE, width=2)),
+            showlegend=False, hoverinfo="skip",
+        ))
+    else:
+        sq = np.array([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]).T
+        tsq = M @ sq
+        fig.add_trace(go.Scatter(
+            x=tsq[0], y=tsq[1], mode="lines", fill="toself",
+            fillcolor=_SQUARE_FILL, line=dict(color=_SQUARE, width=2),
+            name="unit square", hoverinfo="skip",
+        ))
 
     # basis vectors = columns of M
     _arrow2d(fig, M @ np.array([1.0, 0.0]), _E1, "î → column 1")

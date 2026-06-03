@@ -26,14 +26,33 @@ Watch the grid deform. Edit the matrix cells, or pick an example, and slide the
 **Morph** control to see the identity turn into your matrix.
 """
 
-# Each preset returns the target matrix for the given dimension, plus a "notice".
+# Each preset returns the target matrix for the given dimension, plus a "notice"
+# that ends with where this transformation shows up in the real world.
 _NOTICE = {
-    "Identity": "Nothing moves — every vector maps to itself.",
-    "Shear": "Layers slide sideways; the area is unchanged (det = 1).",
-    "Rotation 45°": "The whole space spins. Lengths and angles are preserved.",
-    "Reflection": "Space is flipped across an axis — orientation reverses (det < 0).",
-    "Scale ×2": "Everything stretches away from the origin; area/volume grows.",
-    "Collapse (singular)": "Space is squashed flat — this transform can't be undone (det = 0).",
+    "Identity": "Nothing moves — every vector maps to itself. It's the "
+                "\"do nothing\" transform that every animation morphs out of.",
+    "Shear": "Layers slide sideways; the area is unchanged (det = 1). Italic "
+             "fonts are a shear of upright letters, and so is the slanted look "
+             "of a 2.5D game.",
+    "Rotation 45°": "The whole space spins; lengths and angles are preserved. "
+                    "This happens every time a game rotates your character or "
+                    "your phone re-orients a photo.",
+    "Reflection": "Space is flipped across an axis — orientation reverses "
+                  "(det < 0). Mirror modes in art programs, and reflections "
+                  "across water in games, are exactly this matrix.",
+    "Scale ×2": "Everything stretches away from the origin; area/volume grows. "
+                "Zooming in, and resizing any image or sprite, is this.",
+    "Non-uniform scale": "Each axis is stretched by a different amount. It's how "
+                         "you squash a sprite into a 'short and wide' cartoon "
+                         "look — the axes scaled unequally.",
+    "General warp": "A general transformation that stretches and skews at once. "
+                    "'Liquify' and image-morphing filters bend a picture like "
+                    "this. Drag the sample vector and hunt for a direction that "
+                    "doesn't change — that's an eigenvector (Topic 8).",
+    "Collapse (singular)": "Space is squashed flat — this transform can't be "
+                           "undone (det = 0). It's the math of a shadow: a flat "
+                           "shadow is 3D squashed down, and you can't rebuild the "
+                           "object from its shadow alone.",
     "Custom": "Edit the matrix cells yourself and watch the effect.",
 }
 PRESET_NAMES = list(_NOTICE.keys())
@@ -59,6 +78,12 @@ def _build_preset(name: str, dim: int):
         return M
     if name == "Scale ×2":
         return 2.0 * np.eye(dim)
+    if name == "Non-uniform scale":
+        factors = [2.0, 1.0] if dim == 2 else [2.0, 1.0, 0.5]
+        return np.diag(factors)
+    if name == "General warp":
+        M[0, 0], M[0, 1], M[1, 0], M[1, 1] = 2.0, 1.0, 1.0, 3.0
+        return M  # in 3D the z-axis is left alone, so the warp acts on the xy-plane
     if name == "Collapse (singular)":
         M[1, 1] = 0.0
         return M
@@ -80,6 +105,12 @@ def render():
         dim = 3 if st.radio("Space", ["2D", "3D"], horizontal=True,
                             key="t02_dim") == "3D" else 2
 
+        obj = "square"
+        if dim == 2:
+            obj = "rocket" if st.radio(
+                "Object", ["Unit square", "Rocket 🚀"], horizontal=True,
+                key="t02_obj") == "Rocket 🚀" else "square"
+
         preset = st.selectbox("Example", PRESET_NAMES, key="t02_preset")
 
         # Apply a preset only when the (preset, dim) selection changes, so manual
@@ -89,6 +120,9 @@ def render():
             M_preset = _build_preset(preset, dim)
             if M_preset is not None:
                 w.set_matrix_state("t02_A", M_preset)
+            # The eigenvector hunt only makes sense with the sample vector shown.
+            if preset == "General warp":
+                st.session_state["t02_showvec"] = True
             st.session_state["t02_last"] = signature
 
         st.info(_NOTICE[preset], icon="💡")
@@ -110,7 +144,8 @@ def render():
 
     with right:
         if dim == 2:
-            st.plotly_chart(plot.figure_2d(Mt, show_vec, v, vt), use_container_width=True)
+            st.plotly_chart(plot.figure_2d(Mt, show_vec, v, vt, obj=obj),
+                            use_container_width=True)
         else:
             st.caption("Drag to rotate · scroll to zoom")
             st.plotly_chart(plot.figure_3d(Mt, show_vec, v, vt), use_container_width=True)
