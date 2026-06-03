@@ -1,5 +1,5 @@
 """
-Linear Algebra, Seen — interactive lessons.
+Linear Algebra — interactive lessons.
 
 Run from a terminal (or a PyCharm Run Configuration, see README):
     streamlit run app.py
@@ -12,7 +12,7 @@ import streamlit as st
 
 from topics import t01_vectors, t02_transformations
 
-st.set_page_config(page_title="Linear Algebra, Seen", layout="wide")
+st.set_page_config(page_title="Linear Algebra", layout="wide")
 
 # Registry. The learnable order; uncomment modules as you build them.
 TOPICS = [
@@ -29,8 +29,7 @@ TOPICS = [
     # ("11 · Linear Algebra in AI/ML", t11_ml),
 ]
 
-st.sidebar.title("Linear Algebra, Seen")
-st.sidebar.caption("Left: the numbers.  Right: the effect.")
+st.sidebar.title("Linear Algebra")
 labels = [label for label, _ in TOPICS]
 choice = st.sidebar.radio("Topic", labels, index=0)
 
