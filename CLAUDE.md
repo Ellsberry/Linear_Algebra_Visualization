@@ -37,6 +37,30 @@ Each topic module exposes `TITLE: str`, `SLUG: str`, and `render() -> None`.
 To add one: copy a template and change (1) TITLE/SLUG, (2) intro text, (3) the
 presets / examples, (4) the body of `render()`. Then register it in `app.py`.
 
+## Topics are built from approved specs (read this before building a topic)
+
+The pedagogy — which examples, which fields, the exact student-facing text, the
+preset values — is decided **before** any code, in a design conversation, and
+written into a spec file in `specs/` (e.g. `specs/topic3_determinant.md`). When
+asked to build or change a topic:
+
+- **Build from the spec.** Treat the spec as the source of truth. Implement the
+  examples, presets, numbers, and wording exactly as written.
+- **Do not invent examples or rewrite the lesson text.** The examples are chosen
+  so each field genuinely fits the math (e.g. the determinant topic uses
+  surveying/medical/biology/graphics because those are honestly about
+  area/volume/orientation). Don't add, drop, swap, or reword examples, captions,
+  or notices to taste — the text is final copy.
+- **If no spec exists** for the topic you're asked to build, say so and ask for
+  one (or for the relevant text) rather than improvising the pedagogy. You may,
+  of course, make the *implementation* decisions (state handling, plotting,
+  layout) — just not the teaching content.
+- **If the spec and the code conflict, or the spec seems wrong, flag it** rather
+  than silently "fixing" it. Implementation feedback is welcome; pedagogy changes
+  go back through the spec.
+
+Each finished topic's spec stays in `specs/` as the record of what was agreed.
+
 ## Two topic patterns (pick the one that fits)
 
 - **Single surface + presets** — template `t02_transformations.py`. One set of
@@ -91,3 +115,5 @@ Reflection → det −1, Collapse → det 0) as presets, so Topic 3 reuses them.
 - Don't add heavyweight deps without updating `requirements.txt` and a reason.
 - Don't turn the visuals into black boxes — the "Show the math" path must always
   expose the actual numbers behind the picture.
+- Don't invent or reword a topic's examples or lesson text — build from the spec
+  in `specs/`. Implementation is yours; pedagogy comes from the spec.
