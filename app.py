@@ -10,7 +10,7 @@ and appending it to TOPICS below — nothing else changes.
 """
 import streamlit as st
 
-from topics import t01_vectors, t02_transformations, t03_determinant, t04_inverse, t05_systems
+from topics import t01_vectors, t02_transformations, t03_determinant, t04_inverse, t05_systems, t05b_elimination
 
 st.set_page_config(page_title="Linear Algebra", layout="wide")
 
@@ -21,6 +21,7 @@ TOPICS = [
     (t03_determinant.TITLE, t03_determinant),
     (t04_inverse.TITLE, t04_inverse),
     (t05_systems.TITLE, t05_systems),
+    (t05b_elimination.TITLE, t05b_elimination),
     # ("6 · Subspaces, Basis, Dimension", t06_subspaces),
     # ("7 · Projection & Least Squares", t07_least_squares),
     # ("8 · Eigenvalues & Eigenvectors", t08_eigen),
