@@ -1,0 +1,426 @@
+"""
+Topic 5 -- Linear Systems (Ax = b).
+
+Pattern: multi-example selector (see t01_vectors.py).
+"""
+import numpy as np
+import plotly.graph_objects as go
+import streamlit as st
+
+from engine import widgets as w
+from engine import plotting as plot
+
+TITLE = "5 · Linear Systems (Ax = b)"
+SLUG = "systems"
+
+OVERVIEW = """
+In Topic 4's business screen you solved Ax = r for x. That's a **linear
+system**: a set of equations bundled into Ax = b, asking "what input x produces
+the output b?" A system can have exactly one solution, none, or infinitely many
+— and you can see why two ways: the **row picture** (each equation is a line or
+plane; solutions are where they meet) and the **column picture** (which
+combination of A's columns builds b?). We'll see both, then meet linear systems
+in business, engineering, chemistry, and nutrition.
+
+*(We can picture systems with up to 3 unknowns. For bigger ones — six, or six
+thousand — there's a systematic method that doesn't rely on a drawing. That's
+the next topic.)*
+"""
+
+HOWTO = """
+The left panel sets the equations; the right panel shows the picture. The
+**outcome meter** tells you whether there's one solution, none, or infinitely
+many — and why. On the core screen you'll see the row picture and the column
+picture of the *same* system side by side.
+"""
+
+_E1_PRESETS = {
+    "One solution":    (np.array([[1., 1.], [1., -1.]]), np.array([3., 1.])),
+    "No solution":     (np.array([[1., 1.], [1.,  1.]]), np.array([2., 5.])),
+    "Infinitely many": (np.array([[1., 1.], [2.,  2.]]), np.array([2., 4.])),
+}
+
+_E3_PRESETS = {
+    "Reachable target":   (np.array([[2., 1.], [1., 3.]]), np.array([8., 9.])),
+    "Unreachable target": (np.array([[2., 4.], [1., 2.]]), np.array([8., 9.])),
+    "Redundant alloys":   (np.array([[2., 4.], [1., 2.]]), np.array([8., 4.])),
+}
+
+_E5_PRESETS = {
+    "Unique plan":               (np.array([[2.,1.,1.],[1.,3.,1.],[1.,1.,4.]]), np.array([5.,8.,7.])),
+    "Redundant foods (infinite)":(np.array([[1.,1.,1.],[1.,2.,3.],[2.,3.,4.]]), np.array([6.,14.,20.])),
+    "Impossible targets (none)": (np.array([[1.,1.,1.],[1.,2.,3.],[2.,3.,4.]]), np.array([6.,14.,21.])),
+}
+
+
+def _classify(A, b):
+    """Returns (kind, x_or_None, det_val) without rendering."""
+    square = A.shape[0] == A.shape[1]
+    det_val = float(np.linalg.det(A)) if square else 0.0
+    if square and abs(det_val) > 1e-9:
+        return "unique", np.linalg.solve(A, b), det_val
+    Ab = np.column_stack([A, b.reshape(-1)])
+    kind = "none" if np.linalg.matrix_rank(A) < np.linalg.matrix_rank(Ab) else "infinite"
+    return kind, None, det_val
+
+
+def _render_outcome(kind, x, det_val):
+    """Render the colored outcome meter."""
+    det_str = f"det = {det_val:.3g}"
+    if kind == "unique":
+        parts = "  ·  ".join(f"x{i+1} = {xi:.3g}" for i, xi in enumerate(x))
+        st.info(f"**One solution** ({det_str} ≠ 0)  ·  {parts}", icon="✅")
+    elif kind == "none":
+        st.warning(
+            f"**No solution** ({det_str} = 0) — equations are inconsistent: "
+            "parallel lines/planes that never share a point.",
+            icon="⚠️",
+        )
+    else:
+        st.info(
+            f"**Infinitely many solutions** ({det_str} = 0) — one equation is "
+            "redundant; a free variable means a line/plane of solutions.",
+            icon="♾️",
+        )
+
+
+def render():
+    st.markdown(OVERVIEW)
+    with st.expander("How to use this screen"):
+        st.markdown(HOWTO)
+
+    example = st.radio(
+        "Example",
+        ["1 · The three outcomes", "2 · Business", "3 · Engineering",
+         "4 · Chemistry", "5 · 3D: three planes"],
+        horizontal=True, key="t05_example",
+    )
+    st.divider()
+
+    if example.startswith("1"):
+        _example_one()
+    elif example.startswith("2"):
+        _example_two()
+    elif example.startswith("3"):
+        _example_three()
+    elif example.startswith("4"):
+        _example_four()
+    else:
+        _example_five()
+
+
+# ── Example 1: The three outcomes ────────────────────────────────────────────
+
+def _example_one():
+    left, right = st.columns([1, 2.2], gap="large")
+
+    with left:
+        preset = st.selectbox("Preset", list(_E1_PRESETS), key="t05e1_preset")
+        if st.session_state.get("t05e1_last") != preset:
+            A_p, b_p = _E1_PRESETS[preset]
+            w.set_matrix_state("t05e1_A", A_p)
+            w.set_vector_state("t05e1_b", b_p)
+            st.session_state["t05e1_last"] = preset
+
+        A = w.matrix_editor("t05e1_A", 2, label="Coefficients A")
+        b = w.vector_editor("t05e1_b", 2, (3., 1.), label="Right side b")
+
+    kind, x, det_val = _classify(A, b)
+
+    with right:
+        row_col, col_col = st.columns(2)
+        with row_col:
+            st.markdown("**Row picture** — where do the lines cross?")
+            fig_r = plot.new_figure_2d(rng=5, x_title="x₁", y_title="x₂", height=380)
+            plot.add_line_2d(fig_r, A[0, 0], A[0, 1], b[0], "royalblue", "row 1", rng=5)
+            plot.add_line_2d(fig_r, A[1, 0], A[1, 1], b[1], "crimson",   "row 2", rng=5)
+            if kind == "unique":
+                plot.add_point_2d(fig_r, x, "seagreen",
+                                  f"solution ({x[0]:.2g}, {x[1]:.2g})", size=14)
+            st.plotly_chart(fig_r, use_container_width=True)
+
+        with col_col:
+            st.markdown("**Column picture** — what mix of columns reaches b?")
+            fig_c = plot.new_figure_2d(rng=5, x_title="", y_title="", height=380)
+            c1, c2 = A[:, 0], A[:, 1]
+            plot.add_vector_2d(fig_c, [0, 0], c1, "royalblue", "col 1")
+            plot.add_vector_2d(fig_c, [0, 0], c2, "crimson",   "col 2")
+            plot.add_point_2d(fig_c, b, "black", "target b", size=12, symbol="diamond")
+            if kind == "unique":
+                mid = x[0] * c1
+                plot.add_vector_2d(fig_c, [0, 0], mid, "rgba(0,128,0,0.5)",
+                                   "x₁·col1", dash="dash")
+                plot.add_vector_2d(fig_c, mid, b, "seagreen",
+                                   "x₂·col2 → b", dash="dash")
+            st.plotly_chart(fig_c, use_container_width=True)
+
+        _render_outcome(kind, x, det_val)
+
+    st.markdown(
+        "> Same system, two views. The row picture asks \"where do the lines cross?\"; the "
+        "column picture asks \"what mix of these two arrows reaches the target?\" They "
+        "always agree — one crossing point matches one mix; parallel lines match a target "
+        "you can't reach; one repeated line matches a target with many mixes."
+    )
+
+    with st.expander("Show the math"):
+        st.latex(r"A = " + w.bmatrix(A) + r"\;,\quad b = " + w.bmatrix(b.reshape(-1, 1)))
+        st.markdown(f"**det(A)** = `{det_val:.3g}`")
+        if kind == "unique":
+            st.latex(r"x = A^{-1}b = " + w.bmatrix(x.reshape(-1, 1)))
+        elif kind == "none":
+            st.markdown("rank(A) < rank([A | b]) → **no solution** (inconsistent).")
+        else:
+            st.markdown("rank(A) = rank([A | b]) < n → **free variable** → infinitely many solutions.")
+
+
+# ── Example 2: Business — break-even ─────────────────────────────────────────
+
+def _example_two():
+    left, right = st.columns([1, 1.5], gap="large")
+
+    with left:
+        st.markdown(
+            "**Break-even.** Revenue and cost are two lines. They cross where profit = 0 "
+            "— that crossing point is the solution of a linear system."
+        )
+        price    = w.scalar_slider("t05e2_price", "Selling price per unit ($)", 0.0, 20.0,  8.0, 0.5)
+        fixed    = w.scalar_slider("t05e2_fixed", "Fixed cost ($)",             0.0, 100.0, 40.0, 1.0)
+        var_cost = w.scalar_slider("t05e2_var",   "Variable cost per unit ($)", 0.0, 20.0,  4.0, 0.5)
+
+    rng_x = 20
+    y_max = max(price * rng_x, fixed + var_cost * rng_x) * 1.15 + 10
+
+    with right:
+        fig = plot.new_figure_2d(rng=rng_x, x_title="quantity sold", y_title="dollars",
+                                 equal=False)
+        fig.update_xaxes(range=[0, rng_x])
+        fig.update_yaxes(range=[0, y_max])
+        # Revenue: y = price·q  →  −price·x + y = 0
+        plot.add_line_2d(fig, -price, 1, 0,     "royalblue", f"Revenue = {price:.2g}·q",                    rng=rng_x)
+        # Cost:    y = fixed + var·q  →  −var·x + y = fixed
+        plot.add_line_2d(fig, -var_cost, 1, fixed, "crimson", f"Cost = {fixed:.2g} + {var_cost:.2g}·q",     rng=rng_x)
+
+        if price > var_cost:
+            q_star = fixed / (price - var_cost)
+            y_star = price * q_star
+            if 0 <= q_star <= rng_x * 1.5:
+                plot.add_point_2d(fig, [q_star, y_star], "seagreen",
+                                  f"break-even  q* = {q_star:.1f}", size=14)
+            st.plotly_chart(fig, use_container_width=True)
+            st.success(f"Break-even at **q* = {q_star:.1f} units** "
+                       f"(revenue = cost = ${y_star:.2f}).")
+        else:
+            st.plotly_chart(fig, use_container_width=True)
+            st.warning("No break-even — each unit loses money (price ≤ variable cost): "
+                       "the lines are parallel-ish and never cross.")
+
+    st.markdown(
+        "> Every break-even calculation, and every \"supply meets demand\" price, is the "
+        "solution of a linear system — the point where two lines cross. If price never "
+        "beats the per-unit cost, the lines never meet: no solution."
+    )
+
+    with st.expander("Show the math"):
+        st.markdown(f"Revenue line: $y = {price:.2g}\\,q$")
+        st.markdown(f"Cost line: $y = {fixed:.2g} + {var_cost:.2g}\\,q$")
+        if price > var_cost:
+            st.latex(
+                r"q^* = \frac{\text{fixed}}{\text{price} - \text{var}} = "
+                rf"\frac{{{fixed:.2g}}}{{{price:.2g} - {var_cost:.2g}}} "
+                rf"= {fixed / (price - var_cost):.2f}"
+            )
+
+
+# ── Example 3: Engineering — metal mixing ─────────────────────────────────────
+
+def _example_three():
+    left, right = st.columns([1, 1.4], gap="large")
+
+    with left:
+        st.markdown(
+            "**Metal mixing.** Two alloys, each supplying copper and zinc. "
+            "How much of each alloy hits the target? "
+            "This is the column picture: x₁·col1 + x₂·col2 = b."
+        )
+        preset = st.selectbox("Preset", list(_E3_PRESETS), key="t05e3_preset")
+        if st.session_state.get("t05e3_last") != preset:
+            A_p, b_p = _E3_PRESETS[preset]
+            w.set_matrix_state("t05e3_A", A_p)
+            w.set_vector_state("t05e3_b", b_p)
+            st.session_state["t05e3_last"] = preset
+
+        A = w.matrix_editor("t05e3_A", 2, label="Metal makeup (column j = alloy j: copper, zinc)")
+        b = w.vector_editor("t05e3_b", 2, (8., 9.), label="Target amounts (copper, zinc)")
+
+    kind, x, det_val = _classify(A, b)
+
+    with right:
+        fig = plot.new_figure_2d(rng=12, x_title="copper", y_title="zinc", height=420)
+        c1, c2 = A[:, 0], A[:, 1]
+        plot.add_vector_2d(fig, [0, 0], c1, "royalblue",
+                           f"alloy 1 ({c1[0]:.2g} Cu, {c1[1]:.2g} Zn)")
+        plot.add_vector_2d(fig, [0, 0], c2, "crimson",
+                           f"alloy 2 ({c2[0]:.2g} Cu, {c2[1]:.2g} Zn)")
+        plot.add_point_2d(fig, b, "black", f"target ({b[0]:.2g}, {b[1]:.2g})",
+                          size=13, symbol="diamond")
+        if kind == "unique":
+            mid = x[0] * c1
+            plot.add_vector_2d(fig, [0, 0], mid, "rgba(0,128,0,0.5)", "x₁·alloy1", dash="dash")
+            plot.add_vector_2d(fig, mid, b, "seagreen", "x₂·alloy2 → target", dash="dash")
+        st.plotly_chart(fig, use_container_width=True)
+        _render_outcome(kind, x, det_val)
+
+    st.markdown(
+        "> Metallurgists, chemists, and chefs solve linear systems to hit a target blend "
+        "from the ingredients on hand. If the two ingredients aren't truly different "
+        "(one is just a scaled copy of the other), some targets can't be reached at all — "
+        "no solution."
+    )
+
+    with st.expander("Show the math"):
+        st.latex(r"A\,x = b \;\Longrightarrow\; " + w.bmatrix(A)
+                 + r"\begin{bmatrix}x_1\\x_2\end{bmatrix} = " + w.bmatrix(b.reshape(-1, 1)))
+        if kind == "unique":
+            st.latex(r"x = " + w.bmatrix(x.reshape(-1, 1)))
+            st.markdown(f"Use **{x[0]:.3g} kg of alloy 1** and **{x[1]:.3g} kg of alloy 2**.")
+        elif kind == "none":
+            st.markdown("The two alloys are proportional — the target is off their line. No blend works.")
+        else:
+            st.markdown("The target lies on the alloys' shared line — infinitely many blends work.")
+
+
+# ── Example 4: Chemistry — balance a reaction ─────────────────────────────────
+
+def _example_four():
+    left, right = st.columns([1, 1.4], gap="large")
+
+    with left:
+        st.markdown(
+            "**Balance** `a H₂ + b O₂ → c H₂O`.\n\n"
+            "Set the sliders until both atom counts match on left and right."
+        )
+        a_val = w.scalar_slider("t05e4_a", "a  (H₂ molecules)", 0, 8, 0, 1)
+        b_val = w.scalar_slider("t05e4_b", "b  (O₂ molecules)", 0, 8, 0, 1)
+        c_val = w.scalar_slider("t05e4_c", "c  (H₂O molecules)", 0, 8, 0, 1)
+
+    a_val, b_val, c_val = int(a_val), int(b_val), int(c_val)
+    h_l, h_r = 2 * a_val, 2 * c_val
+    o_l, o_r = 2 * b_val, c_val
+    h_ok   = (h_l == h_r)
+    o_ok   = (o_l == o_r)
+    both_ok = h_ok and o_ok and (a_val + b_val + c_val > 0)
+
+    with right:
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            name="left side",
+            x=["H atoms", "O atoms"], y=[h_l, o_l],
+            marker_color=["seagreen" if h_ok else "steelblue",
+                          "seagreen" if o_ok else "steelblue"],
+            text=[str(h_l), str(o_l)], textposition="outside",
+        ))
+        fig.add_trace(go.Bar(
+            name="right side",
+            x=["H atoms", "O atoms"], y=[h_r, o_r],
+            marker_color=["seagreen" if h_ok else "tomato",
+                          "seagreen" if o_ok else "tomato"],
+            text=[str(h_r), str(o_r)], textposition="outside",
+        ))
+        fig.update_layout(
+            barmode="group", height=320,
+            margin=dict(l=10, r=10, t=40, b=10),
+            title="Atom balance: left ← → right",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+            yaxis=dict(range=[0, max(h_l, h_r, o_l, o_r, 3) + 2]),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        if both_ok:
+            st.success("✓ Balanced!")
+        elif a_val + b_val + c_val == 0:
+            st.info("Move the sliders to try a combination.")
+        else:
+            h_mark = "✓" if h_ok else "✗"
+            o_mark = "✓" if o_ok else "✗"
+            st.warning(f"Not balanced yet: {h_mark} H  ·  {o_mark} O")
+
+    st.markdown(
+        "> Balancing any chemical reaction is solving a linear system — the coefficients "
+        "that conserve every atom. Notice the answer is a *ratio*: 2 : 1 : 2 works, and "
+        "so does 4 : 2 : 4. The system has infinitely many solutions, so chemists pick "
+        "the smallest whole numbers. So 2 H₂ + O₂ → 2 H₂O."
+    )
+
+    with st.expander("Show the math"):
+        st.markdown("**Hydrogen atoms:** left = 2a, right = 2c  →  equation: a = c")
+        st.markdown("**Oxygen atoms:** left = 2b, right = c  →  equation: 2b = c")
+        st.markdown("Free variable: set a = 2, then c = 2 and b = 1  →  ratio **a : b : c = 2 : 1 : 2**")
+        st.latex(r"2\,\text{H}_2 + \text{O}_2 \;\longrightarrow\; 2\,\text{H}_2\text{O}")
+
+
+# ── Example 5: 3D — three planes ─────────────────────────────────────────────
+
+_PLANE_COLORS = ["royalblue", "tomato", "seagreen"]
+
+
+def _example_five():
+    left, right = st.columns([1, 1.6], gap="large")
+
+    with left:
+        st.markdown(
+            "**Three planes in space.** Each row of Ax = b is one equation — one plane. "
+            "Three planes can meet at a point (one solution), along a line (infinitely "
+            "many), or share no common point (none).\n\n"
+            "Framed as: three foods, three nutrients — find amounts to hit exact targets."
+        )
+        preset = st.selectbox("Preset", list(_E5_PRESETS), key="t05e5_preset")
+        if st.session_state.get("t05e5_last") != preset:
+            A_p, b_p = _E5_PRESETS[preset]
+            w.set_matrix_state("t05e5_A", A_p)
+            w.set_vector_state("t05e5_b", b_p)
+            st.session_state["t05e5_last"] = preset
+
+        A = w.matrix_editor("t05e5_A", 3, label="Nutrient matrix A (column j = food j)")
+        b = w.vector_editor("t05e5_b", 3, (5., 8., 7.), label="Nutrient targets b")
+
+    kind, x, det_val = _classify(A, b)
+
+    with right:
+        fig = plot.new_figure_3d(rng=6, titles=("food 1", "food 2", "food 3"))
+        for i in range(3):
+            plot.add_plane_3d(fig, A[i, 0], A[i, 1], A[i, 2], b[i],
+                              _PLANE_COLORS[i], f"plane {i + 1}")
+        if kind == "unique":
+            fig.add_trace(go.Scatter3d(
+                x=[x[0]], y=[x[1]], z=[x[2]], mode="markers",
+                marker=dict(color="gold", size=10, line=dict(color="black", width=2)),
+                name=f"solution ({x[0]:.2g}, {x[1]:.2g}, {x[2]:.2g})",
+            ))
+        st.caption("drag to rotate · scroll to zoom")
+        st.plotly_chart(fig, use_container_width=True)
+        _render_outcome(kind, x, det_val)
+
+    st.markdown(
+        "> A dietician hitting exact nutrient targets from three foods is solving three "
+        "equations in three unknowns — three planes in space. They meet at one point (one "
+        "plan), along a line (many plans), or nowhere (impossible)."
+    )
+
+    st.info(
+        "This is the biggest system we can still *picture* — three unknowns, three planes. "
+        "Real problems have six, or six thousand, unknowns, and there's no drawing for "
+        "that. The next topic introduces the systematic method — elimination to "
+        "**triangular form** — that solves a system of any size, the same algorithm every "
+        "engineering simulation runs internally."
+    )
+
+    with st.expander("Show the math"):
+        st.latex(r"A = " + w.bmatrix(A) + r"\;,\quad b = " + w.bmatrix(b.reshape(-1, 1)))
+        st.markdown(f"**det(A)** = `{det_val:.3g}`")
+        if kind == "unique":
+            st.latex(r"x = " + w.bmatrix(x.reshape(-1, 1)))
+        elif kind == "none":
+            st.markdown("rank(A) < rank([A | b]) → **no solution**.")
+        else:
+            st.markdown("rank(A) = rank([A | b]) < n → **infinitely many solutions** (free variable).")
