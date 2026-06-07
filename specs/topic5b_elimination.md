@@ -41,12 +41,42 @@ floats — last entry is the b-value). It assumes the matrix is already populate
 - `{key}_log` — list of operation strings (e.g. `"R2 → R2 − 2·R1"`).
 - `{key}_history` — list of prior `_M` snapshots (for Undo).
 
-**Display:** render the current augmented matrix with `st.latex` using an
-augmented array, e.g.
-`\left[\begin{array}{ccc|c} … \end{array}\right]` (the vertical bar separates A
-from b; column count = `n_unknowns` then 1). Add a helper
-`widgets.aug_array_latex(M, n_unknowns)` to format it. Below it, show the last
-operation and the running **operation log** (an expander or a small list).
+**Display — show the equations ABOVE the augmented matrix, always (no toggle),
+on every screen.** The core idea of this screen is that the matrix *is* the
+equations with the x's and plus-signs stripped away, so both forms must be visible
+at once and update together on every row operation. Stack them vertically — the
+written equations on top, the augmented matrix directly below — each using the
+full panel width. Stacking (rather than side by side) means even the six-variable
+logistics system fits on one line per row without wrapping, so the layout is
+identical on the 3×3, the 3-variable circuit, and the 6×6:
+
+```
+ 2x₁ + 1x₂ − 1x₃ =   8
+−3x₁ − 1x₂ + 2x₃ = −11
+−2x₁ + 1x₂ + 2x₃ =  −3
+
+        ⎡  2   1  −1 │   8 ⎤
+        ⎢ −3  −1   2 │ −11 ⎥
+        ⎣ −2   1   2 │  −3 ⎦
+```
+
+- Top: the system as equations, rendered with `st.latex` as a single **aligned**
+  block so that all the `x₁` terms line up in one column, all the `x₂` terms in
+  the next, etc. (use an `aligned`/`array` environment with fixed columns, not
+  separate per-row strings). Show signs, each `xⱼ`, and `=` before the b-value.
+- Below: the augmented matrix via `widgets.aug_array_latex(M, n_unknowns)`. **Keep
+  the matrix columns horizontally aligned with the coefficient columns above** so
+  it's visually undeniable that matrix column j is the xⱼ coefficients and the bar
+  is the equals sign.
+- **Both forms re-render together after every operation** so he sees, e.g., "R2 →
+  R2 − 2·R1" happen identically in the equations and in the matrix.
+- **Pivots:** as each pivot is established (the leading nonzero entry used to clear
+  the column below it), make it visually stand out (e.g. bold or colored in the
+  LaTeX) and show a running **pivot count** ("3 pivots in 3 columns" /
+  "2 pivots, 1 free column"). Do NOT name "basis" here — this is the quiet seed
+  for Topic 6; just make the pivots and the count visible.
+
+Below both forms, show the last operation and the running **operation log**.
 
 **Manual controls (always available):**
 - An operation-type selectbox: `["Add multiple of a row", "Swap two rows",
@@ -163,26 +193,31 @@ labeled points (`add_point_2d`), routes as labeled arrows (`add_vector_2d`) — 
 each store's demand and the factory's supply clearly labeled. (Static, not
 clickable; the art just has to be readable and carry every number he needs.)
 
-**Build-the-matrix step:** the six balance equations (flow in = flow out at each
-node), in this row order, are what he should enter:
-- Row 1 (W1): `x₁ − x₃ − x₄ = 0`
-- Row 2 (W2): `x₂ − x₅ − x₆ = 0`
-- Row 3 (store A): `x₃ = 30`
-- Row 4 (store B): `x₄ = 20`
-- Row 5 (store C): `x₅ = 25`
-- Row 6 (store D): `x₆ = 25`
-Give him an **editable 6×7 augmented grid** (use `widgets.matrix_editor`-style
-number inputs, all defaulting to 0) and a **Check** button that compares his grid
-(row-normalized to allow equivalent scaling is NOT required — compare to the exact
-target above) to the correct `[A | b]`. On mismatch, report which rows are wrong
-(don't reveal the answer). A **"Fill it in for me"** button loads the correct
-matrix so he can skip to reducing on mechanics-only days. Once correct/filled,
-load it into `t05b_e2_M`/`_orig` and render `workbench("t05b_e2", 6)`.
+**The build-the-matrix step.** Give him an **editable 6×7 augmented grid** (use
+`widgets.matrix_editor`-style number inputs, all defaulting to 0) to enter the six
+balance equations. **Enter the four store equations first, then the two warehouse
+balances**, in this row order — this ordering puts zeros in the first pivot
+positions, so reducing it will *require row exchanges* (a real reason the swap move
+exists):
+- Row 1 (store A): `x₃ = 30`
+- Row 2 (store B): `x₄ = 20`
+- Row 3 (store C): `x₅ = 25`
+- Row 4 (store D): `x₆ = 25`
+- Row 5 (warehouse W1): `x₁ − x₃ − x₄ = 0`
+- Row 6 (warehouse W2): `x₂ − x₅ − x₆ = 0`
 
-**Correct matrix** (for the checker and the fill button):
-`A = [[1,0,-1,-1,0,0],[0,1,0,0,-1,-1],[0,0,1,0,0,0],[0,0,0,1,0,0],
-[0,0,0,0,1,0],[0,0,0,0,0,1]]`, `b = (0,0,30,20,25,25)`. Solution
-x = (50, 50, 30, 20, 25, 25).
+A **Check** button compares his grid to the correct `[A | b]` (exact match — same
+row order) and, on mismatch, reports which rows are wrong without revealing the
+answer. A **"Fill it in for me"** button loads the correct matrix so he can skip to
+reducing on mechanics-only days. Once correct/filled, load it into
+`t05b_e2_M`/`_orig` and render `workbench("t05b_e2", 6)`.
+
+**Correct matrix** (for the checker and the fill button; column order x₁…x₆):
+`A = [[0,0,1,0,0,0],[0,0,0,1,0,0],[0,0,0,0,1,0],[0,0,0,0,0,1],
+[1,0,-1,-1,0,0],[0,1,0,0,-1,-1]]`, `b = (30,20,25,25,0,0)`. Solution
+x = (50, 50, 30, 20, 25, 25). Because the first two diagonal positions are 0, the
+guided "Do one step" must **swap a warehouse row up** before it can eliminate —
+point this out: this is exactly why the row-exchange move exists.
 
 **Solution readout — label by route, not x₁…x₆:**
 > F→W1: 50 units · F→W2: 50 units · W1→A: 30 · W1→B: 20 · W2→C: 25 · W2→D: 25.
@@ -195,43 +230,56 @@ x = (50, 50, 30, 20, 25, 25).
 
 ---
 
-## Example 3 — Circuit (fill values into a structured matrix, 3 currents)
+## Example 3 — Circuit (develop the formulas, then build the matrix; 3 currents)
 
-**Concept:** a DC circuit; the unknowns are the currents. The equation
-**structure and signs are pre-placed** (Kirchhoff's sign bookkeeping is provided);
-he reads the resistance and voltage **values** off the diagram and types them into
-the marked cells. Then he reduces. Ties forward to Topic 9.
+**Concept:** a DC circuit; the unknowns are the currents I₁, I₂, I₃. Here the
+student **develops the three equations himself** from the circuit laws, then
+**builds the augmented matrix** from those equations, then reduces it. To keep the
+hard part (Kirchhoff's sign bookkeeping) doable, the screen **states the three laws
+and what to write for each**, but the student fills in the actual equation and
+assembles the matrix. Ties forward to Topic 9.
 
-**The circuit (fixed topology).** A battery of voltage **V** drives three branches
-carrying currents **I₁, I₂, I₃**, with resistors **R1, R2, R3**. The governing
-equations are:
-- Node (KCL): `I₁ − I₂ − I₃ = 0`
-- Loop 1 (Ohm/KVL): `R1·I₁ + R2·I₂ = V`
-- Loop 2: `R2·I₂ − R3·I₃ = 0`
+**The circuit (fixed topology, all values labeled on the diagram).** A battery of
+voltage **V = 12** drives three branches carrying currents **I₁, I₂, I₃** through
+resistors **R1 = 2, R2 = 4, R3 = 4**. Current I₁ from the battery splits at a node
+into I₂ and I₃.
 
-**Diagram panel:** a simple, clearly labeled circuit schematic (battery labeled V,
-resistors labeled R1/R2/R3, branch currents labeled I₁/I₂/I₃). Drawn with plotly
-lines/shapes or an SVG — the exact art is implementation, but every value he must
-read (V, R1, R2, R3) and the current labels must be visible. Diagram values:
-**V = 12, R1 = 2, R2 = 4, R3 = 4.**
+**Diagram panel:** a simple, clearly labeled schematic (battery V, resistors
+R1/R2/R3, branch currents I₁/I₂/I₃, and the node where I₁ splits). Drawn with
+plotly lines/shapes or an SVG — exact art is implementation, but the topology, the
+three current arrows, and the values V, R1, R2, R3 must all be visibly labeled.
 
-**Fill-the-values step:** present the augmented matrix with the **structure and
-signs fixed** and only the value cells editable — i.e. the matrix is
-`[[1, −1, −1 | 0], [R1, R2, 0 | V], [0, R2, −R3 | 0]]` with `R1, R2, R3, V` as the
-blanks he fills (note R2 appears in two rows — filling it once should populate
-both, or check both). A **Check** button verifies against the diagram values; a
-**"Fill it in for me"** button loads them. Then load
+**Step 1 — develop the formulas (guided).** Present the three laws as prompts; for
+each, the student writes the equation by entering its coefficients (an editable row
+of three current-coefficients plus the right-hand side). A **Check** marks each
+equation right/wrong without giving the answer; a **Hint** reveals the law's plain
+meaning; a **"Show this equation"** reveals that one if he's stuck.
+- **Node (Kirchhoff's current law):** "Current into the node equals current out."
+  → expected `I₁ − I₂ − I₃ = 0`. Hint: "I₁ comes in; I₂ and I₃ go out."
+- **Left loop (Ohm + Kirchhoff's voltage law):** "Going around the loop with the
+  battery, the battery's voltage equals the sum of the voltage drops V = I·R across
+  its resistors." → expected `R1·I₁ + R2·I₂ = V`, i.e. `2·I₁ + 4·I₂ = 12`. Hint:
+  "drop across a resistor = its resistance × the current through it."
+- **Right loop:** "Around the loop with only R2 and R3 (no battery), the two
+  voltage drops balance." → expected `R2·I₂ − R3·I₃ = 0`, i.e. `4·I₂ − 4·I₃ = 0`.
+  Hint: "the R2 drop equals the R3 drop."
+
+**Step 2 — build the augmented matrix.** Once the three equations are correct (or
+he taps **"Use the equations"**), he assembles them into the 3×4 augmented grid
+(one row per equation: the three current coefficients, then b). A **Check** matches
+against the matrix below; **"Fill it in for me"** loads it. Then load
 `A = [[1,-1,-1],[2,4,0],[0,4,-4]]`, `b = (0,12,0)` into `t05b_e3_M`/`_orig` and
 render `workbench("t05b_e3", 3)`.
 
-**Solution:** I₁ = 3 A, I₂ = 1.5 A, I₃ = 1.5 A. Readout:
+**Step 3 — reduce and read the currents.** Solution: I₁ = 3 A, I₂ = 1.5 A, I₃ =
+1.5 A. Readout:
 > Branch 1 current I₁ = 3 A · I₂ = 1.5 A · I₃ = 1.5 A.
 
 **Notice (always shown):**
-> The unknowns are the currents. The same "what flows in must flow out" idea as
-> the shipping network — electricity and freight obey the same linear algebra.
-> Here the signs are set up for you; you just read the resistor and battery values
-> off the diagram.
+> The unknowns are the currents. The same "what flows in must flow out" idea as the
+> shipping network — electricity and freight obey the same linear algebra. Here you
+> develop the equations yourself from the circuit laws, then build the matrix and
+> solve it — exactly what an electrical engineer does by hand.
 
 **Looking ahead (st.info, on this screen):**
 > This circuit runs on steady (DC) current, so the answers are plain numbers. In
@@ -256,19 +304,24 @@ In `app.py`: add `t05b_elimination` to the `from topics import …` line and ins
 ## Acceptance checklist (verify before committing)
 
 - [ ] Sidebar shows "5.5 · Elimination & Triangular Form" after Topic 5.
-- [ ] **Workbench:** manual Add/Swap/Scale each apply correctly and append to the
-      log; Undo and Reset work; "Do one step" performs one standard op; "Run to
-      triangular form" produces zeros below the diagonal.
+- [ ] **Workbench:** the equations show stacked above the augmented matrix,
+      column-aligned, on every screen (3×3, circuit, and 6×6), and BOTH update
+      together on every row operation; pivots are highlighted with a running pivot
+      count. Manual Add/Swap/Scale each apply correctly and append to the log; Undo
+      and Reset work; "Do one step" performs one standard op; "Run to triangular
+      form" produces zeros below the diagonal.
 - [ ] **Scenarios:** "One solution" back-substitutes to (2,3,−1); "Needs a row
       swap" triggers a swap and solves to (3,2,1); "Redundant" shows a zero row +
       infinitely-many banner; "Contradiction" shows a 0 = nonzero row + no-solution
       banner.
-- [ ] **Logistics:** the network diagram is readable; entering the six balance
-      equations and pressing Check validates (wrong rows are flagged, answer not
-      revealed); "Fill it in for me" works; reducing solves to
-      (50,50,30,20,25,25) shown as labeled routes.
-- [ ] **Circuit:** the schematic is readable; filling R1=2,R2=4,R3=4,V=12 and
-      Check validates; reducing solves to I₁=3, I₂=1.5, I₃=1.5 A; the Topic 9
-      looking-ahead note appears.
+- [ ] **Logistics:** the network diagram is readable; entering the six equations
+      with the four store rows first, then the two warehouse rows, and pressing
+      Check validates (wrong rows flagged, answer not revealed); "Fill it in for
+      me" works; reducing **requires a row swap** (first pivots are zero) and solves
+      to (50,50,30,20,25,25) shown as labeled routes.
+- [ ] **Circuit:** the schematic is readable; the student develops the three
+      equations with law prompts/hints and Check; then builds the augmented matrix
+      (Check / "Fill it in for me"); reducing solves to I₁=3, I₂=1.5, I₃=1.5 A; the
+      Topic 9 looking-ahead note appears.
 - [ ] `widgets.aug_array_latex` added; app runs with `streamlit run app.py`, no
       import errors.

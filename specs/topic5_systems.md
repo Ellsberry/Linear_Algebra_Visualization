@@ -140,33 +140,51 @@ parallel-ish and never cross."
 
 ## Example 3 — Engineering: mixing to a target (column picture)
 
-**Concept:** two metals, each supplying known amounts of copper and zinc; how much
-of each to hit a target amount of each metal? `x1*c1 + x2*c2 = b` — the column
-picture. Callback to Topic 1's smoothies, now as *solving*.
+**Concept (state this plainly to the student):** You have two metal alloys. Each
+alloy, per unit you add, contributes a known amount of **copper** and **zinc** —
+that pair of numbers is the alloy's "makeup vector." You want to combine some
+amount **x₁** of alloy 1 and **x₂** of alloy 2 to hit an exact target: so many
+units of copper and so many of zinc. "How much of each alloy?" is the system
+`x₁·c₁ + x₂·c₂ = b`, where c₁, c₂ are the alloys' makeup vectors (the columns of
+A) and b is the target. **He is solving for x₁ and x₂ — how many units of each
+alloy to add.** This is the *column picture*: build the target out of the column
+vectors. (Direct callback to Topic 1's smoothies — same idea, now solved exactly.)
 
-**Inputs:**
-- `matrix_editor("t05e3_A", 2, label="Metal makeup (column j = alloy j: copper, zinc)")`.
-- `vector_editor("t05e3_b", 2, (8.0, 9.0), label="Target amounts (copper, zinc)")`.
+**Inputs (label them clearly):**
+- `matrix_editor("t05e3_A", 2, label="Alloy makeup — column 1 = alloy 1 (copper, zinc), column 2 = alloy 2 (copper, zinc)")`.
+- `vector_editor("t05e3_b", 2, (8.0, 9.0), label="Target (copper, zinc)")`.
 - Preset selectbox `t05e3_preset`:
-  - **"Reachable target"** → A `[[2, 1], [1, 3]]`, b `(8, 9)` (unique blend
-    x = (3, 2)).
-  - **"Unreachable target"** → A `[[2, 4], [1, 2]]`, b `(8, 9)` (alloys
-    proportional; target off their line → no solution).
-  - **"Redundant alloys"** → A `[[2, 4], [1, 2]]`, b `(8, 4)` (target on the line
-    → infinitely many blends).
+  - **"Reachable target"** → A `[[2, 1], [1, 3]]`, b `(8, 9)`. Alloy 1 = (2 copper,
+    1 zinc), alloy 2 = (1 copper, 3 zinc). Unique blend **x = (3, 2)**: 3 units of
+    alloy 1 + 2 units of alloy 2.
+  - **"Unreachable target"** → A `[[2, 4], [1, 2]]`, b `(8, 9)`. The two alloys are
+    proportional (alloy 2 is just 2× alloy 1), so every blend lands on one line and
+    the target is off it → **no solution** (you can't make this target from these
+    two alloys).
+  - **"Redundant alloys"** → A `[[2, 4], [1, 2]]`, b `(8, 4)`. Proportional alloys
+    again, but now the target lies on their shared line → **infinitely many** blends
+    work.
 
-**Right panel (column picture):** arrows `c1 = A[:,0]`, `c2 = A[:,1]`, the target b
-as a point; if unique, the solution path `x1*c1` then `+ x2*c2` to b.
+**Right panel (column picture) — make the construction explicit:** draw alloy
+vectors `c1 = A[:,0]` and `c2 = A[:,1]` as arrows from the origin, and the target b
+as a point. If there's a unique blend, draw the solution as a **tip-to-tail path**:
+the arrow `x1·c1` from the origin, then `x2·c2` from its tip, landing exactly on b
+— so he sees the blend literally building the target. Label the arrows "x₁ × alloy
+1" and "x₂ × alloy 2".
 
-**Outcome meter** with the blend amounts (or why none/infinite).
+**Outcome meter / readout:** state the answer in words — "Blend: 3 units of alloy 1
++ 2 units of alloy 2", or "No blend of these two alloys reaches the target", or
+"Many blends work (the alloys are redundant)".
 
 **Notice (always shown):**
 > Metallurgists, chemists, and chefs solve linear systems to hit a target blend
-> from the ingredients on hand. If the two ingredients aren't truly different
-> (one is just a scaled copy of the other), some targets can't be reached at all —
-> no solution.
+> from the ingredients on hand. You're solving for *how much of each alloy* to add.
+> If the two alloys aren't truly different — one is just a scaled copy of the other
+> — then every blend lands on a single line, and any target off that line is
+> impossible to make: no solution.
 
-**Show the math (expander):** Ax = b, the solution or the reason there's none.
+**Show the math (expander):** write `x₁·c₁ + x₂·c₂ = b` with the live numbers, then
+the solution (or the reason there's none).
 
 ---
 
@@ -202,33 +220,47 @@ a : b : c = 2 : 1 : 2.
 
 ## Example 5 — 3D: three planes / a three-nutrient plan (medical/nutrition). ENDS THE TOPIC.
 
-**Concept:** three equations in three unknowns = three planes. They can meet at a
-point (unique), in a line (infinite), or share no common point (none). Framed as:
-three foods, three nutrients — find amounts to hit exact targets.
+**Concept (state this plainly):** A dietician has **three foods** and must hit
+exact targets for **three nutrients** (say protein, carbs, vitamin C). If `x₁, x₂,
+x₃` are the amounts of each food, then *each nutrient* gives one equation:
+"(amount of that nutrient per unit of food 1)·x₁ + … = target for that nutrient."
+Three nutrients → three equations in three unknowns. **He is solving for x₁, x₂, x₃
+— how much of each food.** Each equation is a flat **plane** in the space of food
+amounts; the solution is the point where all three planes meet.
 
-**Inputs:**
-- `matrix_editor("t05e5_A", 3, label="Nutrient matrix A (column j = food j)")`.
-- `vector_editor("t05e5_b", 3, (5.0, 8.0, 7.0), label="Nutrient targets b")`.
+**How to read the matrix:** in A, **column j is food j** and **row i is nutrient
+i** (entry A[i,j] = how much of nutrient i is in one unit of food j). Row i is the
+plane `A[i,0]·x₁ + A[i,1]·x₂ + A[i,2]·x₃ = b[i]`.
+
+**Inputs (label clearly):**
+- `matrix_editor("t05e5_A", 3, label="Nutrient content — row i = nutrient i, column j = food j")`.
+- `vector_editor("t05e5_b", 3, (5.0, 8.0, 7.0), label="Nutrient targets (one per row)")`.
 - Preset selectbox `t05e5_preset`:
   - **"Unique plan"** → A `[[2, 1, 1], [1, 3, 1], [1, 1, 4]]`, b `(5, 8, 7)`
-    (solution x = (1, 2, 1)).
+    (the three planes meet at one point; solution **x = (1, 2, 1)** — 1 unit of food
+    1, 2 of food 2, 1 of food 3).
   - **"Redundant foods (infinite)"** → A `[[1, 1, 1], [1, 2, 3], [2, 3, 4]]`,
-    b `(6, 14, 20)` (row 3 = row 1 + row 2, and b is consistent → a line of
-    solutions).
+    b `(6, 14, 20)` (row 3 = row 1 + row 2, b consistent → the planes meet in a
+    *line*: many plans work).
   - **"Impossible targets (none)"** → A `[[1, 1, 1], [1, 2, 3], [2, 3, 4]]`,
-    b `(6, 14, 21)` (same A, but b inconsistent → planes share no point).
+    b `(6, 14, 21)` (same A, b inconsistent → the three planes share no common
+    point: impossible).
 
 **Right panel:** `new_figure_3d(titles=("food 1","food 2","food 3"))`; draw the
-three planes with `add_plane_3d` (each row: `A[i,0]x + A[i,1]y + A[i,2]z = b[i]`),
-translucent and in distinct colors. If unique, mark the solution point with a
-clear marker. Add the caption "drag to rotate · scroll to zoom".
+three planes with `add_plane_3d` (row i: `A[i,0]x + A[i,1]y + A[i,2]z = b[i]`),
+translucent and in three distinct colors. If unique, mark the meeting point with a
+clear marker. Caption: "drag to rotate · scroll to zoom — the solution is where all
+three planes cross." (Tell him to rotate: head-on, a single intersection point can
+hide behind a plane.)
 
-**Outcome meter** with the solution (or none/infinite).
+**Outcome meter / readout:** "Plan: 1 unit food 1, 2 food 2, 1 food 3", or "Many
+plans work (a redundant food)", or "No plan hits all three targets".
 
 **Notice (always shown):**
 > A dietician hitting exact nutrient targets from three foods is solving three
 > equations in three unknowns — three planes in space. They meet at one point (one
-> plan), along a line (many plans), or nowhere (impossible).
+> plan), along a line (many plans), or nowhere (impossible). You're solving for how
+> much of each food to use.
 
 **Looking ahead (st.info, shown on this screen):**
 > This is the biggest system we can still *picture* — three unknowns, three planes.

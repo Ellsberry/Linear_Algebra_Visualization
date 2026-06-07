@@ -239,9 +239,15 @@ def _example_three():
 
     with left:
         st.markdown(
-            "**Metal mixing.** Two alloys, each supplying copper and zinc. "
-            "How much of each alloy hits the target? "
-            "This is the column picture: x₁·col1 + x₂·col2 = b."
+            "**Metal mixing.** You have two metal alloys. Each alloy, per unit you add, "
+            "contributes a known amount of **copper** and **zinc** — that pair of numbers "
+            "is the alloy's \"makeup vector.\" You want to combine some amount **x₁** of "
+            "alloy 1 and **x₂** of alloy 2 to hit an exact target. "
+            "\"How much of each alloy?\" is the system x₁·c₁ + x₂·c₂ = b, where c₁, c₂ "
+            "are the alloys' makeup vectors (the columns of A) and b is the target. "
+            "**You are solving for x₁ and x₂ — how many units of each alloy to add.** "
+            "This is the *column picture*: build the target out of the column vectors. "
+            "(Direct callback to Topic 1's smoothies — same idea, now solved exactly.)"
         )
         preset = st.selectbox("Preset", list(_E3_PRESETS), key="t05e3_preset")
         if st.session_state.get("t05e3_last") != preset:
@@ -250,8 +256,9 @@ def _example_three():
             w.set_vector_state("t05e3_b", b_p)
             st.session_state["t05e3_last"] = preset
 
-        A = w.matrix_editor("t05e3_A", 2, label="Metal makeup (column j = alloy j: copper, zinc)")
-        b = w.vector_editor("t05e3_b", 2, (8., 9.), label="Target amounts (copper, zinc)")
+        A = w.matrix_editor("t05e3_A", 2,
+                            label="Alloy makeup — column 1 = alloy 1 (copper, zinc), column 2 = alloy 2 (copper, zinc)")
+        b = w.vector_editor("t05e3_b", 2, (8., 9.), label="Target (copper, zinc)")
 
     kind, x, det_val = _classify(A, b)
 
@@ -266,16 +273,25 @@ def _example_three():
                           size=13, symbol="diamond")
         if kind == "unique":
             mid = x[0] * c1
-            plot.add_vector_2d(fig, [0, 0], mid, "rgba(0,128,0,0.5)", "x₁·alloy1", dash="dash")
-            plot.add_vector_2d(fig, mid, b, "seagreen", "x₂·alloy2 → target", dash="dash")
+            plot.add_vector_2d(fig, [0, 0], mid, "rgba(0,128,0,0.5)",
+                               f"x₁ × alloy 1", dash="dash")
+            plot.add_vector_2d(fig, mid, b, "seagreen",
+                               f"x₂ × alloy 2", dash="dash")
         st.plotly_chart(fig, use_container_width=True)
-        _render_outcome(kind, x, det_val)
+
+        if kind == "unique":
+            st.success(f"Blend: **{x[0]:.3g} units of alloy 1** + **{x[1]:.3g} units of alloy 2**")
+        elif kind == "none":
+            st.warning("No blend of these two alloys reaches the target.")
+        else:
+            st.info("Many blends work (the alloys are redundant).")
 
     st.markdown(
         "> Metallurgists, chemists, and chefs solve linear systems to hit a target blend "
-        "from the ingredients on hand. If the two ingredients aren't truly different "
-        "(one is just a scaled copy of the other), some targets can't be reached at all — "
-        "no solution."
+        "from the ingredients on hand. You're solving for *how much of each alloy* to add. "
+        "If the two alloys aren't truly different — one is just a scaled copy of the other "
+        "— then every blend lands on a single line, and any target off that line is "
+        "impossible to make: no solution."
     )
 
     with st.expander("Show the math"):
@@ -381,8 +397,9 @@ def _example_five():
             w.set_vector_state("t05e5_b", b_p)
             st.session_state["t05e5_last"] = preset
 
-        A = w.matrix_editor("t05e5_A", 3, label="Nutrient matrix A (column j = food j)")
-        b = w.vector_editor("t05e5_b", 3, (5., 8., 7.), label="Nutrient targets b")
+        A = w.matrix_editor("t05e5_A", 3,
+                            label="Nutrient content — row i = nutrient i, column j = food j")
+        b = w.vector_editor("t05e5_b", 3, (5., 8., 7.), label="Nutrient targets (one per row)")
 
     kind, x, det_val = _classify(A, b)
 
@@ -397,14 +414,24 @@ def _example_five():
                 marker=dict(color="gold", size=10, line=dict(color="black", width=2)),
                 name=f"solution ({x[0]:.2g}, {x[1]:.2g}, {x[2]:.2g})",
             ))
-        st.caption("drag to rotate · scroll to zoom")
+        st.caption("drag to rotate · scroll to zoom — the solution is where all three planes cross.")
         st.plotly_chart(fig, use_container_width=True)
-        _render_outcome(kind, x, det_val)
+
+        if kind == "unique":
+            st.success(
+                f"Plan: **{x[0]:.3g} unit{'s' if abs(x[0])!=1 else ''} food 1**, "
+                f"**{x[1]:.3g} food 2**, **{x[2]:.3g} food 3**"
+            )
+        elif kind == "none":
+            st.warning("No plan hits all three targets.")
+        else:
+            st.info("Many plans work (a redundant food).")
 
     st.markdown(
         "> A dietician hitting exact nutrient targets from three foods is solving three "
         "equations in three unknowns — three planes in space. They meet at one point (one "
-        "plan), along a line (many plans), or nowhere (impossible)."
+        "plan), along a line (many plans), or nowhere (impossible). You're solving for "
+        "how much of each food to use."
     )
 
     st.info(
