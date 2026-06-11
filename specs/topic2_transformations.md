@@ -26,8 +26,10 @@ values — NOT the multi-example selector).
 4. **Add "Where each corner lands"** to "Show the math": show the **live numeric
    morphing matrix** (the interpolated matrix as concrete numbers) times each
    vertex. Details below.
-5. **Make the determinant track the morph:** show BOTH the live det of the current
-   (morphing) transform AND the final det of the target A.
+5. **Make the determinant track the morph:** show BOTH the live **determinant** of
+   the current (morphing) transform AND the final determinant of the target A. Use
+   the word "determinant" (not "area factor"), and add a line on its meaning (area
+   scales by |det|; sign = orientation).
 6. **Rewrite the General Warp preset notice** (the eigenvector hunt) — the old
    wording said "drag the sample vector," but it's typed, not dragged, and it
    should compare A·x to **x** and mention there are usually **two** eigenvector
@@ -116,13 +118,22 @@ Keep the existing content, with A naming, then ADD the new corner section.
 **Existing (rename M→A):**
 - `A = ` [bmatrix of the target matrix A from the cells] — label it "Your matrix A".
 - **Determinant — show BOTH, because the picture mid-morph shows the morphing
-  transform, not the target.** Display the **live determinant of the current
-  morphing transform** `interpolate(A, t)` (the area/volume factor that matches
+  transform, not the target.** Use the word **"determinant"** (not "area factor")
+  — it's the standard name used in every other topic. Display the **live
+  determinant of the current morphing transform** `interpolate(A, t)` (it matches
   what's drawn right now) AND the **final determinant of your matrix A**. E.g.:
-  "Area factor now: 2.25 · final (your matrix A): 4.00". Keep the orientation-flip
-  / singular notes, applied to the final A. (Honest aside worth a line: for a
-  reflection the live factor dips through 0 partway — the shape briefly flattens as
-  it flips before reaching the final negative value.)
+  "Determinant now: 0.887 · final (your matrix A): 1.000". Keep the
+  orientation-flip / singular notes, applied to the final A. Include these two
+  explanatory lines near it:
+  - **Meaning:** "The determinant tells you how the transform scales area (in 2D)
+    or volume (in 3D): area is multiplied by **|det|**, and the **sign** of the
+    determinant tells you whether orientation flipped (negative = mirror image)."
+  - **Mid-morph acknowledgment** (so the live number doesn't confuse him on a
+    rotation): "(Mid-morph the shape isn't a pure rotation yet, so its determinant
+    dips below 1; at t = 1 it's exactly 1.)" — the in-between morph matrix is a
+    blend of the identity and A, not the named transform, so only the endpoints are
+    "pure." (For a reflection the live determinant likewise dips through 0 before
+    reaching its final negative value.)
 - Columns mapping: î → col 1, ĵ → col 2 (and ẑ → col 3 in 3D), for the target A.
 - If sample vector shown: `A · x = …`.
 
@@ -177,9 +188,11 @@ Update any "M" references to "A" and "v" to "x" for consistency.
       words (0 = identity, 1 = your matrix A).
 - [ ] All nine presets still work; the **General warp** notice uses the new
       eigenvector wording (compare A·x to x, two directions, no "drag").
-- [ ] Determinant shows BOTH the live area/volume factor of the morphing transform
-      AND the final det of A; for a reflection the live factor dips through 0
-      mid-morph.
+- [ ] Determinant shows BOTH the live determinant of the morphing transform AND the
+      final det of A, labeled **"determinant"** (not "area factor"); the meaning
+      line (area scales by |det|, sign = orientation) and the "mid-morph isn't a
+      pure rotation yet" acknowledgment both appear; for a reflection the live
+      determinant dips through 0 mid-morph.
 - [ ] "Where each corner lands" shows the **live numeric morphing matrix** times
       each vertex (square = 4 corners; rocket = nose, fin tip, window + note); the
       matrix numbers and results change as the morph slider moves; a plain-language

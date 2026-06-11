@@ -183,16 +183,30 @@ def render():
         dim_word = "area" if dim == 2 else "volume"
         st.latex(r"A = " + w.bmatrix(A))
         det_msg = (
-            f"**{dim_word.capitalize()} factor now:** `{det_live:.3f}` "
+            f"**Determinant now:** `{det_live:.3f}` "
             f"· **final (your matrix A):** `{det_final:.3f}`"
         )
         if det_final < 0:
             det_msg += " Negative final value ⇒ orientation flips."
-            det_msg += (" (The live factor above dips through 0 mid-morph —"
-                        " the shape briefly flattens as it flips.)")
         if abs(det_final) < 1e-9:
             det_msg += " **Zero final value ⇒ space collapses and A has no inverse.**"
         st.markdown(det_msg)
+        st.markdown(
+            f"**Meaning:** The determinant tells you how the transform scales "
+            f"{dim_word}: {dim_word} is multiplied by **|det|**, and the **sign** of the "
+            f"determinant tells you whether orientation flipped (negative = mirror image)."
+        )
+        mid_morph = (
+            "(Mid-morph the shape isn't a pure rotation yet, so its determinant dips "
+            "below 1; at t = 1 it's exactly 1."
+        )
+        if det_final < 0:
+            mid_morph += (
+                " For a reflection the live determinant likewise dips through 0 "
+                "before reaching its final negative value."
+            )
+        mid_morph += ")"
+        st.markdown(mid_morph)
         st.markdown("The basis vectors land on the **columns** of A:")
         cols_latex = " ,\\quad ".join(
             (["\\hat{i}", "\\hat{j}", "\\hat{z}"][k] + r" \to " + w.bmatrix(A[:, k]))
