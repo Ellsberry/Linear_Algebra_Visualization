@@ -18,11 +18,12 @@ SLUG = "transformations"
 
 INTRO = """
 Throughout this course we'll keep meeting the equation **Ax = b**. Here's the
-first piece of it. The matrix **A** is a function that transforms space: multiply
-it by a vector **x** and out comes a new vector — that result is **b**. So
-**Ax = b** just says "apply A to x, and you land on b." Right now we're exploring
-that forward action — *what A does to x*. Later we'll turn it around and ask the
-harder question: given b, which x gets you there?
+first piece of it. The matrix **A** is a function that transforms space. Apply it
+to a vector **x** — written **A·x**, the matrix on the left acting on x — and out
+comes a new vector, the result **b**. So **Ax = b** just says "apply A to x, and
+you land on b." Right now we're exploring that forward action — *what A does to
+x*. Later we'll turn it around and ask the harder question: given b, which x gets
+you there?
 
 Two words we'll use a lot:
 - A **vertex** is a corner of the shape — a specific point, like the nose of the
@@ -60,8 +61,15 @@ _NOTICE = {
                          "look — the axes scaled unequally.",
     "General warp": "A general transformation that stretches and skews at once. "
                     "'Liquify' and image-morphing filters bend a picture like "
-                    "this. Drag the sample vector and hunt for a direction that "
-                    "doesn't change — that's an eigenvector (Topic 8).",
+                    "this. When A acts on most vectors it swings them to point a "
+                    "new way — but a few special vectors come out pointing along "
+                    "the *same line* they started on (same direction or exactly "
+                    "opposite, just longer or shorter). Turn on the sample vector, "
+                    "type different values into **x**, and compare its arrow (x) "
+                    "with its image (A·x): for most x they point different ways. "
+                    "Find a direction where A·x lies right along x — then look for "
+                    "a *second* one. Those are **eigenvectors** (Topic 8), and most "
+                    "2D transforms have two.",
     "Collapse (singular)": "Space is squashed flat — this transform can't be "
                            "undone (det = 0). It's the math of a shadow: a flat "
                            "shadow is 3D squashed down, and you can't rebuild the "
@@ -103,10 +111,10 @@ def _build_preset(name: str, dim: int):
     return A
 
 
-def _corner_latex(At: np.ndarray, v: np.ndarray) -> str:
-    """Return LaTeX for A(t)·v = result."""
-    result = At @ v
-    return r"A(t)\," + w.bmatrix(v.reshape(-1, 1)) + r" = " + w.bmatrix(result.reshape(-1, 1))
+def _corner_latex(T: np.ndarray, v: np.ndarray) -> str:
+    """Return LaTeX showing the live numeric matrix T times v equals result."""
+    result = T @ v
+    return w.bmatrix(T) + w.bmatrix(v.reshape(-1, 1)) + r" = " + w.bmatrix(result.reshape(-1, 1))
 
 
 def _reset():
@@ -148,7 +156,7 @@ def render():
 
         A = w.matrix_editor("t02_A", dim, label="Matrix A (its columns = where the basis lands)")
 
-        t = w.scalar_slider("t02_t", "Morph: identity → matrix A", 0.0, 1.0, 1.0, step=0.01)
+        t = w.scalar_slider("t02_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, step=0.01)
 
         show_vec = st.checkbox("Show a sample vector x", value=False, key="t02_showvec")
         x = None
@@ -170,14 +178,21 @@ def render():
             st.plotly_chart(plot.figure_3d(At, show_vec, x, xt), use_container_width=True)
 
     with st.expander("Show the math"):
-        det = float(np.linalg.det(A))
+        det_final = float(np.linalg.det(A))
+        det_live = float(np.linalg.det(At))
+        dim_word = "area" if dim == 2 else "volume"
         st.latex(r"A = " + w.bmatrix(A))
-        st.markdown(
-            f"**Determinant** = `{det:.3f}` — the factor by which "
-            f"{'area' if dim == 2 else 'volume'} is scaled."
-            + (" Negative ⇒ orientation flips." if det < 0 else "")
-            + (" **Zero ⇒ space collapses and A has no inverse.**" if abs(det) < 1e-9 else "")
+        det_msg = (
+            f"**{dim_word.capitalize()} factor now:** `{det_live:.3f}` "
+            f"· **final (your matrix A):** `{det_final:.3f}`"
         )
+        if det_final < 0:
+            det_msg += " Negative final value ⇒ orientation flips."
+            det_msg += (" (The live factor above dips through 0 mid-morph —"
+                        " the shape briefly flattens as it flips.)")
+        if abs(det_final) < 1e-9:
+            det_msg += " **Zero final value ⇒ space collapses and A has no inverse.**"
+        st.markdown(det_msg)
         st.markdown("The basis vectors land on the **columns** of A:")
         cols_latex = " ,\\quad ".join(
             (["\\hat{i}", "\\hat{j}", "\\hat{z}"][k] + r" \to " + w.bmatrix(A[:, k]))
@@ -190,8 +205,17 @@ def render():
 
         st.markdown("---")
         st.markdown("**Where each corner lands**")
-        st.markdown(f"Current transform (morph slider at t = {t:.2f}):")
-        st.latex(r"A(t) = " + w.bmatrix(At))
+        if abs(t) < 0.01:
+            t_word = "the identity — nothing moves"
+        elif abs(t - 1.0) < 0.01:
+            t_word = "your full matrix A"
+        else:
+            t_word = "part-way from the identity to A"
+        st.markdown(
+            f"These are the matrix's numbers right now "
+            f"(morph **t = {t:.2f}** — {t_word}). "
+            f"Drag t to 1 to reach A."
+        )
 
         if dim == 2:
             if obj == "square":
@@ -218,8 +242,8 @@ def render():
             " column of A**, and **A · (0,1)** is the **second column**. That's the rule from"
             " the top of this topic — \"the columns of A are where the basis vectors go\" — and"
             " you can check it right here."
-            " *(Exactly true when the Morph slider is all the way"
-            " over at t = 1; mid-morph these are the columns of the in-between transform A(t).)*"
+            " *(Check it with the Morph slider all the way over at t = 1; mid-morph the numbers"
+            " above are the columns of the in-between transform, not yet your final A.)*"
         )
 
     with st.expander("Try this"):
