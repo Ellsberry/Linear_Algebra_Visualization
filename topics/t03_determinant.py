@@ -252,26 +252,55 @@ def _example_medical():
 
     At = animate.interpolate(A, t)
     det = float(np.linalg.det(At))
-    det_A = float(np.linalg.det(A))
 
     with right:
         st.plotly_chart(plot.figure_2d(At, obj="square"), use_container_width=True)
         _det_meter(det, kind="area_sq")
 
+    st.info(
+        "This matrix is how the scanner's image is being **stretched or skewed**. "
+        "Change its entries (or pick a preset) and watch the scan region deform; the "
+        "determinant tells you whether the **area** of anything you measure — a tumor, "
+        "a vessel — got bigger, smaller, or stayed the same. "
+        "**What to look for:** the *Calibration* preset scales everything up, so areas "
+        "grow (det > 1); the *Tilt correction* shear skews the shape but "
+        "**keeps the area unchanged (det = 1)** — that's the important case, because a "
+        "measurement taken after it is still trustworthy."
+    )
+
     with st.expander("Show the math"):
-        a, b = float(A[0, 0]), float(A[0, 1])
-        c, d = float(A[1, 0]), float(A[1, 1])
-        st.latex(r"\det A = " + w.bmatrix(A) + r" = a \cdot d - b \cdot c")
+        at00, at01 = float(At[0, 0]), float(At[0, 1])
+        at10, at11 = float(At[1, 0]), float(At[1, 1])
+
+        st.markdown(f"**Current transform (morph t = {t:.2f}):**")
+        st.latex(r"A_t = " + w.bmatrix(At))
+        st.markdown("**Your matrix A (the destination at t = 1):**")
+        st.latex(r"A = " + w.bmatrix(A))
+
+        det_at = at00 * at11 - at01 * at10
         st.latex(
-            r"\det A = ("
-            + f"{a:.4g}" + r")(" + f"{d:.4g}" + r") - ("
-            + f"{b:.4g}" + r")(" + f"{c:.4g}" + r")"
-            + r" = \mathbf{" + f"{det_A:.4f}" + r"}"
+            r"\det A_t = a \cdot d - b \cdot c = ("
+            + f"{at00:.4g}" + r")(" + f"{at11:.4g}" + r") - ("
+            + f"{at01:.4g}" + r")(" + f"{at10:.4g}" + r")"
+            + r" = \mathbf{" + f"{det_at:.4f}" + r"}"
         )
         st.markdown(
             f"**Measured area, before → after:** "
-            f"region area before = 1.00 → after = |det A| × 1.00 = **{abs(det_A):.2f}**"
+            f"region area before = 1.00 → after = |det At| × 1.00 = **{abs(det_at):.2f}**"
         )
+
+        st.markdown("**At · (scan region corners):**")
+        for cx, cy in [(0., 0.), (1., 0.), (1., 1.), (0., 1.)]:
+            x = np.array([cx, cy])
+            xp = At @ x
+            st.latex(
+                r"A_t \cdot \begin{pmatrix}"
+                + f"{cx:.0f}" + r" \\ " + f"{cy:.0f}"
+                + r"\end{pmatrix} = \begin{pmatrix}"
+                + f"{xp[0]:.2f}" + r" \\ " + f"{xp[1]:.2f}"
+                + r"\end{pmatrix}"
+            )
+
         st.markdown(
             "det = 1 means the area is preserved even though the shape changed "
             "(the tilt correction) — a measurement taken on the aligned image is still "
@@ -346,8 +375,26 @@ def _example_biology():
             + f"{k:.4g}^2 = {surface:.2f}"
         )
         st.markdown(
-            f"At k = {k:.4g}: surface:volume = 6/k = 6/{k:.4g} = {ratio:.2f}."
+            f"For every 1 unit of volume there are 6/k = 6/{k:.4g} = **{ratio:.2f}** units of surface "
+            f"— and that number *falls* as the cell grows (k = 1 → 6 units of surface per volume; "
+            f"k = 3 → 2), so the surface can't keep up with the volume it has to serve."
         )
+
+        st.markdown("**A · (cube corners):**")
+        for label, x in [
+            ("(1,0,0)", np.array([1., 0., 0.])),
+            ("(0,1,0)", np.array([0., 1., 0.])),
+            ("(1,1,1)", np.array([1., 1., 1.])),
+        ]:
+            xp = A @ x
+            st.latex(
+                r"A \cdot \begin{pmatrix}"
+                + f"{x[0]:.0f}" + r" \\ " + f"{x[1]:.0f}" + r" \\ " + f"{x[2]:.0f}"
+                + r"\end{pmatrix} = \begin{pmatrix}"
+                + f"{xp[0]:.2f}" + r" \\ " + f"{xp[1]:.2f}" + r" \\ " + f"{xp[2]:.2f}"
+                + r"\end{pmatrix}"
+                + r"\quad \text{" + label + r"}"
+            )
 
 
 # ----------------------------------------------------------------------------
@@ -379,16 +426,19 @@ def _example_graphics():
         st.plotly_chart(plot.figure_2d(At, obj="rocket"), use_container_width=True)
         _det_meter(det, kind="area_sq")
         st.info(
-            "det = 0 means the transform has no inverse. Next topic: exactly when a "
-            "transformation *can* be undone."
+            "det = 0 means this transform has no inverse — the flattened rocket can't "
+            "be turned back. Topic 4 is about exactly which transformations can be "
+            "undone, and how."
         )
 
     with st.expander("Show the math"):
         at00, at01 = float(At[0, 0]), float(At[0, 1])
         at10, at11 = float(At[1, 0]), float(At[1, 1])
 
-        st.markdown(f"The matrix right now, morph t = {t:.2f}:")
+        st.markdown(f"**Current transform (morph t = {t:.2f}):**")
         st.latex(r"A_t = " + w.bmatrix(At))
+        st.markdown("**Your matrix A (the destination at t = 1):**")
+        st.latex(r"A = " + w.bmatrix(A))
 
         det_live = at00 * at11 - at01 * at10
         st.latex(
