@@ -22,6 +22,8 @@ transformation acts on space, **by what factor does area (in 2D) or volume (in
 turns out to matter to surveyors, radiologists, biologists, and game
 programmers. We'll meet it in all four fields, and each time you'll see the
 determinant *is* an area or a volume — not just a formula.
+
+Here's the formula in letters (the examples fill in real numbers):
 """
 
 HOWTO = """
@@ -103,6 +105,22 @@ def _det_meter(det, kind, extra=None):
 
 def render():
     st.markdown(OVERVIEW)
+    st.latex(
+        r"\det \begin{bmatrix} a & b \\ c & d \end{bmatrix} = ad - bc"
+        r"\qquad \text{(2D)}"
+    )
+    st.latex(
+        r"\det \begin{bmatrix} a & b & c \\ d & e & f \\ g & h & i \end{bmatrix}"
+        r" = a(ei - fh) - b(di - fg) + c(dh - eg)"
+        r"\qquad \text{(3D)}"
+    )
+    st.markdown(
+        "The 3D formula looks like a lot, but notice each term is just one top-row entry "
+        "times a little 2×2 determinant of what's left — it's the 2D formula used three "
+        "times. And when the matrix is simple, like the diagonal one in biology, almost "
+        "everything is zero and it collapses to just the diagonal multiplied together."
+    )
+
     with st.expander("How to use this screen"):
         st.markdown(HOWTO)
 
@@ -233,7 +251,8 @@ def _example_medical():
         t = w.scalar_slider("t03e2_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, 0.01)
 
     At = animate.interpolate(A, t)
-    det = float(np.linalg.det(A))
+    det = float(np.linalg.det(At))
+    det_A = float(np.linalg.det(A))
 
     with right:
         st.plotly_chart(plot.figure_2d(At, obj="square"), use_container_width=True)
@@ -247,14 +266,22 @@ def _example_medical():
             r"\det A = ("
             + f"{a:.4g}" + r")(" + f"{d:.4g}" + r") - ("
             + f"{b:.4g}" + r")(" + f"{c:.4g}" + r")"
-            + r" = \mathbf{" + f"{det:.4f}" + r"}"
+            + r" = \mathbf{" + f"{det_A:.4f}" + r"}"
         )
         st.markdown(
-            f"The scan region's area is multiplied by |det A| = {abs(det):.4f}."
+            f"**Measured area, before → after:** "
+            f"region area before = 1.00 → after = |det A| × 1.00 = **{abs(det_A):.2f}**"
         )
         st.markdown(
             "det = 1 means the area is preserved even though the shape changed "
-            "(the tilt correction)."
+            "(the tilt correction) — a measurement taken on the aligned image is still "
+            "trustworthy."
+        )
+        st.markdown(
+            "**Topic 4:** Actually *undoing* a distortion — turning a tilted scan back "
+            "into a square one — means applying the transform's **inverse**. That's the "
+            "next topic; here we're just seeing how the determinant tells us whether area "
+            "was preserved."
         )
 
 
@@ -284,21 +311,29 @@ def _example_biology():
         _det_meter(volume, kind="volume", extra={"surface": surface, "ratio": ratio})
 
     st.info(
-        "**k is the scale factor** — how many times bigger you make the cell. k = 2 means "
-        "twice as wide, twice as tall, twice as deep. Volume scales with the determinant "
-        "(k³), but the surface that feeds and cools a body only scales as k². So as things "
-        "get bigger the surface-to-volume ratio drops — which is why cells stay tiny, why "
-        "large animals need lungs, gills, and folded intestines, and why an elephant's "
-        "ears are huge."
+        "**k is the scale factor** — how many times bigger you make the cell. This matrix "
+        "**scales the whole cell uniformly by k**: every direction grows by the same "
+        f"factor k (k = 2 means twice as wide, twice as tall, twice as deep).\n\n"
+        "A cell absorbs food and oxygen through its **surface**, but it has to feed its "
+        "whole **volume**. When you make something bigger, the volume (k³) outgrows the "
+        "surface (k²), so the surface can't keep up with the demand — which is why cells "
+        "stay tiny, and why large animals can't just be \"scaled-up\" cells: they need extra "
+        "surface area folded in (lungs, gills, intestines). It's also why an **elephant "
+        "has enormous ears**: a big warm body makes heat throughout its volume but can "
+        "only shed it through its surface, so the elephant grows extra surface — those "
+        "huge, blood-rich ears — to dump the heat its size can't otherwise lose."
     )
 
     with st.expander("Show the math"):
         st.markdown(
-            f"Scaling every axis by k gives A = diag(k, k, k) = diag({k:.4g}, {k:.4g}, {k:.4g}):"
+            f"This matrix **scales the whole cell uniformly by k**:"
         )
         st.latex(r"A = " + w.bmatrix(A))
         st.markdown(
-            "For a diagonal matrix, the determinant is the product of the diagonal entries:"
+            "The determinant of any **triangular** matrix — including this **diagonal** "
+            "one — is just the diagonal entries multiplied together. "
+            "(A diagonal matrix is a special case of triangular; this becomes important "
+            'in Topic 5, where “determinant = product of the diagonal” gets used in earnest.)'
         )
         st.latex(
             r"\det A = k \times k \times k = k^3"
@@ -311,7 +346,7 @@ def _example_biology():
             + f"{k:.4g}^2 = {surface:.2f}"
         )
         st.markdown(
-            f"At k = {k:.4g}, surface:volume = 6/k = 6/{k:.4g} = {ratio:.2f}."
+            f"At k = {k:.4g}: surface:volume = 6/k = 6/{k:.4g} = {ratio:.2f}."
         )
 
 
@@ -335,11 +370,13 @@ def _example_graphics():
 
         st.info(info["notice"])
         A = w.matrix_editor("t03e4_A", 2, label="Matrix A")
+        t = w.scalar_slider("t03e4_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, 0.01)
 
-    det = float(np.linalg.det(A))
+    At = animate.interpolate(A, t)
+    det = float(np.linalg.det(At))
 
     with right:
-        st.plotly_chart(plot.figure_2d(A, obj="rocket"), use_container_width=True)
+        st.plotly_chart(plot.figure_2d(At, obj="rocket"), use_container_width=True)
         _det_meter(det, kind="area_sq")
         st.info(
             "det = 0 means the transform has no inverse. Next topic: exactly when a "
@@ -347,29 +384,32 @@ def _example_graphics():
         )
 
     with st.expander("Show the math"):
-        a, b = float(A[0, 0]), float(A[0, 1])
-        c, d = float(A[1, 0]), float(A[1, 1])
+        at00, at01 = float(At[0, 0]), float(At[0, 1])
+        at10, at11 = float(At[1, 0]), float(At[1, 1])
+
+        st.markdown(f"The matrix right now, morph t = {t:.2f}:")
+        st.latex(r"A_t = " + w.bmatrix(At))
+
+        det_live = at00 * at11 - at01 * at10
         st.latex(
-            r"\det A = a \cdot d - b \cdot c = ("
-            + f"{a:.4g}" + r")(" + f"{d:.4g}" + r") - ("
-            + f"{b:.4g}" + r")(" + f"{c:.4g}" + r")"
-            + r" = \mathbf{" + f"{det:.4f}" + r"}"
+            r"\det A_t = a \cdot d - b \cdot c = ("
+            + f"{at00:.4g}" + r")(" + f"{at11:.4g}" + r") - ("
+            + f"{at01:.4g}" + r")(" + f"{at10:.4g}" + r")"
+            + r" = \mathbf{" + f"{det_live:.4f}" + r"}"
         )
         st.markdown(
-            "Area scales by |det A|; a negative sign means orientation flipped (mirror image); "
-            "det = 0 means the area collapsed to nothing."
+            "negative ⇒ orientation flipped (mirror image); 0 ⇒ area collapsed to nothing."
         )
 
-        # A times the rocket's key vertices so the student sees the flip/collapse
         nose = plot._ROCKET[:, 0]
         fin_tip = plot._ROCKET[:, 3]
         window = plot._ROCKET_WINDOW
 
         st.markdown("**A · (rocket vertices):**")
         for label, x in [("nose", nose), ("right fin tip", fin_tip), ("window", window)]:
-            xp = A @ x
+            xp = At @ x
             st.latex(
-                r"A \cdot \begin{pmatrix}"
+                r"A_t \cdot \begin{pmatrix}"
                 + f"{x[0]:.2f}" + r" \\ " + f"{x[1]:.2f}"
                 + r"\end{pmatrix} = \begin{pmatrix}"
                 + f"{xp[0]:.2f}" + r" \\ " + f"{xp[1]:.2f}"

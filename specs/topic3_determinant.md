@@ -57,6 +57,19 @@ Top selector (st.radio, horizontal, key `t03_example`), in THIS order:
 > turns out to matter to surveyors, radiologists, biologists, and game
 > programmers. We'll meet it in all four fields, and each time you'll see the
 > determinant *is* an area or a volume — not just a formula.
+>
+> Here's the formula in letters (the examples fill in real numbers):
+>
+> 2D: det [[a, b], [c, d]] = a·d − b·c
+>
+> 3D: det [[a, b, c], [d, e, f], [g, h, i]] = a(e·i − f·h) − b(d·i − f·g) + c(d·h − e·g)
+>
+> The 3D formula looks like a lot, but notice each term is just one top-row entry
+> times a little 2×2 determinant of what's left — it's the 2D formula used three
+> times. And when the matrix is simple, like the diagonal one in biology, almost
+> everything is zero and it collapses to just the diagonal multiplied together.
+
+(Render both formulas with `st.latex` using proper bmatrix notation.)
 
 `HOWTO` (collapsed expander "How to use this screen"):
 > The left panel sets the numbers; the right panel shows the shape. The
@@ -147,14 +160,24 @@ shearing to correct a tilt distorts shape but preserves area (det = 1).
 
 **Right panel:** `plotting.figure_2d(At, obj="square")` where `At = interpolate(A,
 t)`; the unit square = the scan region, and its corners are transformed by A·x.
+**The morph must actually redraw** — recompute `At` from the slider each run and
+pass `At` (not the static A) to the figure, so dragging t animates identity → A. (A
+dead/static morph here is a bug; verify it animates.)
 
 **Determinant meter:** `_det_meter(det, kind="area_sq")`.
 
-**Show the math (expander) — live calculation:** show `det A = a·d − b·c` with the
-current entries substituted, then the result, e.g.
-`det A = (1.5)(1.5) − (0)(0) = 2.25`, then "the scan region's area is multiplied by
-|det A| = 2.25." Add the sentence: "det = 1 means the area is preserved even though
-the shape changed (the tilt correction)."
+**Show the math (expander) — live calculation, with measured areas:**
+- `det A = a·d − b·c` with the current entries substituted, then the result, e.g.
+  `det A = (1.5)(1.5) − (0)(0) = 2.25`.
+- **Measured area, before → after** (this is the point of the screen — show it):
+  "region area before = 1.00 → after = |det A| × 1.00 = **2.25**." Recompute live.
+- The sentence: "det = 1 means the area is preserved even though the shape changed
+  (the tilt correction) — a measurement taken on the aligned image is still
+  trustworthy."
+- **Topic 4 pointer (one line):** "Actually *undoing* a distortion — turning a
+  tilted scan back into a square one — means applying the transform's **inverse**.
+  That's the next topic; here we're just seeing how the determinant tells us
+  whether area was preserved."
 
 ---
 
@@ -176,25 +199,34 @@ matrix `A = [[k,0,0],[0,k,0],[0,0,k]]` (= `k * np.eye(3)`). `volume = det = k**3
 **Determinant meter:** `_det_meter(det, kind="volume", extra={"surface": surface,
 "ratio": ratio})`.
 
-**Notice (always shown) — introduce k in words first:**
-> **k is the scale factor** — how many times bigger you make the cell. k = 2 means
-> twice as wide, twice as tall, twice as deep. Volume scales with the determinant
-> (k³), but the surface that feeds and cools a body only scales as k². So as things
-> get bigger the surface-to-volume ratio drops — which is why cells stay tiny, why
-> large animals need lungs, gills, and folded intestines, and why an elephant's
-> ears are huge.
+**Notice (always shown) — introduce k in words first, then the surface-vs-volume
+consequence with real context:**
+> **k is the scale factor** — how many times bigger you make the cell. This matrix
+> **scales the whole cell uniformly by k**: every direction grows by the same
+> factor k (k = 2 means twice as wide, twice as tall, twice as deep).
+>
+> A cell absorbs food and oxygen through its **surface**, but it has to feed its
+> whole **volume**. When you make something bigger, the volume (k³) outgrows the
+> surface (k²), so the surface can't keep up with the demand — which is why cells
+> stay tiny, and why large animals can't just be "scaled-up" cells: they need extra
+> surface area folded in (lungs, gills, intestines). It's also why an **elephant
+> has enormous ears**: a big warm body makes heat throughout its volume but can
+> only shed it through its surface, so the elephant grows extra surface — those
+> huge, blood-rich ears — to dump the heat its size can't otherwise lose.
 
 **Show the math (expander) — live, no "det(kI)" shorthand:**
-> Scaling every axis by k gives A = [[k,0,0],[0,k,0],[0,0,k]].
-> For a diagonal matrix, the determinant is just the diagonal entries multiplied
-> together, so: det A = k × k × k = k³ = (with k = 2) **2 × 2 × 2 = 8** ← the volume
-> factor.
+> This matrix scales the whole cell uniformly by k: A = [[k,0,0],[0,k,0],[0,0,k]].
+> The determinant of any **triangular** matrix — including this **diagonal** one —
+> is just the diagonal entries multiplied together. So: det A = k × k × k = k³ =
+> (with k = 2) **2 × 2 × 2 = 8** ← the volume factor.
 > Surface area grows as 6k² = 6 × 4 = 24; volume as k³ = 8; ratio 6/k = 3.
 
 Substitute the **current** k everywhere (the numbers above are the k = 2 example),
-so the products recompute as he drags the slider. State the rule plainly: "for a
-diagonal matrix, the determinant is the product of the diagonal entries" — that's
-why it's k·k·k.
+so the products recompute as he drags the slider. Keep the bridging sentence about
+triangular matrices — it forward-links to triangular form in Topic 5.5, where
+"determinant = product of the diagonal" gets used in earnest. (Call the matrix
+**diagonal** — that's accurate; just note a diagonal matrix is a special triangular
+one.)
 
 ---
 
@@ -206,6 +238,9 @@ determinant = flattened, area gone, cannot be undone → cliffhanger into Topic 
 **Inputs:**
 - Preset selectbox, key `t03e4_preset`.
 - `widgets.matrix_editor("t03e4_A", 2, label="Matrix A")`, presets set it.
+- **Morph slider** `widgets.scalar_slider("t03e4_t", "Morph t: identity → matrix A",
+  0.0, 1.0, 1.0, 0.01)` — so the mirror animates from identity to the reflection
+  instead of snapping.
 
 **Presets:**
 - **"Mirror (reflection)"** → `[[-1, 0], [0, 1]]` (det = −1, horizontal flip →
@@ -218,21 +253,26 @@ determinant = flattened, area gone, cannot be undone → cliffhanger into Topic 
   > A shadow flattens an object onto the ground. det = 0 means the area is gone —
   > and you can't rebuild the rocket from its shadow. There is no way to undo it.
 
-**Right panel:** `plotting.figure_2d(A, obj="rocket")`.
+**Right panel:** `plotting.figure_2d(At, obj="rocket")` where `At = interpolate(A,
+t)` — the rocket morphs from upright (identity) to mirrored/flattened as t goes 0→1.
 
-**Determinant meter:** `_det_meter(det, kind="area_sq")`.
+**Determinant meter:** `_det_meter(det_of_At, kind="area_sq")` — use the **live**
+determinant of the morphing matrix, so it animates (for the mirror it runs 1 → 0 →
+−1, and the rocket visibly flattens to a line at det = 0 mid-morph before re-forming
+mirrored; for the shadow it runs 1 → 0).
 
-**Show the math (expander) — this screen was missing it; add it, matching the other
-screens and reusing Topic 2's corner-math idea:**
-- The live determinant with entries substituted: `det A = a·d − b·c`, e.g. mirror
-  `(−1)(1) − (0)(0) = −1`; shadow `(1)(0) − (0)(0) = 0`. State: "area scales by
-  |det A|; a negative sign means orientation flipped (mirror image); det = 0 means
-  the area collapsed to nothing."
-- **A times the rocket's vertices** (same as Topic 2): show `A·x = x′` for the
-  **nose**, one **fin tip**, and the **window** (coordinates from
-  `engine/plotting.py`: `_ROCKET` columns + `_ROCKET_WINDOW`), with the live matrix
-  numbers, so he sees the mirror swap left/right (or the shadow flatten every point
-  onto the line). Add: "every other vertex transforms the same way."
+**Show the math (expander) — show the matrix A morphing, not just A·vertices:**
+- **The live morphing matrix entries:** display `At = interpolate(A, t)` as concrete
+  numbers (one line of plain language: "the matrix right now, morph t = {t:.2f}"),
+  so he watches the entries change from `[[1,0],[0,1]]` toward `[[−1,0],[0,1]]`
+  (mirror) as he drags. This is the same morphing-matrix view as Topic 2.
+- **The live determinant** of that matrix: `det = a·d − b·c` with the current
+  entries substituted, then the result. State: "negative ⇒ orientation flipped
+  (mirror image); 0 ⇒ area collapsed to nothing."
+- **A times the rocket's vertices:** `At · x = x′` for the **nose**, one **fin tip**,
+  and the **window** (coordinates from `engine/plotting.py`: `_ROCKET` columns +
+  `_ROCKET_WINDOW`), using the live matrix numbers, plus "every other vertex
+  transforms the same way."
 
 **Closing line (st.info or st.markdown under the meter, always shown on this
 screen):**
@@ -270,26 +310,27 @@ the `t02_transformations` entry.
 ## Acceptance checklist (verify before committing)
 
 - [ ] Sidebar shows "3 · Determinant" after Topic 2.
-- [ ] The matrix is called **A** on every screen (not "M"); surveying corners are
-      **P, Q, R**.
-- [ ] Every "Show the math" shows the determinant (and area/volume) as a **live
-      calculation with the current numbers substituted** — e.g. surveying shows
-      `det A = (5)(4) − (2)(1) = 18` and `area = ½ × 18 = 9`, and these recompute as
-      inputs change. No bare final-only numbers; no "det(kI)" / "det[u v]" shorthand.
-- [ ] **Surveying:** the math panel walks points → edge vectors → columns of A →
-      det → area; the ½ is explained (triangle = half the parallelogram); moving a
-      corner updates everything; dragging R across line PQ makes det negative with
+- [ ] The intro shows both the 2D and 3D determinant formulas in letters, with the
+      "each 3D term is the 2D formula" framing line.
+- [ ] **Medical:** the morph slider actually animates (dragging t redraws
+      `interpolate(A,t)`); the math shows `det A` live AND the region area before →
+      after (`1.00 → |det A|×1.00`); matrix labeled A; the Topic 4 inverse pointer
+      appears. ("Calibration" → det 2.25; "Tilt correction" → det 1.)
+- [ ] **Biology:** wording says it **scales the whole cell uniformly by k** (not
+      "an axis"); k introduced as scale factor; the cell + elephant context
+      paragraph appears; the math shows A = diag(k,k,k) and `det A = k×k×k = k³`
+      live, called a **diagonal** matrix with the "a diagonal matrix is a special
+      triangular one → Topic 5.5" bridge; surface:volume drops as k rises.
+- [ ] **Graphics:** has a morph slider (identity → mirror) that animates; the det
+      meter animates (mirror runs 1 → 0 → −1, rocket flattens at det 0 mid-morph);
+      the math shows the **morphing matrix entries** AND `det = a·d − b·c` live AND
+      A·(rocket vertices); the no-inverse closing line appears.
+- [ ] Every "Show the math" shows determinants/areas/volumes as **live substituted
+      calculations** (entries plugged in, then result), recomputing as inputs
+      change; no "det(kI)"/"det[u v]" shorthand; matrix called **A**, surveying
+      corners **P, Q, R**.
+- [ ] **Surveying:** the math walks points → edge vectors → columns of A → det →
+      area; the ½ is explained; dragging R across line PQ makes det negative with
       the clockwise note.
-- [ ] **Medical:** "Calibration" shows det 2.25 via `(1.5)(1.5) − (0)(0)`; "Tilt
-      correction" shows det 1 with a skewed-but-same-area square; matrix labeled A,
-      slider names t.
-- [ ] **Biology:** k is introduced as "scale factor" in words; the math shows
-      A = diag(k,k,k) and `det A = k × k × k = k³` with the current k substituted,
-      plus the "determinant of a diagonal matrix = product of the diagonal" rule;
-      surface:volume drops as k rises.
-- [ ] **Graphics:** has a "Show the math" panel — live `det A = a·d − b·c` (−1 for
-      mirror, 0 for shadow) AND A·(rocket vertices: nose, fin tip, window); "Mirror"
-      shows a backwards rocket, "Shadow" flattens it; the no-inverse closing line
-      appears.
 - [ ] Every screen shows the determinant meter; the app runs with
       `streamlit run app.py` and no import errors.
