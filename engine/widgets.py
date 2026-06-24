@@ -27,12 +27,12 @@ def editable_matrix(state_key: str, dim: int, label: str = "A",
         rb = ["⎤"] + ["⎥"] * (dim - 2) + ["⎦"]
 
     bstyle = (
-        "font-size:1.8em;line-height:2.1;text-align:center;color:#e6e6e6;"
-        "padding-top:6px"
+        "display:flex;align-items:center;justify-content:center;"
+        "font-size:2.4em;line-height:1;color:#e6e6e6;min-height:58px"
     )
     vstyle = (
-        "text-align:center;padding:10px 2px;font-size:1.05em;"
-        "font-weight:500;color:#e6e6e6"
+        "display:flex;align-items:center;justify-content:center;"
+        "font-size:1.05em;font-weight:500;color:#e6e6e6;min-height:58px"
     )
 
     M = np.zeros((dim, dim))

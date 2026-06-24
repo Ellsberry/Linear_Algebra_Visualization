@@ -40,7 +40,7 @@ def _example_graphics():
         st.session_state["t03e4_last"] = preset
 
     st.info(info["notice"])
-    A = w.matrix_editor("t03e4_A", 2, label="Matrix A")
+    A = w.editable_matrix("t03e4_A", 2, label="Matrix A")
     t = w.scalar_slider("t03e4_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, 0.01)
 
     At = animate.interpolate(A, t)
@@ -53,9 +53,9 @@ def _example_graphics():
         at10, at11 = float(At[1, 0]), float(At[1, 1])
 
         st.markdown(f"**Current transform (morph t = {t:.2f}):**")
-        st.latex(r"A_t = " + w.bmatrix(At))
+        w.editable_matrix(None, 2, label="A_t", editable=False, value=At)
         st.markdown("**Your matrix A (the destination at t = 1):**")
-        st.latex(r"A = " + w.bmatrix(A))
+        w.editable_matrix(None, 2, label="A", editable=False, value=A)
 
         det_live = at00 * at11 - at01 * at10
         st.latex(

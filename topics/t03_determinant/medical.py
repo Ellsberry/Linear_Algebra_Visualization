@@ -5,7 +5,6 @@ import streamlit as st
 from engine import animate
 from engine import plotting as plot
 from engine import widgets as w
-from engine.layout import two_col
 
 _E2_PRESETS = {
     "Calibration (rescale)": {
@@ -44,29 +43,24 @@ def _example_medical():
         "measurement taken after it is still trustworthy."
     )
 
-    # --- two-column body ---
-    left, right = two_col()
+    preset = st.selectbox("Preset", list(_E2_PRESETS), key="t03e2_preset")
+    info = _E2_PRESETS[preset]
 
-    with left:
-        preset = st.selectbox("Preset", list(_E2_PRESETS), key="t03e2_preset")
-        info = _E2_PRESETS[preset]
+    if st.session_state.get("t03e2_last") != preset:
+        w.set_matrix_state("t03e2_A", info["A"])
+        st.session_state["t03e2_last"] = preset
 
-        if st.session_state.get("t03e2_last") != preset:
-            w.set_matrix_state("t03e2_A", info["A"])
-            st.session_state["t03e2_last"] = preset
-
-        st.caption(info["notice"])
-        A = w.editable_matrix("t03e2_A", 2, label="Alignment matrix A")
-        t = w.scalar_slider("t03e2_t", "Morph t: identity → matrix A",
-                            0.0, 1.0, 1.0, 0.01)
+    st.caption(info["notice"])
+    A = w.editable_matrix("t03e2_A", 2, label="Alignment matrix A")
+    t = w.scalar_slider("t03e2_t", "Morph t: identity → matrix A",
+                        0.0, 1.0, 1.0, 0.01)
 
     At = animate.interpolate(A, t)
     det = float(np.linalg.det(At))
 
-    with left:
-        _det_meter(det, kind="area_sq")
+    left, right = st.columns([0.5, 0.5], gap="large")
 
-        # --- math (always visible, no expander) ---
+    with left:
         st.markdown(f"**Current transform (morph t = {t:.2f}):**")
         w.editable_matrix(None, 2, label="A_t", editable=False, value=At)
 
@@ -93,11 +87,13 @@ def _example_medical():
             x = np.array([cx, cy])
             xp = At @ x
             st.latex(
-                r"A_t \cdot \begin{pmatrix}"
+                r"{\small "
+                + w.bmatrix(At)
+                + r" \cdot \begin{pmatrix}"
                 + f"{cx:.0f}" + r" \\ " + f"{cy:.0f}"
                 + r"\end{pmatrix} = \begin{pmatrix}"
                 + f"{xp[0]:.2f}" + r" \\ " + f"{xp[1]:.2f}"
-                + r"\end{pmatrix}"
+                + r"\end{pmatrix}}"
             )
 
         st.markdown(
@@ -108,6 +104,7 @@ def _example_medical():
     with right:
         st.plotly_chart(plot.figure_2d(At, obj="square"),
                         use_container_width=True)
+        _det_meter(det, kind="area_sq")
 
     # --- full-width closing ---
     st.markdown(
