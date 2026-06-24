@@ -10,38 +10,38 @@ from . import _inv_meter, _E1_PRESETS
 
 
 def _example_robotics():
-    left, right = st.columns([1.05, 1.35], gap="large")
-    with left:
-        st.markdown(
-            "**Robotics.** Matrix A maps a control input to an end-effector position. "
-            "The inverse recovers the input needed for a desired output. "
-            "Use the slider to deform, then undo."
-        )
-        preset = st.selectbox("Preset", list(_E1_PRESETS), key="t04e1_preset")
-        if st.session_state.get("t04e1_last") != preset:
-            w.set_matrix_state("t04e1_A", _E1_PRESETS[preset])
-            st.session_state["t04e1_last"] = preset
+    st.markdown(
+        "**Robotics.** Matrix A maps a control input to an end-effector position. "
+        "The inverse recovers the input needed for a desired output. "
+        "Use the slider to deform, then undo."
+    )
+    preset = st.selectbox("Preset", list(_E1_PRESETS), key="t04e1_preset")
+    if st.session_state.get("t04e1_last") != preset:
+        w.set_matrix_state("t04e1_A", _E1_PRESETS[preset])
+        st.session_state["t04e1_last"] = preset
 
-        A = w.matrix_editor("t04e1_A", 2, label="Arm map A (control → hand position)")
-        det = float(np.linalg.det(A))
-        invertible = abs(det) > 1e-9
+    A = w.editable_matrix("t04e1_A", 2, label="Arm map A (control → hand position)")
+    det = float(np.linalg.det(A))
+    invertible = abs(det) > 1e-9
 
-        if invertible:
-            direction = st.radio("Direction", ["Apply M", "Undo with M⁻¹"],
-                                 horizontal=True, key="t04e1_dir")
-        else:
-            st.warning("Singular pose — the arm has lost a degree of freedom. "
-                       "Undo is not available.")
-            direction = "Apply M"
+    if invertible:
+        direction = st.radio("Direction", ["Apply M", "Undo with M⁻¹"],
+                             horizontal=True, key="t04e1_dir")
+    else:
+        st.warning("Singular pose — the arm has lost a degree of freedom. "
+                   "Undo is not available.")
+        direction = "Apply M"
 
-        t = w.scalar_slider("t04e1_t", "Morph", 0.0, 1.0, 1.0, 0.01)
-        target = w.vector_editor("t04e1_target", 2, (3.0, 2.0),
-                                 label="Desired hand position")
+    t = w.scalar_slider("t04e1_t", "Morph", 0.0, 1.0, 1.0, 0.01)
+    target = w.vector_editor("t04e1_target", 2, (3.0, 2.0),
+                             label="Desired hand position")
 
     if invertible and direction == "Undo with M⁻¹":
         T = ((1 - t) * np.eye(2) + t * np.linalg.inv(A)) @ A
     else:
         T = animate.interpolate(A, t)
+
+    left, right = st.columns([0.5, 0.5], gap="large")
 
     with right:
         st.plotly_chart(plot.figure_2d(T, obj="square"), use_container_width=True)
@@ -55,6 +55,23 @@ def _example_robotics():
                 f"≈ target ({target[0]:.2f}, {target[1]:.2f})"
             )
 
+    with left:
+        st.latex(r"A = " + w.bmatrix(A) + rf"\qquad \det A = {det:.4f}")
+        if invertible:
+            Ainv = np.linalg.inv(A)
+            x_req = Ainv @ target
+            st.latex(r"{\small A^{-1} = " + w.bmatrix(Ainv)
+                     + rf"\qquad \tfrac{{1}}{{\det A}} = {1/det:.3f}" + r"}")
+            st.latex(r"{\small x = A^{-1}\,b = " + w.bmatrix(Ainv)
+                     + w.bmatrix(target.reshape(-1, 1))
+                     + " = " + w.bmatrix(x_req.reshape(-1, 1)) + r"}")
+            check = A @ x_req
+            st.latex(r"{\small A\,x = " + w.bmatrix(A)
+                     + w.bmatrix(x_req.reshape(-1, 1))
+                     + " = " + w.bmatrix(check.reshape(-1, 1)) + r"}")
+        else:
+            st.latex(r"\det A = 0 \implies \text{no inverse}")
+
     st.info(
         "Every robot arm and animated character solves an inverse problem: given where "
         "the hand should go, work backwards to the settings that put it there. When the "
@@ -62,20 +79,3 @@ def _example_robotics():
         "\"singular\" pose. (Real arms bend at angles, so this is the linear heart of the "
         "idea, not the full mechanics.)"
     )
-
-    with st.expander("Show the math"):
-        st.latex(r"A = " + w.bmatrix(A) + rf"\qquad \det A = {det:.4f}")
-        if invertible:
-            Ainv = np.linalg.inv(A)
-            x_req = Ainv @ target
-            st.latex(r"A^{-1} = " + w.bmatrix(Ainv)
-                     + rf"\qquad \tfrac{{1}}{{\det A}} = {1/det:.3f}")
-            st.latex(r"x = A^{-1}\,b = " + w.bmatrix(Ainv)
-                     + w.bmatrix(target.reshape(-1, 1))
-                     + " = " + w.bmatrix(x_req.reshape(-1, 1)))
-            check = A @ x_req
-            st.latex(r"A\,x = " + w.bmatrix(A)
-                     + w.bmatrix(x_req.reshape(-1, 1))
-                     + " = " + w.bmatrix(check.reshape(-1, 1)))
-        else:
-            st.latex(r"\det A = 0 \implies \text{no inverse}")
