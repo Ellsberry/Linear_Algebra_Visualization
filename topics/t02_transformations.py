@@ -161,7 +161,7 @@ def render():
     left, right = st.columns([0.5, 0.5], gap="large")
 
     with left:
-        A = w.matrix_editor("t02_A", dim, label="Matrix A (its columns = where the basis lands)")
+        A = w.editable_matrix("t02_A", dim, label="Matrix A (its columns = where the basis lands)")
 
         x = None
         if show_vec:
@@ -230,20 +230,20 @@ def render():
             if obj == "square":
                 for v_col in [np.array([0.0, 0.0]), np.array([1.0, 0.0]),
                                np.array([1.0, 1.0]), np.array([0.0, 1.0])]:
-                    st.latex(_corner_latex(At, v_col))
+                    st.latex(r"{\small " + _corner_latex(At, v_col) + r"}")
             else:  # rocket
                 nose = plot._ROCKET[:, 0]
                 fin_tip = plot._ROCKET[:, 3]
                 window = plot._ROCKET_WINDOW
                 for v_col, label in [(nose, "nose"), (fin_tip, "fin tip"), (window, "window")]:
                     st.markdown(f"*{label}*")
-                    st.latex(_corner_latex(At, v_col))
+                    st.latex(r"{\small " + _corner_latex(At, v_col) + r"}")
                 st.markdown("Every other vertex transforms the same way.")
         else:  # 3D
             for v_col in [np.array([1.0, 0.0, 0.0]),
                            np.array([0.0, 1.0, 0.0]),
                            np.array([0.0, 0.0, 1.0])]:
-                st.latex(_corner_latex(At, v_col))
+                st.latex(r"{\small " + _corner_latex(At, v_col) + r"}")
 
         st.markdown(
             "> Two of these corners are special. The corner **(1,0)** is the basis vector **î**,"
