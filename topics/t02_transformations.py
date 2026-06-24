@@ -126,39 +126,43 @@ def _reset():
 def render():
     st.markdown(INTRO)
 
-    left, right = st.columns([1.05, 1.35], gap="large")
-
-    with left:
+    # --- full-width control band ---
+    c = st.columns([1, 1, 1.3, 1.3, 3])
+    with c[0]:
         dim = 3 if st.radio("Space", ["2D", "3D"], horizontal=True,
                             key="t02_dim") == "3D" else 2
-
-        obj = "square"
+    obj = "square"
+    with c[1]:
         if dim == 2:
             obj = "rocket" if st.radio(
                 "Object", ["Unit square", "Rocket 🚀"], horizontal=True,
                 key="t02_obj") == "Rocket 🚀" else "square"
-
+    with c[2]:
         preset = st.selectbox("Example", PRESET_NAMES, key="t02_preset")
+    with c[3]:
+        show_vec = st.checkbox("Show a sample vector x", value=False, key="t02_showvec")
 
-        # Apply a preset only when the (preset, dim) selection changes, so manual
-        # cell edits are preserved afterwards.
-        signature = (preset, dim)
-        if st.session_state.get("t02_last") != signature:
-            A_preset = _build_preset(preset, dim)
-            if A_preset is not None:
-                w.set_matrix_state("t02_A", A_preset)
-            # The eigenvector hunt only makes sense with the sample vector shown.
-            if preset == "General warp":
-                st.session_state["t02_showvec"] = True
-            st.session_state["t02_last"] = signature
+    # Apply a preset only when the (preset, dim) selection changes, so manual
+    # cell edits are preserved afterwards.
+    signature = (preset, dim)
+    if st.session_state.get("t02_last") != signature:
+        A_preset = _build_preset(preset, dim)
+        if A_preset is not None:
+            w.set_matrix_state("t02_A", A_preset)
+        # The eigenvector hunt only makes sense with the sample vector shown.
+        if preset == "General warp":
+            st.session_state["t02_showvec"] = True
+        st.session_state["t02_last"] = signature
 
-        st.info(_NOTICE[preset], icon="💡")
+    t = w.scalar_slider("t02_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, step=0.01)
+    st.info(_NOTICE[preset], icon="💡")
 
+    # --- two-column body ---
+    left, right = st.columns([0.5, 0.5], gap="large")
+
+    with left:
         A = w.matrix_editor("t02_A", dim, label="Matrix A (its columns = where the basis lands)")
 
-        t = w.scalar_slider("t02_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, step=0.01)
-
-        show_vec = st.checkbox("Show a sample vector x", value=False, key="t02_showvec")
         x = None
         if show_vec:
             default_x = [1.0, 1.0] if dim == 2 else [1.0, 1.0, 1.0]
@@ -166,18 +170,9 @@ def render():
 
         st.button("↺ Reset to identity", on_click=_reset)
 
-    At = interpolate(A, t)
-    xt = (At @ x) if (show_vec and x is not None) else None
+        At = interpolate(A, t)
+        xt = (At @ x) if (show_vec and x is not None) else None
 
-    with right:
-        if dim == 2:
-            st.plotly_chart(plot.figure_2d(At, show_vec, x, xt, obj=obj),
-                            use_container_width=True)
-        else:
-            st.caption("Drag to rotate · scroll to zoom")
-            st.plotly_chart(plot.figure_3d(At, show_vec, x, xt), use_container_width=True)
-
-    with st.expander("Show the math"):
         det_final = float(np.linalg.det(A))
         det_live = float(np.linalg.det(At))
         dim_word = "area" if dim == 2 else "volume"
@@ -260,10 +255,18 @@ def render():
             " above are the columns of the in-between transform, not yet your final A.)*"
         )
 
-    with st.expander("Try this"):
-        st.markdown(
-            "- Make a matrix whose **determinant is negative**. What happens to the square/cube?\n"
-            "- Find a non-identity matrix that leaves the sample vector **x pointing the same way** "
-            "(only its length changes). You've just found an *eigenvector* — Topic 8.\n"
-            "- Set a column equal to another column. Why does the area collapse to zero?"
-        )
+    with right:
+        if dim == 2:
+            st.plotly_chart(plot.figure_2d(At, show_vec, x, xt, obj=obj),
+                            use_container_width=True)
+        else:
+            st.caption("Drag to rotate · scroll to zoom")
+            st.plotly_chart(plot.figure_3d(At, show_vec, x, xt), use_container_width=True)
+
+    st.markdown("**Try this**")
+    st.markdown(
+        "- Make a matrix whose **determinant is negative**. What happens to the square/cube?\n"
+        "- Find a non-identity matrix that leaves the sample vector **x pointing the same way** "
+        "(only its length changes). You've just found an *eigenvector* — Topic 8.\n"
+        "- Set a column equal to another column. Why does the area collapse to zero?"
+    )
