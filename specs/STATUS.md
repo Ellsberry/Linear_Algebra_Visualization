@@ -120,9 +120,16 @@ No spec on record (`specs/topic1_*.md` missing) — needs a retroactive spec bef
 - [x] Math: `det At` with entries substituted + sign/collapse meaning
 - [x] Math: At · (rocket vertices — nose, fin tip, window) with `{\small}` and numeric `bmatrix(At)` + "every other vertex" note
 
-## Topic 4 — Inverse Transformations (`t04_inverse.py`)
+## Topic 4 — Inverse Transformations (`topics/t04_inverse/`)
 
-- [x] Module exists and registered in `app.py`
+**File structure:** `t04_inverse` is now a per-screen package:
+- `__init__.py` — TITLE, SLUG, OVERVIEW, HOWTO, shared helpers (`_inv_meter`, `_mod_inv_matrix`), preset dicts (`_E1_PRESETS`, `_E3_PRESETS`), render() dispatcher
+- `robotics.py` — Example 1
+- `cryptography.py` — Example 2 (includes `_E2_KEYS`, `_prep_message`)
+- `medical.py` — Example 3
+- `business.py` — Example 4 (includes `_E4_PRESETS`)
+
+- [x] Module exists and registered in `app.py` (imports as `topics.t04_inverse`)
 - [x] OVERVIEW (Topic 3 cliffhanger callback)
 - [x] HOWTO in collapsed expander
 - [x] Four examples in correct order (Robotics, Cryptography, Medical, Business)
