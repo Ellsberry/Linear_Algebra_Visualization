@@ -15,9 +15,13 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] `editable_matrix` bracket widget added to `engine/widgets.py` (editable + read-only `editable=False` modes; flexbox-centered bracket glyphs)
 - [x] `engine/layout.py` added (`two_col(ratio)` helper)
 
-**NOT yet refactored:** Topics 2, 4, 5, and 5.5 still use the OLD layout (no two-column math/graph split, no `editable_matrix`, expanders still present). They are unchanged by this refactor.
+**NOT yet refactored:** Topics 1, 4, 5, and 5.5 still use the OLD layout (no two-column math/graph split, no `editable_matrix`, expanders still present). They are unchanged by this refactor.
 
 ---
+
+## Topic 1 — Vectors & Combinations (`t01_vectors.py`)
+
+No spec on record (`specs/topic1_*.md` missing) — needs a retroactive spec before refactoring.
 
 ## Topic 2 — Linear Transformations (`t02_transformations.py`)
 
@@ -35,9 +39,17 @@ Legend: [x] done · [~] partial · [ ] not started
   - [x] Rocket: nose, fin tip, window + "every other vertex" note
   - [x] 3D: three axis corners
 - [x] Columns note with "check at t = 1" caveat
-- [x] "Try this" expander
 - [x] Sample vector checkbox + vector editor (named x)
 - [x] Reset button
+
+### Layout refactor
+- [x] Controls in full-width band: left-packed toggle row (`st.columns([1,1,1.3,1.3,3])`) grouping Space/Object/Preset/sample-vector checkbox, then slider + notice full-width below
+- [x] `st.columns([0.5, 0.5])` — math left, graph right
+- [x] "Show the math" expander removed — math always visible in left column
+- [x] "Try this" expander removed — content shown as full-width block at bottom
+- [x] `editable_matrix` widget in use (editable, runs at both 2x2 and 3x3)
+- [x] Corner blocks wrapped in `{\small}`
+- [x] Single-screen topic (not split into files)
 
 ## Topic 3 — Determinant (`topics/t03_determinant/`)
 
