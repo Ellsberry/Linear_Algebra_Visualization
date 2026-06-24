@@ -16,7 +16,7 @@ def _example_biology():
     )
 
     k = w.scalar_slider(
-        "t03e3_k", "Scale factor k (how many times bigger) TEST 123", 0.5, 3.0, 1.5, 0.1
+        "t03e3_k", "Scale factor k (how many times bigger)", 0.5, 3.0, 1.5, 0.1
     )
 
     A = k * np.eye(3)
@@ -30,7 +30,7 @@ def _example_biology():
         st.markdown(
             f"This matrix **scales the whole cell uniformly by k**:"
         )
-        st.latex(r"A = " + w.bmatrix(A))
+        w.editable_matrix(None, 3, label="A", editable=False, value=A)
         st.markdown(
             "The determinant of any **triangular** matrix — including this **diagonal** "
             "one — is just the diagonal entries multiplied together. "
