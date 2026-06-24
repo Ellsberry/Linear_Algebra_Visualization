@@ -3,8 +3,8 @@ Topic 4 -- Inverse Transformations.
 
 Pattern: MULTI-EXAMPLE. A top selector chooses one of four screens.
 Two recurring devices used throughout:
-  - There-and-back: slider t in [0,1] + radio Apply M / Undo with M⁻¹.
-  - Inverse meter: shows M⁻¹ and 1/det, or warns when det = 0.
+  - There-and-back: slider t in [0,1] + radio Apply M / Undo with M-1.
+  - Inverse meter: shows M-1 and 1/det, or warns when det = 0.
 """
 import numpy as np
 import streamlit as st
@@ -60,7 +60,7 @@ _E4_PRESETS = {
 # ----------------------------------------------------------------------------
 
 def _mod_inv_matrix(M_int, mod=26):
-    """Modular inverse of a 2×2 integer matrix mod `mod`; returns None if it doesn't exist."""
+    """Modular inverse of a 2x2 integer matrix mod `mod`; returns None if it doesn't exist."""
     a, b, c, d = int(M_int[0, 0]), int(M_int[0, 1]), int(M_int[1, 0]), int(M_int[1, 1])
     det_int = a * d - b * c
     det_mod = det_int % mod
@@ -83,107 +83,9 @@ def _inv_meter(M):
         st.warning("det = 0 — no inverse. This transform can't be undone.")
 
 
-# ----------------------------------------------------------------------------
-# Top-level render
-# ----------------------------------------------------------------------------
-
-def render():
-    st.markdown(OVERVIEW)
-    with st.expander("How to use this screen"):
-        st.markdown(HOWTO)
-
-    example = st.radio(
-        "Example",
-        ["1 · Robotics", "2 · Cryptography", "3 · Medical imaging", "4 · Business"],
-        horizontal=True,
-        key="t04_example",
-    )
-    st.divider()
-
-    if example.startswith("1"):
-        _example_robotics()
-    elif example.startswith("2"):
-        _example_crypto()
-    elif example.startswith("3"):
-        _example_medical()
-    else:
-        _example_business()
-
-
-# ----------------------------------------------------------------------------
-# Example 1 -- Robotics
-# ----------------------------------------------------------------------------
-
-def _example_robotics():
-    left, right = st.columns([1.05, 1.35], gap="large")
-    with left:
-        st.markdown(
-            "**Robotics.** Matrix A maps a control input to an end-effector position. "
-            "The inverse recovers the input needed for a desired output. "
-            "Use the slider to deform, then undo."
-        )
-        preset = st.selectbox("Preset", list(_E1_PRESETS), key="t04e1_preset")
-        if st.session_state.get("t04e1_last") != preset:
-            w.set_matrix_state("t04e1_A", _E1_PRESETS[preset])
-            st.session_state["t04e1_last"] = preset
-
-        A = w.matrix_editor("t04e1_A", 2, label="Arm map A (control → hand position)")
-        det = float(np.linalg.det(A))
-        invertible = abs(det) > 1e-9
-
-        if invertible:
-            direction = st.radio("Direction", ["Apply M", "Undo with M⁻¹"],
-                                 horizontal=True, key="t04e1_dir")
-        else:
-            st.warning("Singular pose — the arm has lost a degree of freedom. "
-                       "Undo is not available.")
-            direction = "Apply M"
-
-        t = w.scalar_slider("t04e1_t", "Morph", 0.0, 1.0, 1.0, 0.01)
-        target = w.vector_editor("t04e1_target", 2, (3.0, 2.0),
-                                 label="Desired hand position")
-
-    if invertible and direction == "Undo with M⁻¹":
-        T = ((1 - t) * np.eye(2) + t * np.linalg.inv(A)) @ A
-    else:
-        T = animate.interpolate(A, t)
-
-    with right:
-        st.plotly_chart(plot.figure_2d(T, obj="square"), use_container_width=True)
-        _inv_meter(A)
-        if invertible:
-            x_req = np.linalg.inv(A) @ target
-            check = A @ x_req
-            st.markdown(
-                f"Required input: **({x_req[0]:.3f}, {x_req[1]:.3f})**  \n"
-                f"Verify A·x = ({check[0]:.3f}, {check[1]:.3f}) "
-                f"≈ target ({target[0]:.2f}, {target[1]:.2f})"
-            )
-
-    st.info(
-        "Every robot arm and animated character solves an inverse problem: given where "
-        "the hand should go, work backwards to the settings that put it there. When the "
-        "inverse doesn't exist, the arm physically can't reach that way — it's stuck in a "
-        "\"singular\" pose. (Real arms bend at angles, so this is the linear heart of the "
-        "idea, not the full mechanics.)"
-    )
-
-    with st.expander("Show the math"):
-        st.latex(r"A = " + w.bmatrix(A) + rf"\qquad \det A = {det:.4f}")
-        if invertible:
-            Ainv = np.linalg.inv(A)
-            x_req = Ainv @ target
-            st.latex(r"A^{-1} = " + w.bmatrix(Ainv)
-                     + rf"\qquad \tfrac{{1}}{{\det A}} = {1/det:.3f}")
-            st.latex(r"x = A^{-1}\,b = " + w.bmatrix(Ainv)
-                     + w.bmatrix(target.reshape(-1, 1))
-                     + " = " + w.bmatrix(x_req.reshape(-1, 1)))
-            check = A @ x_req
-            st.latex(r"A\,x = " + w.bmatrix(A)
-                     + w.bmatrix(x_req.reshape(-1, 1))
-                     + " = " + w.bmatrix(check.reshape(-1, 1)))
-        else:
-            st.latex(r"\det A = 0 \implies \text{no inverse}")
+# _inv_meter and preset dicts are defined above; submodules import them via
+# `from . import _inv_meter, _E1_PRESETS` etc.
+from .robotics import _example_robotics
 
 
 # ----------------------------------------------------------------------------
@@ -481,3 +383,30 @@ def _example_business():
         "inverse) and it tells you how much to produce to use exactly what you have. This "
         "\"solve A x = r for x\" is the exact question of the next topic — linear systems."
     )
+
+
+# ----------------------------------------------------------------------------
+# Top-level render
+# ----------------------------------------------------------------------------
+
+def render():
+    st.markdown(OVERVIEW)
+    with st.expander("How to use this screen"):
+        st.markdown(HOWTO)
+
+    example = st.radio(
+        "Example",
+        ["1 · Robotics", "2 · Cryptography", "3 · Medical imaging", "4 · Business"],
+        horizontal=True,
+        key="t04_example",
+    )
+    st.divider()
+
+    if example.startswith("1"):
+        _example_robotics()
+    elif example.startswith("2"):
+        _example_crypto()
+    elif example.startswith("3"):
+        _example_medical()
+    else:
+        _example_business()
