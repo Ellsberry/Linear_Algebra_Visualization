@@ -15,7 +15,7 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] `editable_matrix` bracket widget added to `engine/widgets.py` (editable + read-only `editable=False` modes; flexbox-centered bracket glyphs)
 - [x] `engine/layout.py` added (`two_col(ratio)` helper)
 
-**NOT yet refactored:** Topics 1, 4, 5, and 5.5 still use the OLD layout (no two-column math/graph split, no `editable_matrix`, expanders still present). They are unchanged by this refactor.
+**NOT yet refactored:** Topics 1, 5, and 5.5 still use the OLD layout (no two-column math/graph split, no `editable_matrix`, expanders still present). They are unchanged by this refactor.
 
 ---
 
@@ -135,14 +135,26 @@ No spec on record (`specs/topic1_*.md` missing) — needs a retroactive spec bef
 - [x] Four examples in correct order (Robotics, Cryptography, Medical, Business)
 - [x] `_inv_meter` shared helper on every screen
 
+### Layout refactor (all four screens)
+- [x] Per-screen package split complete (robotics.py, cryptography.py, medical.py, business.py)
+- [x] Controls in full-width band above the two columns
+- [x] `editable_matrix` widget in use on Robotics, Medical, Business
+- [x] "Show the math" expanders removed — math always visible in left column
+- [x] `_inv_meter` placed under the graph in right column (Robotics, Medical, Business)
+- [x] Notice/closing line full-width at bottom
+- [x] Robotics: standard 0.5/0.5 layout, math left (with `{\small}`), figure + meter right
+- [x] Medical: standard 0.5/0.5 layout, math left (with `{\small}`), figure + meter right
+- [x] Cryptography: custom math-left / table-right layout (no graph; table + inverse meter in right column)
+- [x] Business: custom 0.6/0.4 layout (5-step algebra in wide left column with `{\small}`, skinny graph + meter right); target solver stays as expander
+
 ### Example 1 — Robotics
-- [x] Matrix editor + presets (Reachable / Singular)
+- [x] Editable matrix + presets (Reachable / Singular)
 - [x] There-and-back: Apply M / Undo with M⁻¹ radio + morph slider
 - [x] Singular pose disables undo + warning
 - [x] Desired hand target vector editor
 - [x] Required input x = A⁻¹ · target + verify A·x = target
 - [x] Notice
-- [x] Show the math: A, A⁻¹, det, 1/det, recovered x, check
+- [x] Math: A, A⁻¹, det, 1/det, recovered x, check (always shown, `{\small}`)
 
 ### Example 2 — Cryptography
 - [x] Text input for message + cipher key selectbox (Key 1, Key 2, Broken)
@@ -150,28 +162,28 @@ No spec on record (`specs/topic1_*.md` missing) — needs a retroactive spec bef
 - [x] Table: plaintext / # / cipher # / ciphertext / decoded
 - [x] Inverse meter (crypto variant): det, M⁻¹ mod 26, or "can't be undone" warning
 - [x] Notice
-- [x] Show the math: block encoding/decoding with mod 26
+- [x] Math: M, c = Mp, M⁻¹, p = M⁻¹c (always shown, `{\small}`)
 
 ### Example 3 — Medical imaging
-- [x] Matrix editor + presets (Full data / Unstable / Singular)
+- [x] Editable matrix + presets (Full data / Unstable / Singular)
 - [x] There-and-back on rocket
 - [x] Singular disables undo
 - [x] Inverse meter (large 1/det visible for unstable preset)
 - [x] Notice (Topic 10 forward-link)
-- [x] Show the math: M, M⁻¹, det, instability note
+- [x] Math: M, M⁻¹, det, instability note (always shown, `{\small}`)
 
 ### Example 4 — Business
-- [x] Matrix editor + production vector editor + presets (Distinct / Proportional)
+- [x] Editable matrix + production vector editor + presets (Distinct / Proportional)
 - [x] Resource point plotted on figure
-- [x] 5-step algebra shown openly (not in expander)
+- [x] 5-step algebra in left column (with `{\small}`)
   - [x] Step 1: forward general
   - [x] Step 2: forward with live numbers
   - [x] Step 3: inverse formula with det in denominator
   - [x] Step 4: inverse with live numbers
   - [x] Step 5: recover and verify round trip
 - [x] Singular: 1/det = 1/0 undefined + caption
-- [x] Optional target solver with negative-production note
-- [x] Inverse meter
+- [x] Optional target solver with negative-production note (in expander)
+- [x] Inverse meter (under graph)
 - [x] Notice (bridges to Topic 5)
 
 ## Topic 5 — Linear Systems (`t05_systems.py`)
