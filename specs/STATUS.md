@@ -6,6 +6,19 @@ Legend: [x] done · [~] partial · [ ] not started
 
 ---
 
+## Layout refactor + dark mode (app-wide)
+
+- [x] Dark theme applied (`.streamlit/config.toml`: dark base, `#4dabf7` primary, `#0e1117` bg)
+- [x] Topic selector moved to top-of-page selectbox (sidebar topic nav removed)
+- [x] Plotting palette re-tuned for dark backgrounds (transparent bg, light font/axes, brighter data colors)
+- [x] Graph heights reduced (2D ~420, 3D ~420) and Plotly margins tightened (`l=10,r=10,t=10,b=10`)
+- [x] `editable_matrix` bracket widget added to `engine/widgets.py` (editable + read-only `editable=False` modes; flexbox-centered bracket glyphs)
+- [x] `engine/layout.py` added (`two_col(ratio)` helper)
+
+**NOT yet refactored:** Topics 2, 4, 5, and 5.5 still use the OLD layout (no two-column math/graph split, no `editable_matrix`, expanders still present). They are unchanged by this refactor.
+
+---
+
 ## Topic 2 — Linear Transformations (`t02_transformations.py`)
 
 - [x] Module exists and registered in `app.py`
@@ -26,13 +39,28 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] Sample vector checkbox + vector editor (named x)
 - [x] Reset button
 
-## Topic 3 — Determinant (`t03_determinant.py`)
+## Topic 3 — Determinant (`topics/t03_determinant/`)
 
-- [x] Module exists and registered in `app.py`
+**File structure:** `t03_determinant` is now a per-screen package:
+- `__init__.py` — TOPIC registry, OVERVIEW, example selector, dispatch, `_det_meter` helper
+- `surveying.py` — Example 1
+- `medical.py` — Example 2
+- `biology.py` — Example 3
+- `graphics.py` — Example 4
+
+- [x] Module exists and registered in `app.py` (imports as `topics.t03_determinant`)
 - [x] OVERVIEW with 2D and 3D formulas in LaTeX + "each 3D term is the 2D formula" framing
-- [x] HOWTO in collapsed expander
+- [x] HOWTO folded into a caption under the overview (no separate expander)
 - [x] Four examples in correct order (Surveying, Medical, Biology, Graphics)
 - [x] `_det_meter` shared helper on every screen
+
+### Layout refactor (all four screens)
+- [x] Controls in full-width band above the two columns
+- [x] `st.columns([0.5, 0.5])` — math left, graph + det meter right
+- [x] "Show the math" expander removed — math always visible in left column
+- [x] Matrix shown via `editable_matrix` (editable for Medical/Graphics; read-only for Biology/Surveying)
+- [x] `_det_meter` placed under the graph in the right column
+- [x] Notice/closing line full-width at bottom
 
 ### Example 1 — Surveying
 - [x] Editable P, Q, R corners (A reserved for matrix)
@@ -40,45 +68,45 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] Determinant meter (area_tri)
 - [x] Orientation note when det < 0 (clockwise corners)
 - [x] Notice (shoelace / GIS)
-- [x] Show the math: full live chain (points → edges → columns → det → area)
+- [x] Math: full live chain (points → edges → columns → det → area)
 - [x] Shoelace expansion line
-- [x] "The ½ is because…" explanation
+- [x] "The ½ is because..." explanation
+- [x] A shown as read-only `editable_matrix` (derived from P, Q, R)
 
 ### Example 2 — Medical imaging
 - [x] Preset selectbox (Calibration / Tilt correction) with `set_matrix_state`
-- [x] Matrix editor + morph slider
+- [x] Editable A via `editable_matrix` widget + morph slider
 - [x] Morph animates (figure uses `At = interpolate(A, t)`)
 - [x] Notice: what the matrix does + what to look for
 - [x] Determinant meter uses live `det(At)`
-- [x] Show the math: now-vs-destination labeling (At vs A)
-- [x] Show the math: `det At` with entries substituted
-- [x] Show the math: area before → after
-- [x] Show the math: At · (4 square corners)
-- [x] Show the math: "det = 1 means area preserved" sentence
+- [x] Math: now-vs-destination labeling (At as read-only `editable_matrix`, A as read-only)
+- [x] Math: `det At` with entries substituted
+- [x] Math: area before → after
+- [x] Math: At · (4 square corners) with `{\small}` and numeric `bmatrix(At)`
+- [x] Math: "det = 1 means area preserved" sentence
 - [x] Topic 4 pointer ("inverse" forward-link)
 
 ### Example 3 — Biology
-- [x] Scale factor k slider
-- [x] Diagonal matrix A = kI built visibly
+- [x] Scale factor k slider (full-width above columns)
+- [x] Diagonal matrix A = kI shown as read-only `editable_matrix` (3×3)
 - [x] 3D figure (unit cube scaled by k)
-- [x] Determinant meter (volume + surface + ratio)
-- [x] Notice: k intro + surface-vs-volume + cells + elephant ears
+- [x] Determinant meter (volume + surface + ratio) — under the graph
+- [x] Notice: k intro + surface-vs-volume + cells + elephant ears (full-width at bottom)
 - [x] Ratio wording: "For every 1 unit of volume there are 6/k units of surface"
-- [x] Show the math: det = k × k × k with current k substituted
-- [x] Show the math: surface area = 6k²
-- [x] Show the math: A · (3 cube corners) with current k
-- [x] Triangular-matrix bridge sentence
-- [~] Bridge references "Topic 5" — spec says "Topic 5.5" (minor text fix needed)
+- [x] Math: det = k × k × k with current k substituted
+- [x] Math: surface area = 6k²
+- [x] Math: A · (3 cube corners) with `\small` and numeric `bmatrix(A)`
+- [x] Triangular-matrix bridge sentence — references "Topic 5.5" (text fix applied)
 
 ### Example 4 — Graphics
 - [x] Preset selectbox (Mirror / Shadow) with `set_matrix_state`
-- [x] Matrix editor + morph slider
+- [x] Editable A via `editable_matrix` widget + morph slider
 - [x] Morph animates (rocket morphs via `At = interpolate(A, t)`)
-- [x] Determinant meter uses live `det(At)` (mirror: 1→0→−1; shadow: 1→0)
-- [x] Closing line: "det = 0 means no inverse… Topic 4"
-- [x] Show the math: both matrices labeled (current At + destination A)
-- [x] Show the math: `det At` with entries substituted + sign/collapse meaning
-- [x] Show the math: At · (rocket vertices — nose, fin tip, window) + "every other vertex" note
+- [x] Determinant meter uses live `det(At)` — under the graph
+- [x] Closing line: "det = 0 means no inverse... Topic 4"
+- [x] Math: both matrices shown as read-only `editable_matrix` (current At + destination A)
+- [x] Math: `det At` with entries substituted + sign/collapse meaning
+- [x] Math: At · (rocket vertices — nose, fin tip, window) with `{\small}` and numeric `bmatrix(At)` + "every other vertex" note
 
 ## Topic 4 — Inverse Transformations (`t04_inverse.py`)
 
@@ -153,7 +181,7 @@ Legend: [x] done · [~] partial · [ ] not started
 ### Example 3 — Engineering (metal mixing)
 - [x] Matrix editor + target vector + 3 presets (Reachable / Unreachable / Redundant)
 - [x] Column picture with alloy vectors + target + tip-to-tail path
-- [x] Outcome readout in words ("Blend: … units")
+- [x] Outcome readout in words ("Blend: ... units")
 - [x] Notice
 - [x] Show the math
 
@@ -211,16 +239,16 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] Workbench renders after correct/filled matrix
 - [x] Solution labeled by route name (F→W1, etc.)
 - [x] Notice
-- [~] **Row order is inverted** — warehouses first (rows 1–2), stores last (rows 3–6). Spec requires stores first (rows 1–4), warehouses last (rows 5–6), so the first two diagonal positions are zero and elimination *requires row swaps*. Current order has nonzero diagonal from the start, defeating the pedagogical point.
+- [~] **Row order is inverted** — warehouses first (rows 1-2), stores last (rows 3-6). Spec requires stores first (rows 1-4), warehouses last (rows 5-6), so the first two diagonal positions are zero and elimination *requires row swaps*. Current order has nonzero diagonal from the start, defeating the pedagogical point.
 
 ### Screen 3 — Circuit (3 currents)
-- [x] Circuit diagram (plotly schematic with V, R1/R2/R3, I₁/I₂/I₃ labeled)
+- [x] Circuit diagram (plotly schematic with V, R1/R2/R3, I1/I2/I3 labeled)
 - [x] Value fill-in (R1, R2, R3, V) with Check / "Fill it in for me"
 - [x] Workbench renders after correct/filled values
-- [x] Solution labeled as currents (I₁, I₂, I₃ in amps)
+- [x] Solution labeled as currents (I1, I2, I3 in amps)
 - [x] Looking-ahead note (Topic 9 / AC / complex numbers)
 - [x] Notice
-- [~] **Equation-development step missing** — spec requires a 3-step guided process: (1) student enters coefficients for each of 3 laws (KCL node, KVL left loop, KVL right loop) with per-equation Check / Hint / "Show this equation"; (2) student assembles the 3×4 augmented matrix; (3) reduce. Code only asks for R/V values with a pre-structured matrix, skipping the equation-building pedagogy.
+- [~] **Equation-development step missing** — spec requires a 3-step guided process: (1) student enters coefficients for each of 3 laws (KCL node, KVL left loop, KVL right loop) with per-equation Check / Hint / "Show this equation"; (2) student assembles the 3x4 augmented matrix; (3) reduce. Code only asks for R/V values with a pre-structured matrix, skipping the equation-building pedagogy.
 
 ---
 
