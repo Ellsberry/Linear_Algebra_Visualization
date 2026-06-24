@@ -28,36 +28,27 @@ _E4_PRESETS = {
 def _example_graphics():
     from . import _det_meter
 
-    left, right = st.columns([1.05, 1.35], gap="large")
-    with left:
-        st.markdown(
-            "**Graphics.** The sign of the determinant tells you if orientation flipped; "
-            "zero means the object has been collapsed to a lower dimension."
-        )
-        preset = st.selectbox("Preset", list(_E4_PRESETS), key="t03e4_preset")
-        info = _E4_PRESETS[preset]
+    st.markdown(
+        "**Graphics.** The sign of the determinant tells you if orientation flipped; "
+        "zero means the object has been collapsed to a lower dimension."
+    )
+    preset = st.selectbox("Preset", list(_E4_PRESETS), key="t03e4_preset")
+    info = _E4_PRESETS[preset]
 
-        if st.session_state.get("t03e4_last") != preset:
-            w.set_matrix_state("t03e4_A", info["A"])
-            st.session_state["t03e4_last"] = preset
+    if st.session_state.get("t03e4_last") != preset:
+        w.set_matrix_state("t03e4_A", info["A"])
+        st.session_state["t03e4_last"] = preset
 
-        st.info(info["notice"])
-        A = w.matrix_editor("t03e4_A", 2, label="Matrix A")
-        t = w.scalar_slider("t03e4_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, 0.01)
+    st.info(info["notice"])
+    A = w.matrix_editor("t03e4_A", 2, label="Matrix A")
+    t = w.scalar_slider("t03e4_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, 0.01)
 
     At = animate.interpolate(A, t)
     det = float(np.linalg.det(At))
 
-    with right:
-        st.plotly_chart(plot.figure_2d(At, obj="rocket"), use_container_width=True)
-        _det_meter(det, kind="area_sq")
-        st.info(
-            "det = 0 means this transform has no inverse — the flattened rocket can't "
-            "be turned back. Topic 4 is about exactly which transformations can be "
-            "undone, and how."
-        )
+    left, right = st.columns([0.5, 0.5], gap="large")
 
-    with st.expander("Show the math"):
+    with left:
         at00, at01 = float(At[0, 0]), float(At[0, 1])
         at10, at11 = float(At[1, 0]), float(At[1, 1])
 
@@ -81,15 +72,27 @@ def _example_graphics():
         fin_tip = plot._ROCKET[:, 3]
         window = plot._ROCKET_WINDOW
 
-        st.markdown("**A · (rocket vertices):**")
+        st.markdown("**At · (rocket vertices):**")
         for label, x in [("nose", nose), ("right fin tip", fin_tip), ("window", window)]:
             xp = At @ x
             st.latex(
-                r"A_t \cdot \begin{pmatrix}"
+                r"{\small "
+                + w.bmatrix(At)
+                + r" \cdot \begin{pmatrix}"
                 + f"{x[0]:.2f}" + r" \\ " + f"{x[1]:.2f}"
                 + r"\end{pmatrix} = \begin{pmatrix}"
                 + f"{xp[0]:.2f}" + r" \\ " + f"{xp[1]:.2f}"
-                + r"\end{pmatrix}"
+                + r"\end{pmatrix}}"
                 + r"\quad \text{(" + label + r")}"
             )
         st.markdown("Every other vertex transforms the same way.")
+
+    with right:
+        st.plotly_chart(plot.figure_2d(At, obj="rocket"), use_container_width=True)
+        _det_meter(det, kind="area_sq")
+
+    st.info(
+        "det = 0 means this transform has no inverse — the flattened rocket can't "
+        "be turned back. Topic 4 is about exactly which transformations can be "
+        "undone, and how."
+    )
