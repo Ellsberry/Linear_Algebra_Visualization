@@ -9,6 +9,60 @@ import numpy as np
 import streamlit as st
 
 
+def editable_matrix(state_key: str, dim: int, label: str = "A",
+                    editable: bool = True, value=None) -> np.ndarray:
+    """Render a matrix in bracket form with editable or read-only cells.
+
+    editable=True  → number_input cells using session_state keys {state_key}__i__j
+                     (same keys as matrix_editor, so presets/Reset keep working).
+    editable=False → static text displaying the provided `value` array.
+    Returns the matrix as a numpy array.
+    """
+    st.markdown(f"**{label} =**")
+
+    if dim == 1:
+        lb, rb = ["["], ["]"]
+    else:
+        lb = ["⎡"] + ["⎢"] * (dim - 2) + ["⎣"]
+        rb = ["⎤"] + ["⎥"] * (dim - 2) + ["⎦"]
+
+    bstyle = (
+        "font-size:1.8em;line-height:2.1;text-align:center;color:#e6e6e6;"
+        "padding-top:6px"
+    )
+    vstyle = (
+        "text-align:center;padding:10px 2px;font-size:1.05em;"
+        "font-weight:500;color:#e6e6e6"
+    )
+
+    M = np.zeros((dim, dim))
+    for i in range(dim):
+        cols = st.columns([0.07] + [1] * dim + [0.07])
+        cols[0].markdown(
+            f'<div style="{bstyle}">{lb[i]}</div>', unsafe_allow_html=True,
+        )
+        for j in range(dim):
+            if editable:
+                wkey = f"{state_key}__{i}__{j}"
+                if wkey not in st.session_state:
+                    st.session_state[wkey] = 1.0 if i == j else 0.0
+                M[i, j] = cols[j + 1].number_input(
+                    label=wkey, key=wkey, step=0.1, format="%.2f",
+                    label_visibility="collapsed",
+                )
+            else:
+                v = float(value[i, j]) if value is not None else 0.0
+                M[i, j] = v
+                cols[j + 1].markdown(
+                    f'<div style="{vstyle}">{v:.2f}</div>',
+                    unsafe_allow_html=True,
+                )
+        cols[dim + 1].markdown(
+            f'<div style="{bstyle}">{rb[i]}</div>', unsafe_allow_html=True,
+        )
+    return M
+
+
 def matrix_editor(state_key: str, dim: int, label: str = "Matrix M") -> np.ndarray:
     """Render a dim x dim grid of number inputs and return the matrix.
 

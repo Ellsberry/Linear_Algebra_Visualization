@@ -13,13 +13,29 @@ import plotly.graph_objects as go
 
 GRID = 6          # grid lines run from -GRID..GRID
 VIEW = 6          # axis range shown
-_E1 = "crimson"
-_E2 = "royalblue"
-_E3 = "seagreen"
-_SQUARE = "rgba(0,150,136,0.9)"
-_SQUARE_FILL = "rgba(0,150,136,0.22)"
-_GRIDLINE = "rgba(120,120,200,0.35)"
-_VEC = "darkorange"
+_E1 = "#ff6b6b"
+_E2 = "#4dabf7"
+_E3 = "#51cf66"
+_SQUARE = "#20c997"
+_SQUARE_FILL = "rgba(32,201,151,0.22)"
+_GRIDLINE = "rgba(160,160,220,0.35)"
+_VEC = "#ffa94d"
+
+_DARK_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(color="#e6e6e6"),
+)
+_DARK_XAXIS = dict(zeroline=True, zerolinecolor="#aaa",
+                    gridcolor="rgba(200,200,220,0.12)")
+_DARK_YAXIS = dict(zeroline=True, zerolinecolor="#aaa",
+                    gridcolor="rgba(200,200,220,0.12)")
+_DARK_3D_AXIS = dict(
+    backgroundcolor="rgba(0,0,0,0)",
+    gridcolor="rgba(200,200,220,0.15)",
+    zerolinecolor="#aaa",
+    color="#e6e6e6",
+)
 
 # An asymmetric "rocket" outline (2xN points) used as an alternative object to
 # the unit square. Asymmetric on purpose: a reflection makes a backwards rocket,
@@ -79,7 +95,7 @@ def figure_2d(M, show_vector=False, v=None, vt=None, obj="square"):
         win = M @ _ROCKET_WINDOW
         fig.add_trace(go.Scatter(
             x=[win[0]], y=[win[1]], mode="markers",
-            marker=dict(color="white", size=9, line=dict(color=_SQUARE, width=2)),
+            marker=dict(color="#e6e6e6", size=9, line=dict(color=_SQUARE, width=2)),
             showlegend=False, hoverinfo="skip",
         ))
     else:
@@ -103,13 +119,13 @@ def figure_2d(M, show_vector=False, v=None, vt=None, obj="square"):
         ))
         _arrow2d(fig, vt, _VEC, "M·v")
 
-    fig.update_xaxes(range=[-VIEW, VIEW], zeroline=True, zerolinecolor="#888",
-                     gridcolor="rgba(0,0,0,0)")
-    fig.update_yaxes(range=[-VIEW, VIEW], zeroline=True, zerolinecolor="#888",
-                     gridcolor="rgba(0,0,0,0)", scaleanchor="x", scaleratio=1)
+    fig.update_xaxes(range=[-VIEW, VIEW], **_DARK_XAXIS)
+    fig.update_yaxes(range=[-VIEW, VIEW], **_DARK_YAXIS,
+                     scaleanchor="x", scaleratio=1)
     fig.update_layout(
-        height=560, margin=dict(l=10, r=10, t=10, b=10),
+        height=420, margin=dict(l=10, r=10, t=10, b=10),
         legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0),
+        **_DARK_LAYOUT,
     )
     return fig
 
@@ -164,32 +180,33 @@ def figure_3d(M, show_vector=False, v=None, vt=None):
 
     rng = [-VIEW, VIEW]
     fig.update_layout(
-        height=560, margin=dict(l=0, r=0, t=10, b=0),
+        height=480, margin=dict(l=0, r=0, t=10, b=0),
         legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0),
         scene=dict(
-            xaxis=dict(range=rng, title="x"),
-            yaxis=dict(range=rng, title="y"),
-            zaxis=dict(range=rng, title="z"),
+            xaxis=dict(range=rng, title="x", **_DARK_3D_AXIS),
+            yaxis=dict(range=rng, title="y", **_DARK_3D_AXIS),
+            zaxis=dict(range=rng, title="z", **_DARK_3D_AXIS),
             aspectmode="cube",
+            bgcolor="rgba(0,0,0,0)",
         ),
+        **_DARK_LAYOUT,
     )
     return fig
 
 
 # ---------- generic 2D primitives (for multi-vector topics: combinations, subspaces) ----------
 
-def new_figure_2d(rng=8, x_title="x", y_title="y", height=560, equal=True):
+def new_figure_2d(rng=8, x_title="x", y_title="y", height=420, equal=True):
     """A blank 2D canvas with origin axes, fixed range, and equal aspect."""
     fig = go.Figure()
-    fig.update_xaxes(range=[-rng, rng], zeroline=True, zerolinecolor="#888",
-                     gridcolor="rgba(0,0,0,0.06)", title=x_title)
-    yaxis = dict(range=[-rng, rng], zeroline=True, zerolinecolor="#888",
-                 gridcolor="rgba(0,0,0,0.06)", title=y_title)
+    fig.update_xaxes(range=[-rng, rng], **_DARK_XAXIS, title=x_title)
+    yaxis = dict(range=[-rng, rng], **_DARK_YAXIS, title=y_title)
     if equal:
         yaxis.update(scaleanchor="x", scaleratio=1)
     fig.update_yaxes(**yaxis)
     fig.update_layout(height=height, margin=dict(l=10, r=10, t=10, b=10),
-                      legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0))
+                      legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0),
+                      **_DARK_LAYOUT)
     return fig
 
 
@@ -210,7 +227,7 @@ def add_vector_2d(fig, start, end, color, name, width=4, dash=None,
 def add_point_2d(fig, p, color, name, size=13, symbol="circle"):
     fig.add_trace(go.Scatter(x=[p[0]], y=[p[1]], mode="markers",
                              marker=dict(color=color, size=size, symbol=symbol,
-                                         line=dict(color="white", width=1)),
+                                         line=dict(color="#e6e6e6", width=1)),
                              name=name))
 
 
@@ -240,7 +257,7 @@ def add_line_2d(fig, a, b, c, color, name, rng=VIEW):
                                  line=dict(color=color, width=2), name=name))
 
 
-def new_figure_3d(rng=6, titles=("x", "y", "z"), height=560):
+def new_figure_3d(rng=6, titles=("x", "y", "z"), height=480):
     """Blank 3D scene with cube aspect ratio and fixed ranges."""
     fig = go.Figure()
     r = [-rng, rng]
@@ -248,11 +265,13 @@ def new_figure_3d(rng=6, titles=("x", "y", "z"), height=560):
         height=height, margin=dict(l=0, r=0, t=10, b=0),
         legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0),
         scene=dict(
-            xaxis=dict(range=r, title=titles[0]),
-            yaxis=dict(range=r, title=titles[1]),
-            zaxis=dict(range=r, title=titles[2]),
+            xaxis=dict(range=r, title=titles[0], **_DARK_3D_AXIS),
+            yaxis=dict(range=r, title=titles[1], **_DARK_3D_AXIS),
+            zaxis=dict(range=r, title=titles[2], **_DARK_3D_AXIS),
             aspectmode="cube",
+            bgcolor="rgba(0,0,0,0)",
         ),
+        **_DARK_LAYOUT,
     )
     return fig
 

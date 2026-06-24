@@ -22,24 +22,10 @@ TOPICS = [
     (t04_inverse.TITLE, t04_inverse),
     (t05_systems.TITLE, t05_systems),
     (t05b_elimination.TITLE, t05b_elimination),
-    # ("6 · Subspaces, Basis, Dimension", t06_subspaces),
-    # ("7 · Projection & Least Squares", t07_least_squares),
-    # ("8 · Eigenvalues & Eigenvectors", t08_eigen),
-    # ("9 · Complex Numbers in LA", t09_complex),
-    # ("10 · Fourier Matrices (DFT)", t10_fourier),
-    # ("11 · Linear Algebra in AI/ML", t11_ml),
 ]
 
-st.sidebar.title("Linear Algebra")
 labels = [label for label, _ in TOPICS]
-choice = st.sidebar.radio("Topic", labels, index=0)
-
-st.sidebar.divider()
-st.sidebar.markdown(
-    "**How to use**\n\n"
-    "Pick an *Example* or edit the cells. Slide *Morph* to animate. "
-    "Open *Show the math* to see the numbers behind the picture."
-)
+choice = st.selectbox("Topic", labels, key="topic_selector")
 
 module = dict(TOPICS)[choice]
 st.header(module.TITLE)

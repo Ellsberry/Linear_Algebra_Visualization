@@ -527,7 +527,9 @@ def _logistics_diagram():
     fig = go.Figure()
     fig.update_layout(
         height=340, margin=dict(l=10, r=10, t=10, b=10),
-        showlegend=False, plot_bgcolor="white",
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#e6e6e6"),
         xaxis=dict(range=[-0.5, 10.5], visible=False),
         yaxis=dict(range=[0.8, 10.5], visible=False),
     )
@@ -549,25 +551,25 @@ def _logistics_diagram():
         my = (src[1] + dst[1]) / 2 + oy
         fig.add_annotation(x=mx, y=my, text=f"<b>{label}</b>", showarrow=False,
                            font=dict(size=13, color=color),
-                           bgcolor="rgba(255,255,255,0.9)", borderpad=2)
+                           bgcolor="rgba(30,33,41,0.85)", borderpad=2)
 
     plot.add_point_2d(fig, F, "#E65C00", "F", size=24)
     fig.add_annotation(x=F[0], y=F[1] + 0.5, text="<b>F</b>  (supply 100)",
                        showarrow=False, font=dict(size=12),
-                       bgcolor="rgba(255,255,255,0.9)", borderpad=3)
+                       bgcolor="rgba(30,33,41,0.85)", borderpad=3)
 
     for name, pos in [("W1", W1), ("W2", W2)]:
         plot.add_point_2d(fig, pos, "#1565C0", name, size=22)
         fig.add_annotation(x=pos[0], y=pos[1] + 0.45, text=f"<b>{name}</b>",
                            showarrow=False, font=dict(size=12),
-                           bgcolor="rgba(255,255,255,0.9)", borderpad=3)
+                           bgcolor="rgba(30,33,41,0.85)", borderpad=3)
 
     for name, pos, demand in [("A", A, 30), ("B", B, 20), ("C", C, 25), ("D", D, 25)]:
         plot.add_point_2d(fig, pos, "#2E7D32", name, size=20)
         fig.add_annotation(x=pos[0], y=pos[1] - 0.45, showarrow=False,
                            text=f"<b>{name}</b>  demand {demand}",
                            font=dict(size=11), yanchor="top",
-                           bgcolor="rgba(255,255,255,0.9)", borderpad=3)
+                           bgcolor="rgba(30,33,41,0.85)", borderpad=3)
     return fig
 
 
@@ -660,7 +662,9 @@ def _circuit_diagram():
     fig = go.Figure()
     fig.update_layout(
         height=280, margin=dict(l=10, r=10, t=10, b=10),
-        showlegend=False, plot_bgcolor="white",
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#e6e6e6"),
         xaxis=dict(range=[-0.5, 11.5], visible=False),
         yaxis=dict(range=[0.0, 7.2], visible=False),
     )
@@ -672,7 +676,7 @@ def _circuit_diagram():
 
     def _line(x0, y0, x1, y1):
         fig.add_shape(type="line", x0=x0, y0=y0, x1=x1, y1=y1,
-                      line=dict(color="black", width=2))
+                      line=dict(color="#aaa", width=2))
 
     # Wires
     _line(*TL, *TR2)           # top rail
@@ -696,7 +700,7 @@ def _circuit_diagram():
     r1x = (TL[0] + A[0]) / 2   # 2.75
     fig.add_shape(type="rect", x0=r1x - 0.75, y0=TL[1] - 0.35,
                   x1=r1x + 0.75, y1=TL[1] + 0.35,
-                  line=dict(color="black", width=2), fillcolor="white")
+                  line=dict(color="black", width=2), fillcolor="rgba(30,33,41,0.9)")
     fig.add_annotation(x=r1x, y=TL[1] + 0.75, text="<b>R1=2 Ω</b>",
                        showarrow=False, font=dict(size=11))
 
@@ -704,13 +708,13 @@ def _circuit_diagram():
     fig.add_annotation(x=1.5, y=TL[1], ax=0.9, ay=TL[1],
                        xref="x", yref="y", axref="x", ayref="y",
                        showarrow=True, arrowhead=2, arrowsize=1.2,
-                       arrowwidth=2, arrowcolor="black")
+                       arrowwidth=2, arrowcolor="#e6e6e6")
     fig.add_annotation(x=1.2, y=TL[1] - 0.55, text="<b>I₁→</b>",
                        showarrow=False, font=dict(size=12))
 
     # Node A dot and label
     fig.add_trace(go.Scatter(x=[A[0]], y=[A[1]], mode="markers",
-                             marker=dict(color="black", size=9),
+                             marker=dict(color="#e6e6e6", size=9),
                              showlegend=False, hoverinfo="skip"))
     fig.add_annotation(x=A[0], y=A[1] + 0.55, text="<b>Node A</b>",
                        showarrow=False, font=dict(size=11))
@@ -719,7 +723,7 @@ def _circuit_diagram():
     r2y = (A[1] + AB[1]) / 2   # 3.25
     fig.add_shape(type="rect", x0=A[0] - 0.35, y0=r2y - 0.75,
                   x1=A[0] + 0.35, y1=r2y + 0.75,
-                  line=dict(color="black", width=2), fillcolor="white")
+                  line=dict(color="black", width=2), fillcolor="rgba(30,33,41,0.9)")
     fig.add_annotation(x=A[0] + 0.85, y=r2y, text="<b>R2=4 Ω</b>",
                        showarrow=False, font=dict(size=11), xanchor="left")
     # I₂ arrow
@@ -734,7 +738,7 @@ def _circuit_diagram():
     r3y = (TR2[1] + BR[1]) / 2   # 3.25
     fig.add_shape(type="rect", x0=TR2[0] - 0.35, y0=r3y - 0.75,
                   x1=TR2[0] + 0.35, y1=r3y + 0.75,
-                  line=dict(color="black", width=2), fillcolor="white")
+                  line=dict(color="black", width=2), fillcolor="rgba(30,33,41,0.9)")
     fig.add_annotation(x=TR2[0] + 0.85, y=r3y, text="<b>R3=4 Ω</b>",
                        showarrow=False, font=dict(size=11), xanchor="left")
     # I₃ arrow

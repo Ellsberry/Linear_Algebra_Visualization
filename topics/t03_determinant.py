@@ -11,6 +11,7 @@ import streamlit as st
 from engine import animate
 from engine import plotting as plot
 from engine import widgets as w
+from engine.layout import two_col
 
 TITLE = "3 · Determinant"
 SLUG = "determinant"
@@ -121,8 +122,11 @@ def render():
         "everything is zero and it collapses to just the diagonal multiplied together."
     )
 
-    with st.expander("How to use this screen"):
-        st.markdown(HOWTO)
+    st.caption(
+        "The left panel sets the numbers and shows the math; the right panel "
+        "shows the shape. The determinant meter shows the determinant and the "
+        "area or volume it equals — watch them change together."
+    )
 
     example = st.radio(
         "Example",
@@ -233,30 +237,11 @@ def _example_surveying():
 # ----------------------------------------------------------------------------
 
 def _example_medical():
-    left, right = st.columns([1.05, 1.35], gap="large")
-    with left:
-        st.markdown(
-            "**Medical imaging.** A scan alignment matrix rescales or shears the image. "
-            "The determinant tells you how every measured area inside the scan changes."
-        )
-        preset = st.selectbox("Preset", list(_E2_PRESETS), key="t03e2_preset")
-        info = _E2_PRESETS[preset]
-
-        if st.session_state.get("t03e2_last") != preset:
-            w.set_matrix_state("t03e2_A", info["A"])
-            st.session_state["t03e2_last"] = preset
-
-        st.info(info["notice"])
-        A = w.matrix_editor("t03e2_A", 2, label="Alignment matrix A")
-        t = w.scalar_slider("t03e2_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, 0.01)
-
-    At = animate.interpolate(A, t)
-    det = float(np.linalg.det(At))
-
-    with right:
-        st.plotly_chart(plot.figure_2d(At, obj="square"), use_container_width=True)
-        _det_meter(det, kind="area_sq")
-
+    # --- full-width description + context notice ---
+    st.markdown(
+        "**Medical imaging.** A scan alignment matrix rescales or shears the image. "
+        "The determinant tells you how every measured area inside the scan changes."
+    )
     st.info(
         "This matrix is how the scanner's image is being **stretched or skewed**. "
         "Change its entries (or pick a preset) and watch the scan region deform; the "
@@ -268,25 +253,48 @@ def _example_medical():
         "measurement taken after it is still trustworthy."
     )
 
-    with st.expander("Show the math"):
-        at00, at01 = float(At[0, 0]), float(At[0, 1])
-        at10, at11 = float(At[1, 0]), float(At[1, 1])
+    # --- two-column body ---
+    left, right = two_col()
 
+    with left:
+        preset = st.selectbox("Preset", list(_E2_PRESETS), key="t03e2_preset")
+        info = _E2_PRESETS[preset]
+
+        if st.session_state.get("t03e2_last") != preset:
+            w.set_matrix_state("t03e2_A", info["A"])
+            st.session_state["t03e2_last"] = preset
+
+        st.caption(info["notice"])
+        A = w.editable_matrix("t03e2_A", 2, label="Alignment matrix A")
+        t = w.scalar_slider("t03e2_t", "Morph t: identity → matrix A",
+                            0.0, 1.0, 1.0, 0.01)
+
+    At = animate.interpolate(A, t)
+    det = float(np.linalg.det(At))
+
+    with left:
+        _det_meter(det, kind="area_sq")
+
+        # --- math (always visible, no expander) ---
         st.markdown(f"**Current transform (morph t = {t:.2f}):**")
-        st.latex(r"A_t = " + w.bmatrix(At))
-        st.markdown("**Your matrix A (the destination at t = 1):**")
+        w.editable_matrix(None, 2, label="A_t", editable=False, value=At)
+
+        st.markdown("**Your matrix A (destination at t = 1):**")
         st.latex(r"A = " + w.bmatrix(A))
 
+        at00, at01 = float(At[0, 0]), float(At[0, 1])
+        at10, at11 = float(At[1, 0]), float(At[1, 1])
         det_at = at00 * at11 - at01 * at10
         st.latex(
-            r"\det A_t = a \cdot d - b \cdot c = ("
+            r"\det A_t = ("
             + f"{at00:.4g}" + r")(" + f"{at11:.4g}" + r") - ("
             + f"{at01:.4g}" + r")(" + f"{at10:.4g}" + r")"
             + r" = \mathbf{" + f"{det_at:.4f}" + r"}"
         )
         st.markdown(
             f"**Measured area, before → after:** "
-            f"region area before = 1.00 → after = |det At| × 1.00 = **{abs(det_at):.2f}**"
+            f"region area before = 1.00 → after = |det At| × 1.00 = "
+            f"**{abs(det_at):.2f}**"
         )
 
         st.markdown("**At · (scan region corners):**")
@@ -303,15 +311,20 @@ def _example_medical():
 
         st.markdown(
             "det = 1 means the area is preserved even though the shape changed "
-            "(the tilt correction) — a measurement taken on the aligned image is still "
-            "trustworthy."
+            "(the tilt correction)."
         )
-        st.markdown(
-            "**Topic 4:** Actually *undoing* a distortion — turning a tilted scan back "
-            "into a square one — means applying the transform's **inverse**. That's the "
-            "next topic; here we're just seeing how the determinant tells us whether area "
-            "was preserved."
-        )
+
+    with right:
+        st.plotly_chart(plot.figure_2d(At, obj="square"),
+                        use_container_width=True)
+
+    # --- full-width closing ---
+    st.markdown(
+        "**Topic 4:** Actually *undoing* a distortion — turning a tilted scan back "
+        "into a square one — means applying the transform's **inverse**. That's the "
+        "next topic; here we're just seeing how the determinant tells us whether area "
+        "was preserved."
+    )
 
 
 # ----------------------------------------------------------------------------
@@ -319,13 +332,15 @@ def _example_medical():
 # ----------------------------------------------------------------------------
 
 def _example_biology():
-    left, right = st.columns([1.05, 1.35], gap="large")
+    st.markdown(
+        "**Biology.** A cell is roughly a cube. Scaling every side by k "
+        "gives a diagonal matrix A whose determinant — the volume factor — "
+        "grows much faster than its surface area."
+    )
+
+    left, right = st.columns([0.42, 0.58], gap="large")
+
     with left:
-        st.markdown(
-            "**Biology.** A cell is roughly a cube. Scaling every side by k "
-            "gives a diagonal matrix A whose determinant — the volume factor — "
-            "grows much faster than its surface area."
-        )
         k = w.scalar_slider(
             "t03e3_k", "Scale factor k (how many times bigger)", 0.5, 3.0, 1.5, 0.1
         )
@@ -335,25 +350,9 @@ def _example_biology():
     surface = 6 * k ** 2
     ratio = 6 / k
 
-    with right:
-        st.plotly_chart(plot.figure_3d(A), use_container_width=True)
+    with left:
         _det_meter(volume, kind="volume", extra={"surface": surface, "ratio": ratio})
 
-    st.info(
-        "**k is the scale factor** — how many times bigger you make the cell. This matrix "
-        "**scales the whole cell uniformly by k**: every direction grows by the same "
-        f"factor k (k = 2 means twice as wide, twice as tall, twice as deep).\n\n"
-        "A cell absorbs food and oxygen through its **surface**, but it has to feed its "
-        "whole **volume**. When you make something bigger, the volume (k³) outgrows the "
-        "surface (k²), so the surface can't keep up with the demand — which is why cells "
-        "stay tiny, and why large animals can't just be \"scaled-up\" cells: they need extra "
-        "surface area folded in (lungs, gills, intestines). It's also why an **elephant "
-        "has enormous ears**: a big warm body makes heat throughout its volume but can "
-        "only shed it through its surface, so the elephant grows extra surface — those "
-        "huge, blood-rich ears — to dump the heat its size can't otherwise lose."
-    )
-
-    with st.expander("Show the math"):
         st.markdown(
             f"This matrix **scales the whole cell uniformly by k**:"
         )
@@ -362,7 +361,7 @@ def _example_biology():
             "The determinant of any **triangular** matrix — including this **diagonal** "
             "one — is just the diagonal entries multiplied together. "
             "(A diagonal matrix is a special case of triangular; this becomes important "
-            'in Topic 5, where “determinant = product of the diagonal” gets used in earnest.)'
+            'in Topic 5.5, where "determinant = product of the diagonal" gets used in earnest.)'
         )
         st.latex(
             r"\det A = k \times k \times k = k^3"
@@ -395,6 +394,23 @@ def _example_biology():
                 + r"\end{pmatrix}"
                 + r"\quad \text{" + label + r"}"
             )
+
+    with right:
+        st.plotly_chart(plot.figure_3d(A), use_container_width=True)
+
+    st.info(
+        "**k is the scale factor** — how many times bigger you make the cell. This matrix "
+        "**scales the whole cell uniformly by k**: every direction grows by the same "
+        f"factor k (k = 2 means twice as wide, twice as tall, twice as deep).\n\n"
+        "A cell absorbs food and oxygen through its **surface**, but it has to feed its "
+        "whole **volume**. When you make something bigger, the volume (k³) outgrows the "
+        "surface (k²), so the surface can't keep up with the demand — which is why cells "
+        "stay tiny, and why large animals can't just be \"scaled-up\" cells: they need extra "
+        "surface area folded in (lungs, gills, intestines). It's also why an **elephant "
+        "has enormous ears**: a big warm body makes heat throughout its volume but can "
+        "only shed it through its surface, so the elephant grows extra surface — those "
+        "huge, blood-rich ears — to dump the heat its size can't otherwise lose."
+    )
 
 
 # ----------------------------------------------------------------------------

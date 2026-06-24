@@ -145,7 +145,7 @@ def _example_one():
             c1, c2 = A[:, 0], A[:, 1]
             plot.add_vector_2d(fig_c, [0, 0], c1, "royalblue", "col 1")
             plot.add_vector_2d(fig_c, [0, 0], c2, "crimson",   "col 2")
-            plot.add_point_2d(fig_c, b, "black", "target b", size=12, symbol="diamond")
+            plot.add_point_2d(fig_c, b, "#e6e6e6", "target b", size=12, symbol="diamond")
             if kind == "unique":
                 mid = x[0] * c1
                 plot.add_vector_2d(fig_c, [0, 0], mid, "rgba(0,128,0,0.5)",
@@ -269,7 +269,7 @@ def _example_three():
                            f"alloy 1 ({c1[0]:.2g} Cu, {c1[1]:.2g} Zn)")
         plot.add_vector_2d(fig, [0, 0], c2, "crimson",
                            f"alloy 2 ({c2[0]:.2g} Cu, {c2[1]:.2g} Zn)")
-        plot.add_point_2d(fig, b, "black", f"target ({b[0]:.2g}, {b[1]:.2g})",
+        plot.add_point_2d(fig, b, "#e6e6e6", f"target ({b[0]:.2g}, {b[1]:.2g})",
                           size=13, symbol="diamond")
         if kind == "unique":
             mid = x[0] * c1
@@ -349,6 +349,9 @@ def _example_four():
             title="Atom balance: left ← → right",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
             yaxis=dict(range=[0, max(h_l, h_r, o_l, o_r, 3) + 2]),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#e6e6e6"),
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -411,7 +414,7 @@ def _example_five():
         if kind == "unique":
             fig.add_trace(go.Scatter3d(
                 x=[x[0]], y=[x[1]], z=[x[2]], mode="markers",
-                marker=dict(color="gold", size=10, line=dict(color="black", width=2)),
+                marker=dict(color="gold", size=10, line=dict(color="#e6e6e6", width=2)),
                 name=f"solution ({x[0]:.2g}, {x[1]:.2g}, {x[2]:.2g})",
             ))
         st.caption("drag to rotate · scroll to zoom — the solution is where all three planes cross.")
