@@ -5,13 +5,7 @@ Pattern: MULTI-EXAMPLE. A top selector chooses one of four real-world screens;
 only the selected screen renders. OVERVIEW pinned at top; HOWTO in a collapsed
 expander. Follow the t01 structural template.
 """
-import numpy as np
 import streamlit as st
-
-from engine import animate
-from engine import plotting as plot
-from engine import widgets as w
-from engine.layout import two_col
 
 TITLE = "3 · Determinant"
 SLUG = "determinant"
@@ -33,25 +27,6 @@ The left panel sets the numbers; the right panel shows the shape. The
 volume it equals — watch them change together. Open **Show the math** to see
 the formula behind the number.
 """
-
-_E4_PRESETS = {
-    "Mirror (reflection)": {
-        "A": np.array([[-1.0, 0.0], [0.0, 1.0]]),
-        "notice": (
-            "Games flip sprites to draw reflections, and use the *sign* of the determinant "
-            "to tell which way a surface faces — that's how an engine skips drawing the "
-            "hidden back of an object (back-face culling)."
-        ),
-    },
-    "Shadow (collapse)": {
-        "A": np.array([[1.0, 0.0], [0.0, 0.0]]),
-        "notice": (
-            "A shadow flattens an object onto the ground. det = 0 means the area is gone — "
-            "and you can't rebuild the rocket from its shadow. There is no way to undo it."
-        ),
-    },
-}
-
 
 # ----------------------------------------------------------------------------
 # Shared helper: determinant meter
@@ -87,6 +62,7 @@ def _det_meter(det, kind, extra=None):
 from .surveying import _example_surveying
 from .medical import _example_medical
 from .biology import _example_biology
+from .graphics import _example_graphics
 
 
 # ----------------------------------------------------------------------------
@@ -133,75 +109,3 @@ def render():
         _example_biology()
     else:
         _example_graphics()
-
-
-# ----------------------------------------------------------------------------
-# Example 4 -- Graphics
-# ----------------------------------------------------------------------------
-
-def _example_graphics():
-    left, right = st.columns([1.05, 1.35], gap="large")
-    with left:
-        st.markdown(
-            "**Graphics.** The sign of the determinant tells you if orientation flipped; "
-            "zero means the object has been collapsed to a lower dimension."
-        )
-        preset = st.selectbox("Preset", list(_E4_PRESETS), key="t03e4_preset")
-        info = _E4_PRESETS[preset]
-
-        if st.session_state.get("t03e4_last") != preset:
-            w.set_matrix_state("t03e4_A", info["A"])
-            st.session_state["t03e4_last"] = preset
-
-        st.info(info["notice"])
-        A = w.matrix_editor("t03e4_A", 2, label="Matrix A")
-        t = w.scalar_slider("t03e4_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, 0.01)
-
-    At = animate.interpolate(A, t)
-    det = float(np.linalg.det(At))
-
-    with right:
-        st.plotly_chart(plot.figure_2d(At, obj="rocket"), use_container_width=True)
-        _det_meter(det, kind="area_sq")
-        st.info(
-            "det = 0 means this transform has no inverse — the flattened rocket can't "
-            "be turned back. Topic 4 is about exactly which transformations can be "
-            "undone, and how."
-        )
-
-    with st.expander("Show the math"):
-        at00, at01 = float(At[0, 0]), float(At[0, 1])
-        at10, at11 = float(At[1, 0]), float(At[1, 1])
-
-        st.markdown(f"**Current transform (morph t = {t:.2f}):**")
-        st.latex(r"A_t = " + w.bmatrix(At))
-        st.markdown("**Your matrix A (the destination at t = 1):**")
-        st.latex(r"A = " + w.bmatrix(A))
-
-        det_live = at00 * at11 - at01 * at10
-        st.latex(
-            r"\det A_t = a \cdot d - b \cdot c = ("
-            + f"{at00:.4g}" + r")(" + f"{at11:.4g}" + r") - ("
-            + f"{at01:.4g}" + r")(" + f"{at10:.4g}" + r")"
-            + r" = \mathbf{" + f"{det_live:.4f}" + r"}"
-        )
-        st.markdown(
-            "negative ⇒ orientation flipped (mirror image); 0 ⇒ area collapsed to nothing."
-        )
-
-        nose = plot._ROCKET[:, 0]
-        fin_tip = plot._ROCKET[:, 3]
-        window = plot._ROCKET_WINDOW
-
-        st.markdown("**A · (rocket vertices):**")
-        for label, x in [("nose", nose), ("right fin tip", fin_tip), ("window", window)]:
-            xp = At @ x
-            st.latex(
-                r"A_t \cdot \begin{pmatrix}"
-                + f"{x[0]:.2f}" + r" \\ " + f"{x[1]:.2f}"
-                + r"\end{pmatrix} = \begin{pmatrix}"
-                + f"{xp[0]:.2f}" + r" \\ " + f"{xp[1]:.2f}"
-                + r"\end{pmatrix}"
-                + r"\quad \text{(" + label + r")}"
-            )
-        st.markdown("Every other vertex transforms the same way.")
