@@ -1,151 +1,145 @@
-# Build Spec — Layout Refactor + Dark Mode (PROTOTYPE on Topic 3)
+# Build Spec — Layout Refactor + Dark Mode (Topic 3, with file split)
 
-**For the builder (Claude Code):** This establishes a new screen layout, a dark
-theme, and a new merged editable-matrix widget. **Prototype it on Topic 3 only**
-(`topics/t03_determinant.py`), plus the app-wide pieces (theme, top selector,
-plotting palette) which necessarily affect every topic. Do NOT refactor topics 2,
-4, 5, 5.5 yet — we review Topic 3 first, then roll the pattern out. Follow
-`CLAUDE.md`. Keep all of Topic 3's existing content/behavior (the four screens,
-all the math) — this changes *layout and styling*, not the lesson.
+**For the builder (Claude Code):** This finalizes a new screen layout for Topic 3
+and splits the topic into per-screen files first so each edit is small and
+verifiable. Dark mode and the top selector are already applied. **Do Topic 3 only;**
+do not touch topics 2, 4, 5, 5.5 yet. Follow `CLAUDE.md`. Keep all existing content
+and the live morph-math — this changes *layout, structure, and the rendering of the
+corner math*, not the lesson.
 
-This is a **prototype to evaluate**. The riskiest piece is the styled
-bracket-matrix widget; build it first and expect to tweak its look after review.
+**Process rules (these have bitten us — follow exactly):**
+- Make **surgical edits**: move existing `st.` calls into the new structure; do NOT
+  rewrite whole functions from memory (that keeps dropping blocks).
+- Use **straight ASCII quotes only** — never curly/smart quotes (they cause
+  SyntaxErrors).
+- After each step: run
+  `python -c "import ast; ast.parse(open(PATH).read())"`, paste the changed code,
+  and **stop** — wait for review before running the app.
+- After a step is verified, update `specs/STATUS.md` and **commit** before the next.
 
-## Part A — App-wide changes (apply once; they affect all topics)
+---
 
-### A1. Dark theme (app chrome)
-Create `.streamlit/config.toml`:
+## Part 0 — Split `t03_determinant.py` into per-screen files FIRST
+
+The single 460+-line file is why edits keep clobbering each other. Split it before
+applying the layout, as a pure mechanical move (no logic changes).
+
+**Target structure:**
 ```
-[theme]
-base = "dark"
-primaryColor = "#4dabf7"
-backgroundColor = "#0e1117"
-secondaryBackgroundColor = "#1a1d24"
-textColor = "#e6e6e6"
+topics/t03_determinant/
+    __init__.py        # TOPIC registry entry, OVERVIEW text, example selector, dispatch
+    _shared.py         # _det_meter and any helper used by 2+ screens
+    surveying.py       # _example_surveying
+    medical.py         # _example_medical
+    biology.py         # _example_biology
+    graphics.py        # _example_graphics
 ```
-(These are starting values; fine to adjust for contrast.)
+- Move each `_example_*` function **verbatim** into its own file; fix imports
+  (`from engine import widgets as w, plotting as plot`, `from ._shared import
+  _det_meter`, etc.).
+- `__init__.py` keeps the same `TOPIC`/registration so `app.py` needs **no change**
+  and the module still imports as `topics.t03_determinant`.
+- **Do this one function at a time**: move one, parse-check, run the app, confirm the
+  screen still works, commit. Then the next. Four small commits, not one big one.
+- No behavior changes in Part 0 — it's only relocation. The layout work is Part 1.
 
-### A2. Topic selector → top of page, scrolls with the page
-In `app.py`, move topic navigation **out of the sidebar** to a compact selector at
-the **top of the main area** (a `st.selectbox` is best — stays compact as the topic
-list grows to 11). Remove the sidebar topic radio and the sidebar "How to use"
-text entirely. The selector scrolls with the page (no pinning). The sidebar can be
-dropped or left empty.
+---
 
-### A3. Plotting palette re-tuned for dark backgrounds (`engine/plotting.py`)
-On dark, the current light-mode colors wash out or vanish. Update:
-- **All figure layouts** (`figure_2d`, `figure_3d`, `new_figure_2d`,
-  `new_figure_3d`): set `paper_bgcolor="rgba(0,0,0,0)"`,
-  `plot_bgcolor="rgba(0,0,0,0)"`, and a **light font** (`font=dict(color="#e6e6e6")`).
-  For 3D, set the scene background transparent and axis/grid colors light.
-- **Axis lines / zerolines:** `zerolinecolor="#888"` → lighter, e.g. `"#aaa"`;
-  gridlines a subtle light tint, e.g. `"rgba(200,200,220,0.12)"`.
-- **Data colors → brighter, higher-contrast variants** (replace the constants):
-  - `_E1` crimson → `"#ff6b6b"`; `_E2` royalblue → `"#4dabf7"`; `_E3` seagreen →
-    `"#51cf66"`; `_VEC` darkorange → `"#ffa94d"`.
-  - `_SQUARE` → `"#20c997"`; `_SQUARE_FILL` → `"rgba(32,201,151,0.22)"`.
-  - `_GRIDLINE` (deformed grid) → `"rgba(160,160,220,0.35)"`.
-- Check every rgba transparency reads on dark; bump alpha where things disappear.
+## Part 1 — The finalized layout (apply per screen, in the new files)
 
-### A4. Smaller graphs
-Graph height is currently a fixed 560. Make it a **per-figure parameter** and
-reduce it: **2D ≈ 420**, **3D ≈ 480**. This is the single biggest anti-scroll win.
+### 1A. Page structure (this REPLACES the earlier "controls in the left column" plan)
+Controls and the example text move UP into the full-width band, so the two-column
+body below is **purely math (left) and graph (right)** — maximizing room for the
+math beside the picture (this is a visualization-first course).
 
-## Part B — The new shared layout (build in engine, prototype on Topic 3)
-
-### B1. Page structure (top → bottom)
 ```
-[ Topic selector — top selectbox, scrolls with page ]          (app.py)
-Topic header + description (FULL WIDTH; fold the old "how to use" bits in here)
-[ Example selector — compact, horizontal, low vertical footprint ]
-Example description + "what to notice" (FULL WIDTH, above the columns)
-┌───────────────────────────┬──────────────────────────────┐
-│ LEFT COLUMN (~40%)        │  RIGHT COLUMN (~60%)         │
-│  • presets (compact)      │   the graph (smaller:        │
-│  • A in bracket form      │    ~420 px 2D / ~480 px 3D)  │
-│    (editable or derived)  │                              │
-│  • det A (live)           │                              │
-│  • sliders (vertical)     │                              │
-│  • A·vertex lines (live)  │                              │
-│  • [morph screens only:   │                              │
-│     read-only A(t)]       │                              │
-└───────────────────────────┴──────────────────────────────┘
-Challenge / closing line (FULL WIDTH, bottom)
+[ Topic selector ]                                    (app.py — already done)
+Topic header + description (FULL WIDTH)
+[ Example selector — compact one-row control ]
+─────────────────────────────────────────────────────────────────
+ FULL-WIDTH CONTROL BAND:
+   • example text ("Biology. A cell is roughly a cube…")
+   • controls: preset dropdown, matrix editor, slider(s)
+─────────────────────────────────────────────────────────────────
+ ┌───────────────────────────┬─────────────────────────────────┐
+ │ MATH (left, ~0.50)        │  GRAPH (right, ~0.50)           │
+ │  always shown, NO expander│   smaller + tight margins       │
+ │  matrix, det, A·corners   │                                 │
+ └───────────────────────────┴─────────────────────────────────┘
+ Notice / closing line (FULL WIDTH, bottom)
 ```
-- Implement as a small reusable helper in `engine/` (e.g. `layout.py` with a
-  `two_col()` returning `(left, right)` at a given ratio) so every topic uses the
-  same skeleton. Allow a **per-screen column ratio** (default 0.4/0.6).
-- **"Show the math" is always shown** — no expander, no button. The math lives in
-  the left column under the matrix.
-- **Example selector:** use a compact horizontal control (`st.radio(...,
-  horizontal=True)` with tightened spacing, or `st.segmented_control` / `st.pills`
-  if the installed Streamlit supports them). Goal: one short row, not a tall stack.
+- Implement via a tiny helper in `engine/layout.py` (`two_col(ratio=(0.5,0.5))`
+  returning `(left, right)`) so every screen uses the same skeleton.
+- **"Show the math" expander is REMOVED on every screen** — the math renders
+  unconditionally in the left column.
+- The **example text and all controls render full-width ABOVE** the `two_col` block.
+  Only the math goes in the left column; only the graph goes in the right.
+- Column ratio default **0.5 / 0.5** (the math is the tall thing now, so it needs a
+  real half). Per-screen override allowed.
 
-### B2. The merged editable-matrix widget (the prototype's key new piece)
-Add `editable_matrix(state_key, dim, label="A", editable=True)` to
-`engine/widgets.py`. It renders the matrix **A in bracket form with the entries as
-the cells**, so the matrix the student edits *is* the matrix in the math —
-replacing the old separate "number-input grid up top + `A = [[…]]` LaTeX below".
+### 1B. Shrink the graph (height AND margins — the real space win)
+In `engine/plotting.py`, for every figure:
+- Height: **2D ≈ 360–400**, **3D ≈ 420**.
+- **Cut Plotly margins hard:** `margin=dict(l=10, r=10, t=10, b=10)` (defaults are
+  ~80px and waste a third of the box). For 3D, tighten the scene domain similarly.
+- Trim/relocate the legend so it doesn't add top padding (small legend, or overlay
+  inside the plot). The goal: the graph box is mostly graph, not whitespace.
 
-- **Layout:** a row of `st.columns` — a thin left column drawing the **left
-  bracket**, `dim` middle columns of `st.number_input` (the entries), a thin right
-  column drawing the **right bracket**, with an "A =" label to the left. Since
-  Streamlit can't put live widgets inside real LaTeX, the brackets are **drawn with
-  CSS / tall bracket glyphs** around the input grid — it should *read* as a
-  bracketed matrix. (This is the approximation to confirm on review.)
-- Use the **same cell state keys** as the current `matrix_editor` (`{key}__i__j`)
-  so existing presets / `set_matrix_state` keep working unchanged.
-- `editable=False` → render the same bracketed matrix but with the numbers as
-  static text (for **derived** matrices: surveying's A from P/Q/R, biology's diag(k),
-  and the read-only morphing A(t)).
-- Free editing and presets coexist: presets write the cells, the student can type
-  any values, **Reset** returns to a default. Keep Reset.
+### 1C. Render the corner math compactly but CORRECTLY
+The `A · (corner)` blocks are the tallest part of the math. Tighten them **without
+breaking correct notation**:
+- **Keep stacked column-vector notation** — the input and output are 3×1 **column**
+  vectors (stacked, tall parentheses), NOT inline `(x,y,z)` tuples. A 3×3 times a
+  3×1 giving a 3×1 is the correct, dimension-honest form, and it teaches the shape
+  rule. Do **not** use inline/row-vector shorthand (a 3×3 times a 1×3 is undefined
+  and mathematically wrong — never show that).
+- **Show the actual numeric matrix** doing the multiplication, not the symbol "A".
+  Each corner line is `[numeric 3×3 grid] · [stacked column] = [stacked column]`,
+  with the grid showing the current entries (e.g. 1.50 on the diagonal for k=1.5).
+- **Keep all three** cube corners `(1,0,0)`, `(0,1,0)`, `(1,1,1)`.
+- **Shrink only these corner blocks' font** to reclaim height: wrap the corner
+  `st.latex` expressions in `\small` (start there; `\scriptsize` only if still
+  needed). Leave the headline math (the `A =` matrix, `det A = k³`, the meaning
+  sentences) at **full size** — only the repetitive corner blocks shrink.
 
-## Part C — Apply to Topic 3's four screens
+### 1D. Text fix
+In Biology's triangular-bridge sentence, change **"Topic 5"** to **"Topic 5.5"**.
 
-Map each screen onto the new layout. **A is always shown in bracket form**;
-*editable* where the student sets A directly, *derived (read-only)* where A comes
-from upstream inputs.
+---
 
-- **Surveying:** left column = P, Q, R point editors → **derived read-only A** in
-  bracket form (its columns are the edge vectors) → det/area live chain →
-  (no sliders). Right = 2D figure (~420). The matrix is derived, not directly
-  edited — that's correct here.
-- **Medical:** left = preset control + **editable A** (merged bracket matrix) +
-  morph slider (vertical) + det live + area before→after + A(t)·corners; plus a
-  **read-only A(t)** "current transform" bracket matrix (morph screen). Right = 2D
-  figure (~420).
-- **Biology:** left = k slider → **derived read-only diag(k)** in bracket form +
-  det = k³ live + surface/volume + A·corners. Right = 3D figure (~480).
-- **Graphics:** like Medical — preset + **editable A** + morph slider + live det +
-  A(t)·vertices + read-only A(t); the no-inverse/Topic-4 closing line full-width at
-  bottom. Right = 2D figure (~420).
+## Part 2 — Per-screen mapping (in the split files)
 
-Topic 3's matrices are small (2×2 or 3×3 diagonal), so they fit the ~40% left
-column comfortably — which is why Topic 3 is a good prototype. (Topic 5.5's wide
-augmented matrices will need the wider-math exception when we get there; not part of
-this prototype.)
+Each screen: example text + controls in the full-width band; math left; graph right;
+notice/closing full-width at bottom; no expander.
 
-## Not in this prototype (future, once layout is approved)
-- Rolling the layout/widget/dark palette out to topics 2, 4, 5, 5.5.
-- Topic 5.5 **double augmented matrix `[A | I]`** to compute the inverse by
-  elimination (the Topic 4 ↔ 5.5 bridge) — a wider-math screen, specced separately.
+- **Surveying** (`surveying.py`): band = P, Q, R point editors. Left = the derived A
+  (from edge vectors) + the live det→area chain. Right = 2D figure. No slider.
+- **Medical** (`medical.py`): band = preset + editable A matrix + morph slider.
+  Left = det live + area before→after + the At·(square corners) math + read-only
+  A(t). Right = 2D figure.
+- **Biology** (`biology.py`): band = k slider. Left = derived diag(k) shown as the
+  numeric matrix + det = k³ live + surface/volume line + the three A·corner blocks
+  (compact, `\small`). Right = 3D figure. Notice (elephant) full-width at bottom.
+- **Graphics** (`graphics.py`): band = preset + editable A + morph slider. Left =
+  both matrices (current At + destination A) + live det + At·(rocket vertices).
+  Right = 2D figure. No-inverse/Topic-4 closing line full-width at bottom.
 
-## Acceptance checklist
-- [ ] App is dark; plot backgrounds are transparent and all data colors read
-      clearly on dark (basis arrows, fills, deformed grid, 3D scene).
-- [ ] Topic selector is a compact selectbox at the top of the page (sidebar topic
-      radio and "How to use" text removed).
-- [ ] Topic 3 header/description is full width with the old "how to use" guidance
-      folded in; the per-example description + "what to notice" is full width above
-      the columns.
-- [ ] Example selector is one compact row, not a tall stack.
-- [ ] Two-column body: left = presets + bracketed A + det + vertical sliders +
-      A·vertex math; right = a smaller graph (~420 2D / ~480 3D).
-- [ ] "Show the math" is always visible (no expander).
-- [ ] `editable_matrix` renders A as a bracketed matrix of editable cells; presets
-      still set the cells; free editing works; Reset works.
-- [ ] Surveying/biology show a **derived read-only** bracketed A; medical/graphics
-      show an **editable** A plus a read-only A(t); morph screens still animate and
-      the math still tracks the slider.
-- [ ] App runs with `streamlit run app.py`, no errors. (Topics 2/4/5/5.5 untouched.)
+(The merged editable-matrix-in-brackets widget from the earlier draft is **deferred**
+— it's the riskiest piece and not needed to fix scrolling. Keep the existing
+`matrix_editor` for now; revisit the bracket widget after this layout is approved.)
+
+---
+
+## Acceptance checklist (verify per screen, on disk, before trusting screenshots)
+- [ ] `t03_determinant` is a package (per-screen files); `app.py` unchanged; app
+      imports and all four screens render.
+- [ ] On each screen: example text and ALL controls are full-width ABOVE the two
+      columns; the left column contains ONLY math; the right column ONLY the graph.
+- [ ] NO `st.expander` anywhere in Topic 3 (grep returns nothing); math always shown.
+- [ ] Graphs are visibly smaller with tight margins (little whitespace in the box).
+- [ ] Corner math: numeric matrix (not "A") × stacked column vector = stacked column
+      vector; all three corners; corner blocks in `\small`; headline math full size.
+      No inline/row-vector forms anywhere.
+- [ ] Biology bridge says "Topic 5.5"; elephant notice present full-width at bottom.
+- [ ] Morph screens (Medical, Graphics) still animate and the math still tracks the
+      slider; straight ASCII quotes only; `ast.parse` clean.

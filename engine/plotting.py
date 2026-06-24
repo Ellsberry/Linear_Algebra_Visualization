@@ -180,7 +180,7 @@ def figure_3d(M, show_vector=False, v=None, vt=None):
 
     rng = [-VIEW, VIEW]
     fig.update_layout(
-        height=480, margin=dict(l=0, r=0, t=10, b=0),
+        height=420, margin=dict(l=10, r=10, t=10, b=10),
         legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0),
         scene=dict(
             xaxis=dict(range=rng, title="x", **_DARK_3D_AXIS),

@@ -15,21 +15,18 @@ def _example_biology():
         "grows much faster than its surface area."
     )
 
-    left, right = st.columns([0.42, 0.58], gap="large")
-
-    with left:
-        k = w.scalar_slider(
-            "t03e3_k", "Scale factor k (how many times bigger)", 0.5, 3.0, 1.5, 0.1
-        )
+    k = w.scalar_slider(
+        "t03e3_k", "Scale factor k (how many times bigger) TEST 123", 0.5, 3.0, 1.5, 0.1
+    )
 
     A = k * np.eye(3)
     volume = k ** 3
     surface = 6 * k ** 2
     ratio = 6 / k
 
-    with left:
-        _det_meter(volume, kind="volume", extra={"surface": surface, "ratio": ratio})
+    left, right = st.columns([0.5, 0.5], gap="large")
 
+    with left:
         st.markdown(
             f"This matrix **scales the whole cell uniformly by k**:"
         )
@@ -64,7 +61,9 @@ def _example_biology():
         ]:
             xp = A @ x
             st.latex(
-                r"A \cdot \begin{pmatrix}"
+                r"\small"
+                + w.bmatrix(A)
+                + r"\begin{pmatrix}"
                 + f"{x[0]:.0f}" + r" \\ " + f"{x[1]:.0f}" + r" \\ " + f"{x[2]:.0f}"
                 + r"\end{pmatrix} = \begin{pmatrix}"
                 + f"{xp[0]:.2f}" + r" \\ " + f"{xp[1]:.2f}" + r" \\ " + f"{xp[2]:.2f}"
@@ -74,6 +73,7 @@ def _example_biology():
 
     with right:
         st.plotly_chart(plot.figure_3d(A), use_container_width=True)
+        _det_meter(volume, kind="volume", extra={"surface": surface, "ratio": ratio})
 
     st.info(
         "**k is the scale factor** — how many times bigger you make the cell. This matrix "

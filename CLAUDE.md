@@ -18,6 +18,14 @@ streamlit run app.py
 Streamlit does not launch from PyCharm's green Run button by default; use the
 terminal, or a Run Configuration with module `streamlit`, parameters `run app.py`.
 
+## Running the app
+
+1. Do **NOT** start, run, or restart the Streamlit server — the user runs it
+   themselves.
+2. Only edit files; when a change needs testing, tell the user it's ready and
+   let them reload.
+3. Never run `streamlit run`.
+
 ## Architecture (do not break this shape)
 
 - `app.py` — sidebar topic navigator + the `TOPICS` registry. Adding a topic
@@ -117,3 +125,55 @@ Reflection → det −1, Collapse → det 0) as presets, so Topic 3 reuses them.
   expose the actual numbers behind the picture.
 - Don't invent or reword a topic's examples or lesson text — build from the spec
   in `specs/`. Implementation is yours; pedagogy comes from the spec.
+
+## Working agreement (read before every change)
+
+### Running the app — the user owns the server
+- Do NOT start, run, or restart the Streamlit server. The user runs it themselves
+  in their own terminal.
+- Never run `streamlit run app.py` or launch the app in a background shell.
+- When a change is ready to look at, say so and let the user reload. Do not spawn a
+  server to "test" — multiple servers on the same port cause stale, misleading
+  screens.
+- If the user asks you to stop the server, you may run a stop command; otherwise
+  leave server processes alone.
+
+### Quotes — straight ASCII only
+- Use only straight ASCII quotes: " and '. NEVER use curly/smart quotes (" " ' ').
+  Smart quotes cause Python SyntaxErrors and have broken this project repeatedly.
+- After any edit that adds strings, assume smart quotes may have slipped in and
+  check.
+
+### Edits — surgical, never wholesale rewrites
+- Make targeted edits: move, add, or change specific lines. Do NOT rewrite an entire
+  function from memory — that keeps silently dropping blocks (notices, presets,
+  math).
+- When relocating code (e.g. into columns), move the existing `st.` calls; keep
+  every other line intact.
+- If text must be restored, copy it verbatim from git or from the relevant file in
+  `specs/`. Do not regenerate approved wording from memory.
+
+### Verify before reporting — show, don't claim
+- Do not report a change as "done." Instead: run
+  `python -c "import ast; ast.parse(open('PATH').read())"` to confirm it parses,
+  then PASTE the changed code (the full function or block) and STOP.
+- The user verifies from the pasted code, not from your summary. Wait for review
+  before continuing.
+- When asked whether something exists in a file, run `grep -n` and paste the raw
+  output rather than describing it.
+
+### Scope — one screen/task per turn
+- Do exactly one screen or one task per turn, then stop. Never sweep through
+  "the remaining screens" or "the rest of the changes" in one pass.
+- Wait for the user to confirm and commit before starting the next.
+
+### After each verified change
+- Update `specs/STATUS.md` to reflect what is now done.
+- Then the user commits before the next change.
+
+### Project structure notes
+- `topics/t03_determinant/` is a per-screen package: `surveying.py`, `medical.py`,
+  `biology.py`, `graphics.py`, with shared helpers in `__init__.py`. Edit one screen
+  file at a time.
+- Pedagogy/content decisions are made with the user in chat and recorded in `specs/`.
+  Implement from the spec; do not invent new lesson content.
