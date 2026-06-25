@@ -6,19 +6,18 @@ from engine import plotting as plot
 
 
 def _example_two():
-    left, right = st.columns([1, 1.5], gap="large")
-
-    with left:
-        st.markdown(
-            "**Break-even.** Revenue and cost are two lines. They cross where profit = 0 "
-            "— that crossing point is the solution of a linear system."
-        )
-        price    = w.scalar_slider("t05e2_price", "Selling price per unit ($)", 0.0, 20.0,  8.0, 0.5)
-        fixed    = w.scalar_slider("t05e2_fixed", "Fixed cost ($)",             0.0, 100.0, 40.0, 1.0)
-        var_cost = w.scalar_slider("t05e2_var",   "Variable cost per unit ($)", 0.0, 20.0,  4.0, 0.5)
+    st.markdown(
+        "**Break-even.** Revenue and cost are two lines. They cross where profit = 0 "
+        "— that crossing point is the solution of a linear system."
+    )
+    price    = w.scalar_slider("t05e2_price", "Selling price per unit ($)", 0.0, 20.0,  8.0, 0.5)
+    fixed    = w.scalar_slider("t05e2_fixed", "Fixed cost ($)",             0.0, 100.0, 40.0, 1.0)
+    var_cost = w.scalar_slider("t05e2_var",   "Variable cost per unit ($)", 0.0, 20.0,  4.0, 0.5)
 
     rng_x = 20
     y_max = max(price * rng_x, fixed + var_cost * rng_x) * 1.15 + 10
+
+    left, right = st.columns([0.5, 0.5], gap="large")
 
     with right:
         fig = plot.new_figure_2d(rng=rng_x, x_title="quantity sold", y_title="dollars",
@@ -44,13 +43,7 @@ def _example_two():
             st.warning("No break-even — each unit loses money (price ≤ variable cost): "
                        "the lines are parallel-ish and never cross.")
 
-    st.markdown(
-        "> Every break-even calculation, and every \"supply meets demand\" price, is the "
-        "solution of a linear system — the point where two lines cross. If price never "
-        "beats the per-unit cost, the lines never meet: no solution."
-    )
-
-    with st.expander("Show the math"):
+    with left:
         st.markdown(f"Revenue line: $y = {price:.2g}\\,q$")
         st.markdown(f"Cost line: $y = {fixed:.2g} + {var_cost:.2g}\\,q$")
         if price > var_cost:
@@ -59,3 +52,9 @@ def _example_two():
                 rf"\frac{{{fixed:.2g}}}{{{price:.2g} - {var_cost:.2g}}} "
                 rf"= {fixed / (price - var_cost):.2f}"
             )
+
+    st.markdown(
+        "> Every break-even calculation, and every \"supply meets demand\" price, is the "
+        "solution of a linear system — the point where two lines cross. If price never "
+        "beats the per-unit cost, the lines never meet: no solution."
+    )
