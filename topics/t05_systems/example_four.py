@@ -8,16 +8,13 @@ from engine import plotting as plot
 
 
 def _example_four():
-    left, right = st.columns([1, 1.4], gap="large")
-
-    with left:
-        st.markdown(
-            "**Balance** `a H₂ + b O₂ → c H₂O`.\n\n"
-            "Set the sliders until both atom counts match on left and right."
-        )
-        a_val = w.scalar_slider("t05e4_a", "a  (H₂ molecules)", 0, 8, 0, 1)
-        b_val = w.scalar_slider("t05e4_b", "b  (O₂ molecules)", 0, 8, 0, 1)
-        c_val = w.scalar_slider("t05e4_c", "c  (H₂O molecules)", 0, 8, 0, 1)
+    st.markdown(
+        "**Balance** `a H₂ + b O₂ → c H₂O`.\n\n"
+        "Set the sliders until both atom counts match on left and right."
+    )
+    a_val = w.scalar_slider("t05e4_a", "a  (H₂ molecules)", 0, 8, 0, 1)
+    b_val = w.scalar_slider("t05e4_b", "b  (O₂ molecules)", 0, 8, 0, 1)
+    c_val = w.scalar_slider("t05e4_c", "c  (H₂O molecules)", 0, 8, 0, 1)
 
     a_val, b_val, c_val = int(a_val), int(b_val), int(c_val)
     h_l, h_r = 2 * a_val, 2 * c_val
@@ -25,6 +22,8 @@ def _example_four():
     h_ok   = (h_l == h_r)
     o_ok   = (o_l == o_r)
     both_ok = h_ok and o_ok and (a_val + b_val + c_val > 0)
+
+    left, right = st.columns([0.5, 0.5], gap="large")
 
     with right:
         fig = go.Figure()
@@ -63,15 +62,15 @@ def _example_four():
             o_mark = "✓" if o_ok else "✗"
             st.warning(f"Not balanced yet: {h_mark} H  ·  {o_mark} O")
 
+    with left:
+        st.markdown("**Hydrogen atoms:** left = 2a, right = 2c  →  equation: a = c")
+        st.markdown("**Oxygen atoms:** left = 2b, right = c  →  equation: 2b = c")
+        st.markdown("Free variable: set a = 2, then c = 2 and b = 1  →  ratio **a : b : c = 2 : 1 : 2**")
+        st.latex(r"2\,\text{H}_2 + \text{O}_2 \;\longrightarrow\; 2\,\text{H}_2\text{O}")
+
     st.markdown(
         "> Balancing any chemical reaction is solving a linear system — the coefficients "
         "that conserve every atom. Notice the answer is a *ratio*: 2 : 1 : 2 works, and "
         "so does 4 : 2 : 4. The system has infinitely many solutions, so chemists pick "
         "the smallest whole numbers. So 2 H₂ + O₂ → 2 H₂O."
     )
-
-    with st.expander("Show the math"):
-        st.markdown("**Hydrogen atoms:** left = 2a, right = 2c  →  equation: a = c")
-        st.markdown("**Oxygen atoms:** left = 2b, right = c  →  equation: 2b = c")
-        st.markdown("Free variable: set a = 2, then c = 2 and b = 1  →  ratio **a : b : c = 2 : 1 : 2**")
-        st.latex(r"2\,\text{H}_2 + \text{O}_2 \;\longrightarrow\; 2\,\text{H}_2\text{O}")
