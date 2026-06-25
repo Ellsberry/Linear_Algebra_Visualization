@@ -45,40 +45,40 @@ def _skewed_grid(fig, v1, v2):
 
 
 def _example_three():
-    left, right = st.columns([1.05, 1.35], gap="large")
-    with left:
-        st.markdown(
-            "**The smoothie mixer.** Now you control the amounts. Banana (1, 4) and "
-            "peanut butter (4, 1), each with its own scoops slider: *c₁ scoops of "
-            "banana plus c₂ scoops of peanut butter.* The moving point is your "
-            "smoothie, **c₁·banana + c₂·peanut butter** — and that expression is a "
-            "**linear combination**. Turn on **Show span** to shade every smoothie "
-            "you could possibly make from these two ingredients. Then take the "
-            "**target** and tune the two sliders to land on it."
-        )
-        st.info(DEFINITION, icon="🧱")
+    st.markdown(
+        "**The smoothie mixer.** Now you control the amounts. Banana (1, 4) and "
+        "peanut butter (4, 1), each with its own scoops slider: *c₁ scoops of "
+        "banana plus c₂ scoops of peanut butter.* The moving point is your "
+        "smoothie, **c₁·banana + c₂·peanut butter** — and that expression is a "
+        "**linear combination**. Turn on **Show span** to shade every smoothie "
+        "you could possibly make from these two ingredients. Then take the "
+        "**target** and tune the two sliders to land on it."
+    )
+    st.info(DEFINITION, icon="🧱")
 
-        preset = st.selectbox("Example", list(_E3_PRESETS), key="t01e3_preset")
-        notice, v1_def, v2_def = _E3_PRESETS[preset]
-        if st.session_state.get("t01e3_last") != preset:
-            w.set_vector_state("t01e3_v1", v1_def)
-            w.set_vector_state("t01e3_v2", v2_def)
-            st.session_state["t01e3_last"] = preset
-        st.info(notice, icon="💡")
+    preset = st.selectbox("Example", list(_E3_PRESETS), key="t01e3_preset")
+    notice, v1_def, v2_def = _E3_PRESETS[preset]
+    if st.session_state.get("t01e3_last") != preset:
+        w.set_vector_state("t01e3_v1", v1_def)
+        w.set_vector_state("t01e3_v2", v2_def)
+        st.session_state["t01e3_last"] = preset
+    st.info(notice, icon="💡")
 
-        v1 = w.vector_editor("t01e3_v1", 2, v1_def, label="banana (v₁)")
-        v2 = w.vector_editor("t01e3_v2", 2, v2_def, label="peanut butter (v₂)")
+    v1 = w.vector_editor("t01e3_v1", 2, v1_def, label="banana (v₁)")
+    v2 = w.vector_editor("t01e3_v2", 2, v2_def, label="peanut butter (v₂)")
 
-        allow_neg = st.checkbox("Allow negative scoops", key="t01e3_neg")
-        lo = -12.0 if allow_neg else 0.0
-        c1 = w.scalar_slider("t01e3_c1", "Scoops of banana (c₁)", lo, 12.0, 2.0, step=0.25)
-        c2 = w.scalar_slider("t01e3_c2", "Scoops of peanut butter (c₂)", lo, 12.0, 2.0, step=0.25)
-        show_span = st.checkbox("Show span", value=True, key="t01e3_span")
+    allow_neg = st.checkbox("Allow negative scoops", key="t01e3_neg")
+    lo = -12.0 if allow_neg else 0.0
+    c1 = w.scalar_slider("t01e3_c1", "Scoops of banana (c₁)", lo, 12.0, 2.0, step=0.25)
+    c2 = w.scalar_slider("t01e3_c2", "Scoops of peanut butter (c₂)", lo, 12.0, 2.0, step=0.25)
+    show_span = st.checkbox("Show span", value=True, key="t01e3_span")
 
     result = c1 * v1 + c2 * v2
     det = float(np.linalg.det(np.column_stack([v1, v2])))
     independent = abs(det) > 1e-9
     dist = float(np.linalg.norm(result - TARGET))
+
+    left, right = st.columns([0.5, 0.5], gap="large")
 
     with right:
         fig = plot.new_figure_2d(VIEW, PROTEIN_AXIS, SUGAR_AXIS)
@@ -115,7 +115,7 @@ def _example_three():
         if dist < 0.3:
             st.success("🎯 You hit the target smoothie!")
 
-    with st.expander("Show the math"):
+    with left:
         st.latex(rf"{c1:g}\," + w.bmatrix(v1.reshape(-1, 1)) + rf" + {c2:g}\,"
                  + w.bmatrix(v2.reshape(-1, 1)) + " = " + w.bmatrix(result.reshape(-1, 1)))
         st.markdown(
@@ -137,22 +137,22 @@ def _example_three():
         "a basis) give either no answer or infinitely many."
     )
 
-    with st.expander("Challenge — Make the target smoothie"):
-        st.markdown(
-            "Hit the target by setting the two scoop sliders. With two good "
-            "ingredients there's exactly *one* pair that works — find it. Then "
-            "switch to the proportional pair and try the same target: anything off "
-            "the line simply can't be made, no matter how you set the sliders. That "
-            "\"one solution / no solution\" feeling is the exact question we'll "
-            "formalize later when we solve **Ax = b**."
-        )
+    st.markdown("**Challenge — Make the target smoothie**")
+    st.markdown(
+        "Hit the target by setting the two scoop sliders. With two good "
+        "ingredients there's exactly *one* pair that works — find it. Then "
+        "switch to the proportional pair and try the same target: anything off "
+        "the line simply can't be made, no matter how you set the sliders. That "
+        "\"one solution / no solution\" feeling is the exact question we'll "
+        "formalize later when we solve **Ax = b**."
+    )
 
-    with st.expander("Reality check"):
-        st.markdown(
-            "In a real kitchen you can't add −2 scoops. Math is more generous: it "
-            "lets coefficients go negative — subtracting an ingredient — and that's "
-            "how vectors reach in *every* direction, not just the first quadrant. "
-            "Turn on **Allow negative scoops** to free the vectors to the full "
-            "plane; just remember that's the math being more flexible than your "
-            "blender."
-        )
+    st.markdown("**Reality check**")
+    st.markdown(
+        "In a real kitchen you can't add −2 scoops. Math is more generous: it "
+        "lets coefficients go negative — subtracting an ingredient — and that's "
+        "how vectors reach in *every* direction, not just the first quadrant. "
+        "Turn on **Allow negative scoops** to free the vectors to the full "
+        "plane; just remember that's the math being more flexible than your "
+        "blender."
+    )
