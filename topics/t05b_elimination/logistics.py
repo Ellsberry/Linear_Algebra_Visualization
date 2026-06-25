@@ -53,27 +53,35 @@ def _fill_for_me_cb():
 
 
 def _logistics_diagram():
-    """Static plotly diagram of the 6-route shipping network."""
+    """Static plotly diagram of the 7-route cycle shipping network.
+
+    Store B is fed by BOTH W1 (x4) and W2 (x5) — the cycle that makes
+    elimination necessary and produces infinitely many valid plans.
+    """
     fig = go.Figure()
     fig.update_layout(
-        height=340, margin=dict(l=10, r=10, t=10, b=10),
+        height=360, margin=dict(l=10, r=10, t=10, b=10),
         showlegend=False,
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#e6e6e6"),
-        xaxis=dict(range=[-0.5, 10.5], visible=False),
+        xaxis=dict(range=[-0.5, 11.5], visible=False),
         yaxis=dict(range=[0.8, 10.5], visible=False),
     )
 
-    F  = [5.0, 9.3];  W1 = [2.0, 5.8];  W2 = [8.0, 5.8]
-    A  = [0.5, 2.2];  B  = [3.5, 2.2];  C  = [6.5, 2.2];  D = [9.5, 2.2]
+    F  = [5.0, 9.3]
+    W1 = [2.5, 6.0];  W2 = [7.5, 6.0]
+    A  = [0.5, 2.5];  B  = [5.0, 2.5];  C = [8.0, 2.5];  D = [10.0, 2.5]
 
+    # (src, dst, label, color, (label_x_offset, label_y_offset))
+    # x4 and x5 both arrive at B from opposite sides — offsets keep labels apart
     routes = [
-        (F,  W1, "x₁", "royalblue",    ( 0.55,  0.0)),
-        (F,  W2, "x₂", "seagreen",     (-0.55,  0.0)),
+        (F,  W1, "x₁", "royalblue",    (-0.40,  0.0)),
+        (F,  W2, "x₂", "seagreen",     ( 0.40,  0.0)),
         (W1, A,  "x₃", "darkorange",   (-0.55,  0.1)),
-        (W1, B,  "x₄", "crimson",      ( 0.55,  0.1)),
-        (W2, C,  "x₅", "mediumorchid", (-0.55,  0.1)),
-        (W2, D,  "x₆", "#8B6914",      ( 0.55,  0.1)),
+        (W1, B,  "x₄", "crimson",      (-0.55,  0.0)),
+        (W2, B,  "x₅", "mediumorchid", ( 0.55,  0.0)),
+        (W2, C,  "x₆", "#B8860B",      ( 0.40,  0.1)),
+        (W2, D,  "x₇", "steelblue",    ( 0.55,  0.1)),
     ]
     for src, dst, label, color, (ox, oy) in routes:
         plot.add_vector_2d(fig, src, dst, color, label, width=2, showlegend=False)
@@ -90,13 +98,13 @@ def _logistics_diagram():
 
     for name, pos in [("W1", W1), ("W2", W2)]:
         plot.add_point_2d(fig, pos, "#1565C0", name, size=22)
-        fig.add_annotation(x=pos[0], y=pos[1] + 0.45, text=f"<b>{name}</b>",
+        fig.add_annotation(x=pos[0], y=pos[1] + 0.5, text=f"<b>{name}</b>",
                            showarrow=False, font=dict(size=12),
                            bgcolor="rgba(30,33,41,0.85)", borderpad=3)
 
     for name, pos, demand in [("A", A, 30), ("B", B, 20), ("C", C, 25), ("D", D, 25)]:
         plot.add_point_2d(fig, pos, "#2E7D32", name, size=20)
-        fig.add_annotation(x=pos[0], y=pos[1] - 0.45, showarrow=False,
+        fig.add_annotation(x=pos[0], y=pos[1] - 0.5, showarrow=False,
                            text=f"<b>{name}</b>  demand {demand}",
                            font=dict(size=11), yanchor="top",
                            bgcolor="rgba(30,33,41,0.85)", borderpad=3)
