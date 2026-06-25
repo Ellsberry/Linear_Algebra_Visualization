@@ -15,7 +15,7 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] `editable_matrix` bracket widget added to `engine/widgets.py` (editable + read-only `editable=False` modes; flexbox-centered bracket glyphs)
 - [x] `engine/layout.py` added (`two_col(ratio)` helper)
 
-**NOT yet refactored:** Topics 5 and 5.5 still use the OLD layout (no two-column math/graph split, no `editable_matrix`, expanders still present). They are unchanged by this refactor.
+**NOT yet refactored:** Topic 5.5 still uses the OLD layout (wide augmented matrices need a wider-math layout, not the standard 0.5/0.5 split — explicitly exempted). It also has outstanding content work (see Topic 5.5 section below).
 
 ---
 
@@ -211,51 +211,71 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] Inverse meter (under graph)
 - [x] Notice (bridges to Topic 5)
 
-## Topic 5 — Linear Systems (`t05_systems.py`)
+## Topic 5 — Linear Systems (`topics/t05_systems/`)
 
-- [x] Module exists and registered in `app.py`
+**File structure:** `t05_systems` is now a per-screen package:
+- `__init__.py` — TITLE, SLUG, OVERVIEW, HOWTO, preset dicts (`_E1_PRESETS`, `_E3_PRESETS`, `_E5_PRESETS`), `_PLANE_COLORS`, shared helpers (`_classify`, `_render_outcome`), render() dispatcher
+- `example_one.py` — Example 1 (The three outcomes)
+- `example_two.py` — Example 2 (Business / break-even)
+- `example_three.py` — Example 3 (Engineering / metal mixing)
+- `example_four.py` — Example 4 (Chemistry / balance a reaction)
+- `example_five.py` — Example 5 (3D: three planes)
+
+- [x] Module exists and registered in `app.py` (imports as `topics.t05_systems`)
 - [x] OVERVIEW (Topic 4 callback + row/column picture intro)
 - [x] HOWTO in collapsed expander
 - [x] Five examples in correct order
 - [x] `_classify` + `_render_outcome` shared helpers
 
+### Layout refactor (all five screens)
+- [x] Per-screen package split complete (example_one.py ... example_five.py)
+- [x] Controls in full-width band above the columns
+- [x] All "Show the math" expanders removed — math always visible
+- [x] `editable_matrix` widget in use on Examples 1, 3, and 5 (the screens with a matrix)
+- [x] Notice/closing content full-width at bottom
+- [x] Example 1 (Three outcomes): **Option-A exception** — row picture and column picture side by side (`st.columns(2)`), outcome meter + blockquote + math all full-width below
+- [x] Example 2 (Break-even): slider-driven, no matrix; 0.5/0.5 math-left / graph-right
+- [x] Example 3 (Metal mixing): 0.5/0.5, `editable_matrix` 2x2, Ax=b in `{\small}`
+- [x] Example 4 (Chemistry): slider-driven, no matrix; 0.5/0.5 math-left / bar-chart-right
+- [x] Example 5 (3D planes): 0.5/0.5, `editable_matrix` 3x3, A/b/x in `{\small}`
+
 ### Example 1 — The three outcomes
-- [x] Matrix editor + vector editor + 3 presets (One / None / Infinite)
+- [x] `editable_matrix` + vector editor + 3 presets (One / None / Infinite)
 - [x] Row picture (lines via `add_line_2d`) + column picture side by side
 - [x] Intersection point marked when unique
 - [x] Tip-to-tail path in column picture when unique
 - [x] Notice (same system, two views)
-- [x] Show the math
+- [x] Math always shown (full-width below figures)
 
 ### Example 2 — Business (break-even)
 - [x] Three sliders (price, fixed cost, variable cost)
 - [x] Revenue + cost lines on figure
 - [x] Break-even point marked; no-break-even warning when price ≤ var cost
 - [x] Notice
-- [x] Show the math: line equations + q* formula
+- [x] Math always shown: line equations + q* formula
 
 ### Example 3 — Engineering (metal mixing)
-- [x] Matrix editor + target vector + 3 presets (Reachable / Unreachable / Redundant)
+- [x] `editable_matrix` + target vector + 3 presets (Reachable / Unreachable / Redundant)
 - [x] Column picture with alloy vectors + target + tip-to-tail path
 - [x] Outcome readout in words ("Blend: ... units")
 - [x] Notice
-- [x] Show the math
+- [x] Math always shown (left column, `{\small}`)
 
 ### Example 4 — Chemistry (balance a reaction)
 - [x] Three integer sliders (a, b, c)
 - [x] Atom-balance bar chart (H and O, green when matched)
 - [x] Balanced banner
 - [x] Notice (ratio point: 2:1:2)
-- [x] Show the math: conservation equations + ratio
+- [x] Math always shown: conservation equations + ratio
 
 ### Example 5 — 3D: three planes
-- [x] Matrix editor (3×3) + target vector + 3 presets (Unique / Redundant / Impossible)
+- [x] `editable_matrix` (3x3) + target vector + 3 presets (Unique / Redundant / Impossible)
 - [x] Three translucent planes via `add_plane_3d`
 - [x] Solution point marked when unique
 - [x] Outcome readout in words
 - [x] Notice
 - [x] Looking-ahead note (elimination / triangular form)
-- [x] Show the math
+- [x] Math always shown (left column, `{\small}`)
 
 ### Shared helpers added to `engine/plotting.py`
 - [x] `add_line_2d`
@@ -264,11 +284,19 @@ Legend: [x] done · [~] partial · [ ] not started
 
 ## Topic 5.5 — Elimination & Triangular Form (`t05b_elimination.py`)
 
+**Layout refactor not yet applied** — wide augmented matrices (6x7 in Logistics) need a wider-math layout, not the standard 0.5/0.5 split. Exempted until a custom layout is designed.
+
 - [x] Module exists and registered in `app.py`
 - [x] OVERVIEW
 - [x] HOWTO in collapsed expander
 - [x] Three screens (Workbench, Logistics, Circuit)
 - [x] `aug_array_latex` added to `engine/widgets.py`
+
+### Outstanding work (next priorities)
+- [~] **(a) Logistics row-order inversion** — warehouses first (rows 1-2), stores last (rows 3-6). Spec requires stores first (rows 1-4), warehouses last (rows 5-6), so the first two diagonal positions are zero and elimination *requires row swaps*. Current order has nonzero diagonal from the start, defeating the pedagogical point.
+- [~] **(b) Circuit equation-development step** — spec requires a 3-step guided process: (1) student enters coefficients for each of 3 laws (KCL node, KVL left loop, KVL right loop) with per-equation Check / Hint / "Show this equation"; (2) student assembles the 3x4 augmented matrix; (3) reduce. Code only asks for R/V values with a pre-structured matrix, skipping the equation-building pedagogy.
+- [ ] **(c) [A | I] inverse-by-elimination screen** — the Topic 4 <-> 5.5 bridge (specced separately, not yet built).
+- [ ] **(d) Pivot highlighting in LaTeX** — pivots counted but not visually marked (spec: bold/colored pivots).
 
 ### Shared workbench
 - [x] Equations displayed above augmented matrix (both update on every op)
@@ -280,7 +308,6 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] Undo + Reset
 - [x] Scenario detection: 0 = c (no solution), zero row (infinite), pivot count
 - [x] Pivot count with quiet rank/Topic 6 seed
-- [ ] Pivot highlighting in LaTeX (spec: bold/colored pivots) — pivots counted but not visually marked
 
 ### Screen 1 — The workbench
 - [x] 4 presets (One solution / Needs a row swap / Redundant / Contradiction)
@@ -289,13 +316,12 @@ Legend: [x] done · [~] partial · [ ] not started
 
 ### Screen 2 — Logistics (6-variable shipping network)
 - [x] Network diagram (plotly, nodes + labeled arrows + demands)
-- [x] Editable 6×7 augmented grid
+- [x] Editable 6x7 augmented grid
 - [x] Check button (flags wrong rows without revealing answer)
 - [x] "Fill it in for me" button
 - [x] Workbench renders after correct/filled matrix
-- [x] Solution labeled by route name (F→W1, etc.)
+- [x] Solution labeled by route name (F->W1, etc.)
 - [x] Notice
-- [~] **Row order is inverted** — warehouses first (rows 1-2), stores last (rows 3-6). Spec requires stores first (rows 1-4), warehouses last (rows 5-6), so the first two diagonal positions are zero and elimination *requires row swaps*. Current order has nonzero diagonal from the start, defeating the pedagogical point.
 
 ### Screen 3 — Circuit (3 currents)
 - [x] Circuit diagram (plotly schematic with V, R1/R2/R3, I1/I2/I3 labeled)
@@ -304,7 +330,6 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] Solution labeled as currents (I1, I2, I3 in amps)
 - [x] Looking-ahead note (Topic 9 / AC / complex numbers)
 - [x] Notice
-- [~] **Equation-development step missing** — spec requires a 3-step guided process: (1) student enters coefficients for each of 3 laws (KCL node, KVL left loop, KVL right loop) with per-equation Check / Hint / "Show this equation"; (2) student assembles the 3x4 augmented matrix; (3) reduce. Code only asks for R/V values with a pre-structured matrix, skipping the equation-building pedagogy.
 
 ---
 
