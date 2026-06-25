@@ -9,27 +9,26 @@ from . import _classify, _E5_PRESETS, _PLANE_COLORS
 
 
 def _example_five():
-    left, right = st.columns([1, 1.6], gap="large")
+    st.markdown(
+        "**Three planes in space.** Each row of Ax = b is one equation — one plane. "
+        "Three planes can meet at a point (one solution), along a line (infinitely "
+        "many), or share no common point (none).\n\n"
+        "Framed as: three foods, three nutrients — find amounts to hit exact targets."
+    )
+    preset = st.selectbox("Preset", list(_E5_PRESETS), key="t05e5_preset")
+    if st.session_state.get("t05e5_last") != preset:
+        A_p, b_p = _E5_PRESETS[preset]
+        w.set_matrix_state("t05e5_A", A_p)
+        w.set_vector_state("t05e5_b", b_p)
+        st.session_state["t05e5_last"] = preset
 
-    with left:
-        st.markdown(
-            "**Three planes in space.** Each row of Ax = b is one equation — one plane. "
-            "Three planes can meet at a point (one solution), along a line (infinitely "
-            "many), or share no common point (none).\n\n"
-            "Framed as: three foods, three nutrients — find amounts to hit exact targets."
-        )
-        preset = st.selectbox("Preset", list(_E5_PRESETS), key="t05e5_preset")
-        if st.session_state.get("t05e5_last") != preset:
-            A_p, b_p = _E5_PRESETS[preset]
-            w.set_matrix_state("t05e5_A", A_p)
-            w.set_vector_state("t05e5_b", b_p)
-            st.session_state["t05e5_last"] = preset
-
-        A = w.matrix_editor("t05e5_A", 3,
-                            label="Nutrient content — row i = nutrient i, column j = food j")
-        b = w.vector_editor("t05e5_b", 3, (5., 8., 7.), label="Nutrient targets (one per row)")
+    A = w.editable_matrix("t05e5_A", 3,
+                          label="Nutrient content — row i = nutrient i, column j = food j")
+    b = w.vector_editor("t05e5_b", 3, (5., 8., 7.), label="Nutrient targets (one per row)")
 
     kind, x, det_val = _classify(A, b)
+
+    left, right = st.columns([0.5, 0.5], gap="large")
 
     with right:
         fig = plot.new_figure_3d(rng=6, titles=("food 1", "food 2", "food 3"))
@@ -55,6 +54,16 @@ def _example_five():
         else:
             st.info("Many plans work (a redundant food).")
 
+    with left:
+        st.latex(r"{\small A = " + w.bmatrix(A) + r"\;,\quad b = " + w.bmatrix(b.reshape(-1, 1)) + r"}")
+        st.markdown(f"**det(A)** = `{det_val:.3g}`")
+        if kind == "unique":
+            st.latex(r"{\small x = " + w.bmatrix(x.reshape(-1, 1)) + r"}")
+        elif kind == "none":
+            st.markdown("rank(A) < rank([A | b]) → **no solution**.")
+        else:
+            st.markdown("rank(A) = rank([A | b]) < n → **infinitely many solutions** (free variable).")
+
     st.markdown(
         "> A dietician hitting exact nutrient targets from three foods is solving three "
         "equations in three unknowns — three planes in space. They meet at one point (one "
@@ -69,13 +78,3 @@ def _example_five():
         "**triangular form** — that solves a system of any size, the same algorithm every "
         "engineering simulation runs internally."
     )
-
-    with st.expander("Show the math"):
-        st.latex(r"A = " + w.bmatrix(A) + r"\;,\quad b = " + w.bmatrix(b.reshape(-1, 1)))
-        st.markdown(f"**det(A)** = `{det_val:.3g}`")
-        if kind == "unique":
-            st.latex(r"x = " + w.bmatrix(x.reshape(-1, 1)))
-        elif kind == "none":
-            st.markdown("rank(A) < rank([A | b]) → **no solution**.")
-        else:
-            st.markdown("rank(A) = rank([A | b]) < n → **infinitely many solutions** (free variable).")
