@@ -15,13 +15,38 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] `editable_matrix` bracket widget added to `engine/widgets.py` (editable + read-only `editable=False` modes; flexbox-centered bracket glyphs)
 - [x] `engine/layout.py` added (`two_col(ratio)` helper)
 
-**NOT yet refactored:** Topics 1, 5, and 5.5 still use the OLD layout (no two-column math/graph split, no `editable_matrix`, expanders still present). They are unchanged by this refactor.
+**NOT yet refactored:** Topics 5 and 5.5 still use the OLD layout (no two-column math/graph split, no `editable_matrix`, expanders still present). They are unchanged by this refactor.
 
 ---
 
-## Topic 1 — Vectors & Combinations (`t01_vectors.py`)
+## Topic 1 — Vectors & Combinations (`topics/t01_vectors/`)
 
-No spec on record (`specs/topic1_*.md` missing) — needs a retroactive spec before refactoring.
+**Spec:** `specs/topic1_vectors.md`
+
+**File structure:** `t01_vectors` is now a per-screen package:
+- `__init__.py` — TITLE, SLUG, VIEW, OVERVIEW, HOWTO, shared constants (BANANA, PEANUT, PROTEIN_AXIS, SUGAR_AXIS), render() dispatcher
+- `example_one.py` — Example 1 (One ingredient)
+- `example_two.py` — Example 2 (Two ingredients, added)
+- `example_three.py` — Example 3 (The smoothie mixer)
+
+- [x] Module exists and registered in `app.py` (imports as `topics.t01_vectors`)
+- [x] OVERVIEW with smoothie framing + Ax = b forward-gesture paragraph
+- [x] HOWTO in collapsed expander
+- [x] Three examples in correct order
+
+### Content additions
+- [x] Light Ax = b gesture added to OVERVIEW ("The question we keep circling...")
+- [x] Explicit ingredients-to-algebra mapping added after Example 3's math (ingredients→A columns, scoops→x, target→b)
+
+### Layout refactor (all three screens)
+- [x] Per-screen package split complete (example_one.py, example_two.py, example_three.py)
+- [x] Controls in full-width band above the two columns
+- [x] `st.columns([0.5, 0.5])` — math left, graph right
+- [x] All "Show the math" expanders removed — math always visible in left column
+- [x] Example 3: DEFINITION block full-width above columns; readouts under graph in right column; Ax = b mapping + Challenge + Reality check all full-width always-shown at bottom (expanders removed)
+- [x] Notice/closing content full-width at bottom
+
+**Note:** Topic 1 uses hardcoded light-mode plot colors (e.g. "darkorange", "crimson", "navy") unlike Topics 2-4 which use the engine's dark-palette constants. May need a color-tune follow-up if anything looks dim on dark backgrounds.
 
 ## Topic 2 — Linear Transformations (`t02_transformations.py`)
 
