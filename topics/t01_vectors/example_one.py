@@ -20,27 +20,28 @@ _E1_PRESETS = {
 
 
 def _example_one():
-    left, right = st.columns([1.05, 1.35], gap="large")
-    with left:
-        st.markdown(
-            "**One ingredient.** Start with one ingredient — banana, at (1, 4): "
-            "one gram of protein and four of sugar per scoop. The slider is how "
-            "many scoops. Watch the arrow grow as you add scoops and shrink back "
-            "toward the origin as you take them away."
-        )
-        preset = st.selectbox("Example", list(_E1_PRESETS), key="t01e1_preset")
-        notice, c_default, brk_default = _E1_PRESETS[preset]
+    st.markdown(
+        "**One ingredient.** Start with one ingredient — banana, at (1, 4): "
+        "one gram of protein and four of sugar per scoop. The slider is how "
+        "many scoops. Watch the arrow grow as you add scoops and shrink back "
+        "toward the origin as you take them away."
+    )
+    preset = st.selectbox("Example", list(_E1_PRESETS), key="t01e1_preset")
+    notice, c_default, brk_default = _E1_PRESETS[preset]
 
-        if st.session_state.get("t01e1_last") != preset:
-            st.session_state["t01e1_c"] = c_default
-            st.session_state["t01e1_break"] = brk_default
-            st.session_state["t01e1_last"] = preset
+    if st.session_state.get("t01e1_last") != preset:
+        st.session_state["t01e1_c"] = c_default
+        st.session_state["t01e1_break"] = brk_default
+        st.session_state["t01e1_last"] = preset
 
-        st.info(notice, icon="💡")
-        c = w.scalar_slider("t01e1_c", "Scoops of banana", -3.0, 5.0, c_default, step=0.25)
-        show_break = st.checkbox("Show the recipe breakdown", key="t01e1_break")
+    st.info(notice, icon="💡")
+    c = w.scalar_slider("t01e1_c", "Scoops of banana", -3.0, 5.0, c_default, step=0.25)
+    show_break = st.checkbox("Show the recipe breakdown", key="t01e1_break")
 
     end = c * BANANA
+
+    left, right = st.columns([0.5, 0.5], gap="large")
+
     with right:
         fig = plot.new_figure_2d(VIEW, PROTEIN_AXIS, SUGAR_AXIS)
         plot.add_vector_2d(fig, [0, 0], BANANA, "rgba(180,140,0,0.45)",
@@ -53,7 +54,7 @@ def _example_one():
                                "sugar part", dash="dash", arrow=False)
         st.plotly_chart(fig, use_container_width=True)
 
-    with st.expander("Show the math"):
+    with left:
         st.latex(rf"{c:g} \cdot " + w.bmatrix(BANANA.reshape(-1, 1))
                  + " = " + w.bmatrix(end.reshape(-1, 1)))
         st.caption("Scaling multiplies every component by the same number.")
