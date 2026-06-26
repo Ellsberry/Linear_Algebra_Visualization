@@ -39,8 +39,7 @@ experimenting safe.
 
 def render():
     st.markdown(OVERVIEW)
-    with st.expander("How to use this screen"):
-        st.markdown(HOWTO)
+    st.caption(HOWTO)
 
     example = st.radio(
         "Example",

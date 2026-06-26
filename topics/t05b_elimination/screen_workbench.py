@@ -65,14 +65,13 @@ def _example_one():
 
     workbench("t05b_e1", 3)
 
-    with st.expander("Show the math"):
-        st.markdown(
-            "The three legal moves — add a multiple, swap, scale — are the "
-            "**elementary row operations**. Each can be undone, so they never "
-            "change the solution set.\n\n"
-            "Once the matrix is upper triangular, its determinant equals the "
-            "**product of the diagonal pivots**. If any pivot is zero, the "
-            "determinant is zero — exactly the *singular* / \"no unique solution\" "
-            "case from Topic 3. The number of nonzero pivots is the *rank* of A, "
-            "a preview of Topic 6."
-        )
+    st.markdown(
+        "The three legal moves — add a multiple, swap, scale — are the "
+        "**elementary row operations**. Each can be undone, so they never "
+        "change the solution set.\n\n"
+        "Once the matrix is upper triangular, its determinant equals the "
+        "**product of the diagonal pivots**. If any pivot is zero, the "
+        "determinant is zero — exactly the *singular* / \"no unique solution\" "
+        "case from Topic 3. The number of nonzero pivots is the *rank* of A, "
+        "a preview of Topic 6."
+    )
