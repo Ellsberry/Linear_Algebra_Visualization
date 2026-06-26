@@ -24,96 +24,146 @@ off the diagram.
 
 
 def _circuit_diagram():
-    """Static plotly schematic of the DC circuit."""
+    """Static plotly schematic of the redesigned DC circuit (V=36, 5 branches, nodes P and Q)."""
     fig = go.Figure()
     fig.update_layout(
-        height=280, margin=dict(l=10, r=10, t=10, b=10),
+        height=420, margin=dict(l=10, r=10, t=10, b=10),
         showlegend=False,
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#e6e6e6"),
-        xaxis=dict(range=[-0.5, 11.5], visible=False),
-        yaxis=dict(range=[0.0, 7.2], visible=False),
+        xaxis=dict(range=[-0.5, 8], visible=False),
+        yaxis=dict(range=[0, 9], visible=False, scaleanchor="x", scaleratio=1),
     )
 
-    # Node coordinates
-    TL = (0.5, 5.5); TR2 = (9.5, 5.5)
-    BL = (0.5, 1.0); BR  = (9.5, 1.0)
-    A  = (5.0, 5.5); AB  = (5.0, 1.0)   # node A top/bottom of R2 branch
-
-    def _line(x0, y0, x1, y1):
+    def _wire(x0, y0, x1, y1):
         fig.add_shape(type="line", x0=x0, y0=y0, x1=x1, y1=y1,
                       line=dict(color="#aaa", width=2))
 
-    # Wires
-    _line(*TL, *TR2)           # top rail
-    _line(*TL, *BL)            # left side (battery)
-    _line(*BL, *BR)            # bottom rail
-    _line(*TR2, *BR)           # right branch (R3)
-    _line(A[0], A[1], AB[0], AB[1])  # middle branch (R2)
+    # --- Wires ---
+    _wire(1, 1, 7, 1)          # ground rail
+    _wire(1, 1, 1, 7)          # left vertical (battery branch)
+    _wire(1, 7, 3.5, 7)        # top-left rail (battery+ to P)
+    _wire(3.5, 7, 3.5, 1)      # motor branch (P down to ground)
+    _wire(7, 7, 7, 1)          # lamp branch (Q down to ground)
+    _wire(3.5, 7, 7, 7)        # R2 direct path P->Q
+    _wire(3.5, 7, 3.5, 8.2)    # R5 raised: left up from P
+    _wire(3.5, 8.2, 7, 8.2)    # R5 raised: horizontal
+    _wire(7, 8.2, 7, 7)        # R5 raised: right down to Q
 
-    # Battery symbol (left side, midpoint y=3.25)
-    bx = TL[0]; bmy = (TL[1] + BL[1]) / 2
-    _line(bx - 0.45, bmy + 0.3, bx + 0.45, bmy + 0.3)   # long bar (positive)
-    _line(bx - 0.25, bmy - 0.3, bx + 0.25, bmy - 0.3)   # short bar (negative)
-    fig.add_annotation(x=bx - 0.7, y=bmy + 0.45, text="<b>+</b>",
-                       showarrow=False, font=dict(size=14, color="crimson"), xanchor="right")
-    fig.add_annotation(x=bx - 0.7, y=bmy - 0.45, text="<b>−</b>",
-                       showarrow=False, font=dict(size=14, color="royalblue"), xanchor="right")
-    fig.add_annotation(x=bx - 0.9, y=bmy, text="<b>V=12</b>",
-                       showarrow=False, font=dict(size=12), xanchor="right")
+    # --- Battery (left vertical, centered at y=4) ---
+    bmy = 4.0
+    _wire(0.52, bmy + 0.3, 1.48, bmy + 0.3)   # long bar (+, positive)
+    _wire(0.72, bmy - 0.3, 1.28, bmy - 0.3)   # short bar (-, negative)
+    fig.add_annotation(x=0.25, y=bmy + 0.55, text="<b>+</b>",
+                       showarrow=False, font=dict(size=13, color="crimson"),
+                       xanchor="center")
+    fig.add_annotation(x=0.25, y=bmy - 0.55, text="<b>-</b>",
+                       showarrow=False, font=dict(size=13, color="royalblue"),
+                       xanchor="center")
+    fig.add_annotation(x=0.5, y=bmy + 1.1, text="<b>V = 36 V</b>",
+                       showarrow=False, font=dict(size=9), xanchor="center")
 
-    # R1 box on top rail between TL and A
-    r1x = (TL[0] + A[0]) / 2   # 2.75
-    fig.add_shape(type="rect", x0=r1x - 0.75, y0=TL[1] - 0.35,
-                  x1=r1x + 0.75, y1=TL[1] + 0.35,
-                  line=dict(color="black", width=2), fillcolor="rgba(30,33,41,0.9)")
-    fig.add_annotation(x=r1x, y=TL[1] + 0.75, text="<b>R1=2 Ω</b>",
-                       showarrow=False, font=dict(size=11))
+    # --- R1 box (top-left rail, centered x=2.25, y=7) ---
+    fig.add_shape(type="rect", x0=1.65, y0=6.7, x1=2.85, y1=7.3,
+                  line=dict(color="#aaa", width=1.5),
+                  fillcolor="rgba(30,33,41,0.95)")
+    fig.add_annotation(x=2.25, y=7.46, text="<b>R1 = 2 Ω</b>",
+                       showarrow=False, font=dict(size=10))
 
-    # I1 arrow: left of R1 on top rail
-    fig.add_annotation(x=1.5, y=TL[1], ax=0.9, ay=TL[1],
-                       xref="x", yref="y", axref="x", ayref="y",
-                       showarrow=True, arrowhead=2, arrowsize=1.2,
-                       arrowwidth=2, arrowcolor="#e6e6e6")
-    fig.add_annotation(x=1.2, y=TL[1] - 0.55, text="<b>I₁→</b>",
-                       showarrow=False, font=dict(size=12))
+    # --- R2 box (P->Q segment, centered x=5.25, y=7) ---
+    fig.add_shape(type="rect", x0=4.5, y0=6.7, x1=6.0, y1=7.3,
+                  line=dict(color="#aaa", width=1.5),
+                  fillcolor="rgba(30,33,41,0.95)")
+    fig.add_annotation(x=5.25, y=6.1, text="<b>R2 = 6 Ω</b>",
+                       showarrow=False, font=dict(size=10))
 
-    # Node A dot and label
-    fig.add_trace(go.Scatter(x=[A[0]], y=[A[1]], mode="markers",
+    # --- R5 box (raised rail, centered x=5.25, y=8.2) ---
+    fig.add_shape(type="rect", x0=4.5, y0=7.9, x1=6.0, y1=8.5,
+                  line=dict(color="#aaa", width=1.5),
+                  fillcolor="rgba(30,33,41,0.95)")
+    fig.add_annotation(x=5.25, y=8.64, text="<b>R5 = 12 Ω</b>",
+                       showarrow=False, font=dict(size=10))
+
+    # --- Motor (R3) circle centered (3.5, 4), radius 0.5 ---
+    fig.add_shape(type="circle", x0=3.0, y0=3.5, x1=4.0, y1=4.5,
+                  line=dict(color="#aaa", width=1.5),
+                  fillcolor="rgba(30,33,41,0.95)")
+    fig.add_annotation(x=3.5, y=4.0, text="<b>M</b>",
+                       showarrow=False, font=dict(size=13, color="#e6e6e6"))
+    fig.add_annotation(x=3.5, y=3.1, text="motor R3=8 Ω",
+                       showarrow=False, font=dict(size=9), xanchor="center",
+                       bgcolor="rgba(30,33,41,0.8)", borderpad=1)
+
+    # --- Lamp (R4) circle centered (7, 4), radius 0.5 ---
+    fig.add_shape(type="circle", x0=6.5, y0=3.5, x1=7.5, y1=4.5,
+                  line=dict(color="#aaa", width=1.5),
+                  fillcolor="rgba(30,33,41,0.95)")
+    fig.add_annotation(x=7.0, y=4.0, text="<b>X</b>",
+                       showarrow=False, font=dict(size=13, color="#e6e6e6"))
+    fig.add_annotation(x=7.0, y=3.1, text="lamp R4=4 Ω",
+                       showarrow=False, font=dict(size=9), xanchor="center",
+                       bgcolor="rgba(30,33,41,0.8)", borderpad=1)
+
+    # --- Nodes P and Q (dots + labels) ---
+    fig.add_trace(go.Scatter(x=[3.5, 7], y=[7, 7], mode="markers",
                              marker=dict(color="#e6e6e6", size=9),
                              showlegend=False, hoverinfo="skip"))
-    fig.add_annotation(x=A[0], y=A[1] + 0.55, text="<b>Node A</b>",
+    fig.add_annotation(x=3.28, y=7.4, text="<b>P</b>",
+                       showarrow=False, font=dict(size=12), xanchor="right")
+    fig.add_annotation(x=7.18, y=7.4, text="<b>Q</b>",
+                       showarrow=False, font=dict(size=12), xanchor="left")
+
+    # --- Current arrows ---
+    # I1 upward on left branch (below battery)
+    fig.add_annotation(x=1, y=2.65, ax=1, ay=2.1,
+                       xref="x", yref="y", axref="x", ayref="y",
+                       showarrow=True, arrowhead=2, arrowsize=1.2,
+                       arrowwidth=2, arrowcolor="#e6e6e6", text="")
+    fig.add_annotation(x=1.18, y=2.35, text="<b>I₁↑</b>",
+                       showarrow=False, font=dict(size=11), xanchor="left")
+
+    # I2 rightward along R2 (between P and R2 box left edge)
+    fig.add_annotation(x=4.4, y=7, ax=3.7, ay=7,
+                       xref="x", yref="y", axref="x", ayref="y",
+                       showarrow=True, arrowhead=2, arrowsize=1.2,
+                       arrowwidth=2, arrowcolor="#e6e6e6", text="")
+    fig.add_annotation(x=4.05, y=7.42, text="<b>I₂→</b>",
                        showarrow=False, font=dict(size=11))
 
-    # R2 box on middle branch
-    r2y = (A[1] + AB[1]) / 2   # 3.25
-    fig.add_shape(type="rect", x0=A[0] - 0.35, y0=r2y - 0.75,
-                  x1=A[0] + 0.35, y1=r2y + 0.75,
-                  line=dict(color="black", width=2), fillcolor="rgba(30,33,41,0.9)")
-    fig.add_annotation(x=A[0] + 0.85, y=r2y, text="<b>R2=4 Ω</b>",
-                       showarrow=False, font=dict(size=11), xanchor="left")
-    # I2 arrow
-    fig.add_annotation(x=A[0], y=r2y + 1.4, ax=A[0], ay=r2y + 1.95,
+    # I3 downward on motor branch (above motor circle)
+    fig.add_annotation(x=3.5, y=5.1, ax=3.5, ay=5.65,
                        xref="x", yref="y", axref="x", ayref="y",
                        showarrow=True, arrowhead=2, arrowsize=1.2,
-                       arrowwidth=2, arrowcolor="seagreen")
-    fig.add_annotation(x=A[0] + 0.55, y=r2y + 1.85, text="<b>I₂↓</b>",
-                       showarrow=False, font=dict(size=12, color="seagreen"))
+                       arrowwidth=2, arrowcolor="#e6e6e6", text="")
+    fig.add_annotation(x=3.65, y=5.32, text="<b>I₃↓</b>",
+                       showarrow=False, font=dict(size=11), xanchor="left")
 
-    # R3 box on right branch
-    r3y = (TR2[1] + BR[1]) / 2   # 3.25
-    fig.add_shape(type="rect", x0=TR2[0] - 0.35, y0=r3y - 0.75,
-                  x1=TR2[0] + 0.35, y1=r3y + 0.75,
-                  line=dict(color="black", width=2), fillcolor="rgba(30,33,41,0.9)")
-    fig.add_annotation(x=TR2[0] + 0.85, y=r3y, text="<b>R3=4 Ω</b>",
-                       showarrow=False, font=dict(size=11), xanchor="left")
-    # I3 arrow
-    fig.add_annotation(x=TR2[0], y=r3y + 1.4, ax=TR2[0], ay=r3y + 1.95,
+    # I4 downward on lamp branch (above lamp circle)
+    fig.add_annotation(x=7, y=5.1, ax=7, ay=5.65,
                        xref="x", yref="y", axref="x", ayref="y",
                        showarrow=True, arrowhead=2, arrowsize=1.2,
-                       arrowwidth=2, arrowcolor="crimson")
-    fig.add_annotation(x=TR2[0] + 0.55, y=r3y + 1.85, text="<b>I₃↓</b>",
-                       showarrow=False, font=dict(size=12, color="crimson"))
+                       arrowwidth=2, arrowcolor="#e6e6e6", text="")
+    fig.add_annotation(x=7.15, y=5.32, text="<b>I₄↓</b>",
+                       showarrow=False, font=dict(size=11), xanchor="left")
+
+    # I5 rightward on R5 raised rail (between P corner and R5 box left edge)
+    fig.add_annotation(x=4.3, y=8.2, ax=3.7, ay=8.2,
+                       xref="x", yref="y", axref="x", ayref="y",
+                       showarrow=True, arrowhead=2, arrowsize=1.2,
+                       arrowwidth=2, arrowcolor="#e6e6e6", text="")
+    fig.add_annotation(x=4.0, y=8.48, text="<b>I₅→</b>",
+                       showarrow=False, font=dict(size=11))
+
+    # --- Loop indicators ---
+    fig.add_annotation(x=2.25, y=1.8, text="Loop 1 ↻",
+                       showarrow=False, font=dict(size=11, color="#6aa3d5"),
+                       bgcolor="rgba(30,33,41,0.75)", borderpad=3)
+    fig.add_annotation(x=5.25, y=1.8, text="Loop 2 ↻",
+                       showarrow=False, font=dict(size=11, color="#6aa3d5"),
+                       bgcolor="rgba(30,33,41,0.75)", borderpad=3)
+    fig.add_annotation(x=5.25, y=7.62, text="Loop 3 ↻",
+                       showarrow=False, font=dict(size=11, color="#6aa3d5"),
+                       bgcolor="rgba(30,33,41,0.75)", borderpad=3)
 
     return fig
 

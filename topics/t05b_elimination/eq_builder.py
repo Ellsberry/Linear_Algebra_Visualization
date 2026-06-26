@@ -1,7 +1,6 @@
 import streamlit as st
 from fractions import Fraction
 
-from .eq_parser import parse_equation, rows_equivalent, ParseError
 from .workbench import workbench, _load_aug
 
 
@@ -59,7 +58,7 @@ def _row_to_latex(row, n):
     return lhs + rf" = {b_str}"
 
 
-def _live_aug_latex(key, n, n_rows=None):
+def _live_aug_latex(key, n, parse_fn, n_rows=None):
     """Build augmented [A|b] LaTeX from current typed equations; faint dashes for blank/unparseable rows.
 
     n_rows defaults to n; pass len(target_aug) when equations > unknowns.
@@ -84,43 +83,43 @@ def _live_aug_latex(key, n, n_rows=None):
             row_strs.append(" & ".join([dash] * (n + 1)))
             continue
         try:
-            row = parse_equation(text)
+            row = parse_fn(text)
             cells = [_fmt(row[j]) for j in range(n)] + [_fmt(row[-1])]
             row_strs.append(" & ".join(cells))
-        except ParseError:
+        except Exception:
             row_strs.append(" & ".join([dash] * (n + 1)))
 
     body = r" \\ ".join(row_strs)
     return r"\left[\begin{array}{" + col_spec + r"}" + body + r"\end{array}\right]"
 
 
-def _assemble_from_builder(key, n, row_labels):
+def _assemble_from_builder(key, n, row_labels, parse_fn):
     """Parse each row's text input; return a list of float rows, or None for unparseable entries."""
     rows = []
     for i in range(len(row_labels)):
         text = st.session_state.get(f"{key}_eq__{i}", "").strip()
         try:
-            row = parse_equation(text)
+            row = parse_fn(text)
             rows.append([float(row[j]) for j in range(n)] + [float(row[-1])])
-        except (ParseError, Exception):
+        except Exception:
             rows.append(None)
     return rows
 
 
-def _check_cb(key, target_aug, row_labels):
+def _check_cb(key, target_aug, row_labels, parse_fn, equiv_fn):
     n = len(target_aug[0]) - 1
     wrong = []
     parse_errors = []
     for i, target_row in enumerate(target_aug):
         text = st.session_state.get(f"{key}_eq__{i}", "").strip()
         try:
-            parsed = parse_equation(text)
-        except ParseError:
+            parsed = parse_fn(text)
+        except Exception:
             parse_errors.append(i)
             wrong.append(i)
             continue
         condensed = list(parsed[:n]) + [parsed[-1]]
-        if not rows_equivalent(condensed, target_row):
+        if not equiv_fn(condensed, target_row):
             wrong.append(i)
     st.session_state[f"{key}_check_result"] = wrong
     st.session_state[f"{key}_parse_errors"] = parse_errors
@@ -139,7 +138,7 @@ def _fill_cb(key, target_aug):
     st.session_state[f"{key}_ready"] = True
 
 
-def _node_balance_builder(key, n, row_labels, intro_md=None):
+def _node_balance_builder(key, n, row_labels, parse_fn, intro_md=None):
     """Typed-equation builder: one text box per row, with live LaTeX preview."""
     if intro_md:
         st.markdown(intro_md)
@@ -155,9 +154,9 @@ def _node_balance_builder(key, n, row_labels, intro_md=None):
             text = st.session_state.get(f"{key}_eq__{i}", "").strip()
             if text:
                 try:
-                    row = parse_equation(text)
+                    row = parse_fn(text)
                     st.latex(_row_to_latex(row, n))
-                except ParseError:
+                except Exception:
                     st.caption("...")
             else:
                 st.caption("...")
@@ -165,24 +164,28 @@ def _node_balance_builder(key, n, row_labels, intro_md=None):
 
 def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
                      solution_labels, intro_md, reduce_caption, closing_md=None,
-                     builder_intro_md=None):
+                     builder_intro_md=None, parse_fn=None, equiv_fn=None):
     """Render the full equation-builder flow: diagram + node boxes, live [A|b], Check/Fill, workbench."""
+    if parse_fn is None:
+        from .eq_parser import parse_equation as parse_fn
+    if equiv_fn is None:
+        from .eq_parser import rows_equivalent as equiv_fn
     st.markdown(intro_md)
 
     diagram_col, builder_col = st.columns([0.5, 0.5], gap="large")
     with diagram_col:
         st.plotly_chart(diagram_fn(), use_container_width=True)
     with builder_col:
-        _node_balance_builder(key, n_unknowns, row_labels, intro_md=builder_intro_md)
+        _node_balance_builder(key, n_unknowns, row_labels, parse_fn, intro_md=builder_intro_md)
 
     st.markdown("**Your system as an augmented matrix [A | b]**")
     st.caption("Each equation you write becomes a row. Dashes mark rows you haven't written yet.")
-    st.latex(_live_aug_latex(key, n_unknowns, n_rows=len(target_aug)))
+    st.latex(_live_aug_latex(key, n_unknowns, parse_fn, n_rows=len(target_aug)))
 
     c1, c2 = st.columns(2)
     with c1:
         st.button("Check", key=f"{key}_check_btn", on_click=_check_cb,
-                  args=(key, target_aug, row_labels))
+                  args=(key, target_aug, row_labels, parse_fn, equiv_fn))
     with c2:
         st.button("Fill it in for me", key=f"{key}_fill_btn", on_click=_fill_cb,
                   args=(key, target_aug))
