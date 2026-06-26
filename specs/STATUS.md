@@ -299,15 +299,17 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 **File structure:** `t05b_elimination` is now a per-screen package:
 - `__init__.py` — TITLE, SLUG, OVERVIEW, HOWTO (as `st.caption`), render() dispatcher
 - `workbench.py` — shared elimination engine (all row-op logic, state management, `workbench()` callable)
+- `eq_parser.py` — equation parser + equivalence checker (`parse_equation`, `rows_equivalent`, `ParseError`; hardcoded `N_VARS=7`)
+- `eq_builder.py` — shared equation-builder UI (`equation_builder(key, n_unknowns, target_aug, ...)`) — n-agnostic, proven at n=6 and n=7
 - `screen_workbench.py` — Screen 1 (The workbench: presets, math block)
-- `logistics.py` — Screen 2 (Logistics: redesigned, see below)
+- `logistics_one.py` — Screen 2a (Logistics one plan: 6-route tree, unique solution)
+- `logistics.py` — Screen 2b (Logistics many plans: 7-route cycle, infinitely many)
 - `circuit.py` — Screen 3 (Circuit: fill-values, workbench reveal, Topic 9 pointer)
-- `eq_parser.py` — equation parser + equivalence checker for the typed-equation builder
 
 - [x] Module exists and registered in `app.py`
 - [x] OVERVIEW
 - [x] HOWTO rendered as `st.caption` (no expander)
-- [x] Three screens (Workbench, Logistics, Circuit)
+- [x] Four screens — selector: "1 · The workbench / 2a · Logistics (one plan) / 2b · Logistics (many plans) / 3 · Circuit"
 - [x] `aug_array_latex` in `engine/widgets.py`
 
 ### Layout refactor
@@ -326,28 +328,43 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 - [x] Undo + Reset
 - [x] Scenario detection: 0 = c (no solution), zero row (infinite), pivot count
 - [x] Pivot count with quiet rank / Topic 6 seed
+- [x] **Bug fix:** `_show_scenario` now checks `n_pivots < n_unknowns` before reporting "infinitely many solutions" on a zero row — previously fired a false positive for over-determined systems (7 equations / 6 unknowns) where a redundant row zeros out after full elimination even though rank = n_unknowns and the solution is unique
+
+### Shared equation-builder (`eq_builder.py`)
+- [x] `equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn, solution_labels, intro_md, reduce_caption, closing_md, builder_intro_md)` — renders the full flow for any n
+- [x] Parameterized helpers: `_row_to_eq_str(row, n)`, `_row_to_latex(row, n)`, `_live_aug_latex(key, n, n_rows)`, `_assemble_from_builder(key, n, row_labels)`, `_node_balance_builder(key, n, row_labels, intro_md)`
+- [x] Parameterized callbacks: `_check_cb(key, target_aug, row_labels)`, `_fill_cb(key, target_aug)` — wired via Streamlit `on_click` + `args`
+- [x] **Bug fix:** `eq_parser.parse_equation` always returns a length-8 row (`N_VARS=7` hardcoded). For n=6, b is at `row[-1]` (index 7), not `row[n]` (index 6 = x₇ coefficient = 0). Fixed in `_row_to_latex`, `_live_aug_latex` (b reads), and `_check_cb` (condensed comparison: `list(parsed[:n]) + [parsed[-1]]` before `rows_equivalent`)
+- [x] **Bug fix:** `_live_aug_latex` previously looped `range(n_unknowns)`, hiding the last row of over-determined systems (e.g. Store D on 2a). Added `n_rows` param; `equation_builder` passes `len(target_aug)`
 
 ### Screen 1 — The workbench
 - [x] 4 presets (One solution / Needs a row swap / Redundant / Contradiction)
 - [x] Notice
 - [x] Math block always shown (elementary row operations + det = product of pivots + rank preview)
 
-### Screen 2 — Logistics (REDESIGNED per `specs/topic5b_logistics_redesign.md`)
+### Screen 2a — Logistics (one plan) — `logistics_one.py`
 
-**What changed and why:** The old screen had a pure-tree network whose augmented matrix was already upper-triangular, so elimination had nothing to do. The new screen fixes all three original flaws.
+**Teaching role:** Introduces the equation-builder pattern on a simpler tree network where every store has exactly one incoming route. Elimination gives a unique answer — students see the method work cleanly before the harder case.
 
-- [x] **New cycle network** — Store B is fed by BOTH W1 (route x₄) and W2 (route x₅). This creates a cycle, making the system genuinely NOT pre-triangular and giving one free variable (infinitely many valid plans). 7 routes/unknowns: x₁ F→W1, x₂ F→W2, x₃ W1→A, x₄ W1→B, x₅ W2→B, x₆ W2→C, x₇ W2→D. Demands: A=30, B=20, C=25, D=25 (total 100 = factory supply).
-- [x] **Verified math:** 7×7 system, rank(A)=6, rank([A|b])=6 → exactly one free variable → infinitely many plans. The F row (total in = total out) is the redundant row. General solution: free parameter t = x₅ (freight to B via W2), 0 ≤ t ≤ 20.
-- [x] **Strict sign convention throughout:** in = +1, out = −1, RHS = net supply/demand. The F row is therefore −x₁ − x₂ = −100 (both routes out).
-- [x] **New `eq_parser.py`:** `parse_equation(s)` parses student-typed node-balance equations into `[a1..a7, b]` (Fraction arithmetic). `rows_equivalent(r1, r2)` accepts any nonzero scalar multiple of the target row, so rearranged or rescaled forms count as correct. `ParseError` for unreadable input.
-- [x] **Typed-equation builder:** one `st.text_input` per node (key `t05b_e2_eq__{i}`); label = node name only (no variable hints — student reads the diagram). Live LaTeX preview of what the parser understood (`st.latex`); faint `...` caption when empty or unparseable.
-- [x] **Side-by-side layout:** diagram column (left) + builder column (right) via `st.columns([0.5, 0.5], gap="large")` — the student sees the network while writing equations.
-- [x] **Framing sentence** at top: states the goal (7 route flows, flow-in = flow-out at every node, every demand met).
-- [x] **Check** validates each node's equation via `rows_equivalent`; distinguishes "couldn't read" from "wrong" in the error message.
-- [x] **Fill it in for me** sets each text box to the correct plain-text equation derived from `_E2_AUG`.
-- [x] **Assembled bracketed [A|b]** shown after Check/Fill succeeds (`w.aug_array_latex` + heading + caption).
-- [x] **Workbench** wired to `workbench("t05b_e2", 7, solution_labels=_E2_LABELS)` — correctly handles the 7-unknown system; engine detects the free-variable outcome.
-- [x] **Closing explanation** (always shown after workbench): explains the free variable as the B-delivery split, physical range 0 ≤ t ≤ 20, and why a real logistics network needs the math (a family of plans, not one answer).
+- [x] **6-route tree network** — B fed only by W1 (route x₄); no cycle. Routes: x₁ F→W1, x₂ F→W2, x₃ W1→A, x₄ W1→B, x₅ W2→C, x₆ W2→D. Demands: A=30, B=20, C=25, D=25 (total 100 = factory supply).
+- [x] **Verified math:** 7 equations / 6 unknowns, rank=6 → unique solution x=(50,50,30,20,25,25). One redundant row zeros out after elimination (F-row is dependent); `_show_scenario` correctly falls through to "Ready to back-substitute."
+- [x] **Diagram** (`_logistics_one_diagram`): B placed under W1's side with a single incoming arrow — visually contrasts with 2b where B has two incoming arrows.
+- [x] **Powered by `equation_builder`** with `key="t05b_e2a"`, `n_unknowns=6`. All state keys prefixed `t05b_e2a_*`, fully isolated from 2b's `t05b_e2_*` keys.
+- [x] **Closing text:** "One definite plan" — every route pinned; explains that adding a second route to B (the next screen) changes this completely.
+
+### Screen 2b — Logistics (many plans) — `logistics.py` (REDESIGNED)
+
+**Teaching role:** Same network as 2a plus one extra route (W2→B = x₅). That single edge creates a cycle and changes the solution from one plan to a whole family. The teaching arc: 2a gives the endpoints (x₄=20,x₅=0) and (x₄=0,x₅=20); 2b's free parameter slides between them.
+
+- [x] **7-route cycle network** — B fed by BOTH W1 (x₄) and W2 (x₅). Routes: x₁–x₇ as before. Same demands. 7 equations / 7 unknowns.
+- [x] **Verified math:** rank(A)=6, rank([A|b])=6 → one free variable → infinitely many valid plans. Free parameter t = x₅ (freight to B via W2), 0 ≤ t ≤ 20; general solution x₁=50−t, x₂=50+t, x₃=30, x₄=20−t, x₅=t, x₆=25, x₇=25.
+- [x] **Strict sign convention:** in=+1, out=−1, RHS=net supply/demand. F row: −x₁−x₂=−100.
+- [x] **`eq_parser.py`:** `parse_equation(s)` → `[a1..a7, b]` (Fractions); `rows_equivalent` accepts any nonzero scalar multiple. `ParseError` for bad input.
+- [x] **Powered by `equation_builder`** with `key="t05b_e2"`, `n_unknowns=7`. Equation boxes keyed `t05b_e2_eq__{i}`.
+- [x] **Live [A|b]** always visible as student types; faint dash rows for blank/unparseable equations.
+- [x] **Check / Fill it in for me** — check distinguishes "couldn't read" from "wrong".
+- [x] **Workbench** (`workbench("t05b_e2", 7, ...)`) — engine detects free-variable outcome correctly.
+- [x] **Closing text:** explains the free variable as the B-delivery split and why a real logistics network needs the math (a family of plans, business picks the cheapest).
 
 ### Screen 3 — Circuit (3 currents)
 - [x] Circuit diagram (plotly schematic with V, R1/R2/R3, I1/I2/I3 labeled)
@@ -357,10 +374,10 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 - [x] Looking-ahead note (Topic 9 / AC / complex numbers)
 - [x] Notice
 
-### Outstanding work (new features, not refactor)
+### Outstanding work (future design + build)
 
-- [ ] **(a) Circuit equation-building** — the Circuit screen asks the student to fill in R/V values against a pre-structured matrix; the spec calls for a guided derivation of the KCL node equation and KVL loop equations (like Logistics now has for node-balance). NOT yet built — needs its own design session.
-- [ ] **(b) [A | I] inverse-by-elimination screen** — the Topic 4 <-> 5.5 bridge: extend the workbench to full reduced row echelon form, applied to [A | I] to produce A⁻¹. Specced separately, not yet built.
+- [ ] **(a) Circuit redesign** — the current Circuit screen (3) asks the student to fill in R/V values against a pre-structured matrix. The goal is a richer experience: a more complex diagram, and the student derives the KCL/KVL equations themselves via the shared `equation_builder` (same pattern as Logistics). Needs its own design session to settle the network topology, exact equations, and closing text before coding.
+- [ ] **(b) [A | I] inverse-by-elimination screen** — the Topic 4 ↔ 5.5 bridge: extend the workbench to full reduced row echelon form applied to [A | I] to produce A⁻¹. Specced separately, not yet built.
 - [ ] **(c) Pivot highlighting in LaTeX** — pivots counted but not visually marked (spec: bold/colored pivots in the augmented-matrix display). Minor; pending.
 
 ---
