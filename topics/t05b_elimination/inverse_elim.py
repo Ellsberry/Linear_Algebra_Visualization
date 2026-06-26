@@ -28,12 +28,31 @@ def _fmt_entry(v):
     return f"-{frac}" if v < 0 else frac
 
 
-def _aug_latex(M, n):
-    """Render the n x 2n augmented matrix [A | I/A^-1] with a LaTeX divider."""
+def _active_pivot(M, n):
+    """Return (p, p) for the first diagonal column not yet fully reduced, or None."""
+    for p in range(n):
+        if M[p][p] != Fr(1):
+            return (p, p)
+        for i in range(n):
+            if i != p and M[i][p] != Fr(0):
+                return (p, p)
+    return None
+
+
+def _aug_latex(M, n, highlight=None):
+    """Render the n x 2n augmented matrix [A | I/A^-1] with a LaTeX divider.
+
+    highlight: optional (row, col) to color/bold in accent blue.
+    """
     col_spec = "c" * n + "|" + "c" * n
     rows = []
-    for row in M:
-        cells = [_fmt_entry(row[j]) for j in range(2 * n)]
+    for ri, row in enumerate(M):
+        cells = []
+        for ci in range(2 * n):
+            entry = _fmt_entry(row[ci])
+            if highlight is not None and (ri, ci) == highlight:
+                entry = r"\textcolor{#4dabf7}{\mathbf{" + entry + r"}}"
+            cells.append(entry)
         rows.append(" & ".join(cells))
     body = r" \\ ".join(rows)
     return r"\left[\begin{array}{" + col_spec + r"}" + body + r"\end{array}\right]"
@@ -157,7 +176,8 @@ def render_inverse_elim():
     left, right = st.columns([1, 1.3], gap="large")
 
     with right:
-        st.latex(_aug_latex(M, _N))
+        hp = None if singular else _active_pivot(M, _N)
+        st.latex(_aug_latex(M, _N, highlight=hp))
         if log:
             st.caption(f"Last: {log[-1]}")
             if len(log) > 1:

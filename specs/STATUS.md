@@ -298,20 +298,22 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 
 **File structure:** `t05b_elimination` is now a per-screen package:
 - `__init__.py` — TITLE, SLUG, OVERVIEW, HOWTO (as `st.caption`), render() dispatcher
-- `workbench.py` — shared elimination engine (all row-op logic, state management, `workbench()` callable)
+- `workbench.py` — shared elimination engine (all row-op logic, state management, `workbench()` callable); includes `_active_pivot_tri` for pivot highlighting
 - `eq_parser.py` — numeric parser for Logistics (x-variables, N_VARS=7; `parse_equation`, `rows_equivalent`, `ParseError`)
 - `eq_builder.py` — shared equation-builder UI (`equation_builder(key, n_unknowns, target_aug, ...)`) — n-agnostic, parser-agnostic; powers three screens with two parsers
 - `circuit_parser.py` — symbolic parser for Circuit (I-variables + R/V symbol table; N_VARS=5)
+- `rref_reducer.py` — dedicated Gauss-Jordan RREF reducer for [A|I] inversion (`make_augmented`, `compute_one_step`, `run_to_reduced`, `op_*`); uses Fraction; pure logic, no Streamlit; built and unit-tested before wiring
 - `screen_workbench.py` — Screen 1 (The workbench: presets, math block)
 - `logistics_one.py` — Screen 2a (Logistics one plan: 6-route tree, unique solution)
 - `logistics.py` — Screen 2b (Logistics many plans: 7-route cycle, infinitely many)
 - `circuit.py` — Screen 3 (Circuit: KCL/KVL symbolic equations, 5 currents, unique solution)
+- `inverse_elim.py` — Screen 4 ([A|I] inverse-by-elimination; spec: `specs/topic5b_inverse_elimination.md`)
 
 - [x] Module exists and registered in `app.py`
 - [x] OVERVIEW
 - [x] HOWTO rendered as `st.caption` (no expander)
-- [x] Four screens — selector: "1 · The workbench / 2a · Logistics (one plan) / 2b · Logistics (many plans) / 3 · Circuit"
-- [x] `aug_array_latex` in `engine/widgets.py`
+- [x] Five screens — selector: "1 · The workbench / 2a · Logistics (one plan) / 2b · Logistics (many plans) / 3 · Circuit / 4 · Inverse by elimination"
+- [x] `aug_array_latex` in `engine/widgets.py` — optional `highlight=(row,col)` arg (defaults `None`; existing callers unaffected)
 
 ### Layout refactor
 - [x] Page-level "How to use this screen" expander removed; HOWTO now `st.caption` under OVERVIEW
@@ -321,7 +323,7 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 
 ### Shared workbench engine
 - [x] Equations displayed above augmented matrix (both update on every op)
-- [x] Augmented matrix via `aug_array_latex`
+- [x] Augmented matrix via `aug_array_latex` — with active-pivot highlight (`_active_pivot_tri` in `workbench.py`; highlight advances column by column as elimination proceeds)
 - [x] Manual controls: Add multiple / Swap / Scale
 - [x] Guided: "Do one step" (one standard forward-elimination op)
 - [x] Guided: "Run to triangular form"
@@ -387,13 +389,38 @@ Student writes the five circuit equations themselves (2 KCL + 3 KVL, symbolic fo
 - [x] **Closing text:** "One definite answer" with solution; Topic 9 AC-circuit forward-link.
 - [x] Powered by `equation_builder` with `parse_fn=parse_circuit_equation`, `equiv_fn=rows_equivalent`, `fill_equations=[...]`, `placeholder="e.g. R1*I1 + R3*I3 = V"`.
 
-### Outstanding work (future design + build)
+### Screen 4 — Inverse [A|I] — `inverse_elim.py` (COMPLETE)
 
-Topic 5.5 has 4 complete screens (Workbench, Logistics 2a, Logistics 2b, Circuit). The only remaining net-new screen in 5.5 is:
+**Spec:** `specs/topic5b_inverse_elimination.md`
 
-- [ ] **[A | I] inverse-by-elimination screen** — the Topic 4 ↔ 5.5 bridge: extend the workbench to full reduced row echelon form applied to [A | I] to produce A⁻¹. Specced separately, not yet built.
-- [ ] **Pivot highlighting in LaTeX** — pivots counted but not visually marked (spec: bold/colored pivots in the augmented-matrix display). Minor; pending.
-- [ ] **AC-circuit revisit (Topic 9)** — the same circuit topology reused with complex impedances; same 5 equations, complex solution. Keep circuit_parser and the topology clean for this future hook.
+The Topic 4 ↔ 5.5 bridge: augment A with the identity to form [A | I], row-reduce all the way to RREF (Gauss-Jordan — zeros below AND above diagonal, pivots scaled to 1) until the left block is I, and the right block is A⁻¹.
+
+- [x] **`rref_reducer.py`** — dedicated Gauss-Jordan RREF reducer, separate from the triangular `workbench` so the four existing screens are untouched. Eliminates above and below each pivot; scales pivots to 1. Uses `Fraction` for exact arithmetic (fractional inverses display as 1/2, -1/4, not decimals). Clean step-description formatting (no nested "1/5/2" strings; `_fmt_factor` handles reciprocals of fractions). Built and unit-tested before wiring.
+- [x] **Three verified examples:**
+  - Integer inverse: A=[[2,1,1],[1,3,2],[1,0,0]], A⁻¹=[[0,0,1],[-2,1,3],[3,-1,-5]] (det=-1; no fractions in answer).
+  - Fractional inverse: A=[[2,0,0],[1,2,0],[1,1,2]], A⁻¹=[[1/2,0,0],[-1/4,1/2,0],[-1/8,-1/4,1/2]] (det=8; exact fractions via `Fraction`).
+  - Singular: A=[[1,2,3],[2,4,6],[1,0,1]] (det=0; reduction detects no pivot → "A has no inverse" warning, no false answer).
+- [x] **Guided reduction:** "Do one step" (one Gauss-Jordan op) and "Run to reduced form" (full RREF in one click).
+- [x] **Manual row-op controls:** swap / scale / add-multiple with fraction-parsable text inputs (student types `1/2`, `-3/4`); factor parsed via `Fraction`; bad input shows a gentle caption and does not apply.
+- [x] **Undo / Reset** — same state pattern as the triangular workbench.
+- [x] **Singular detection:** banner "A is singular — the left block can't become the identity, so A has no inverse." Controls disabled once singular.
+- [x] **Completion payoff** (full-width below columns when left block is I):
+  - "Why the right side becomes A⁻¹" insight paragraph.
+  - Boxed inverse: `A⁻¹ = ...` as LaTeX bmatrix with exact Fraction entries.
+  - A·A⁻¹ = I verification rendered as LaTeX (computed with Fraction arithmetic; confirms the inverse is exact).
+- [x] **Active-pivot highlighting:** `_active_pivot(M, n)` finds the first diagonal position not yet fully reduced (pivot ≠ 1 or column not fully cleared); highlighted entry rendered in accent blue bold. No highlight when done or singular.
+- [x] **Wide-math layout** (`st.columns([1, 1.3])`): controls narrow-left, 3×6 matrix wide-right (LaTeX `{ccc|ccc}` divider). Matches workbench column split.
+- [x] **Wired into selector** as "4 · Inverse by elimination" in `__init__.py` radio.
+
+### Future hook (not Topic 5.5 work)
+
+- **AC-circuit revisit (Topic 9)** — the same circuit topology reused with complex impedances; same 5 equations, complex solution. `circuit_parser.py` and the Plotly diagram are kept clean for this future hook.
+
+---
+
+## Core curriculum status
+
+**Topics 1–5 and 5.5 are FULLY COMPLETE** — all refactored to the dark-mode layout, all screens built and verified, all engines shared and tested. The core curriculum (vectors → transformations → determinant → inverse → linear systems → elimination & inversion) is done.
 
 ---
 
@@ -402,6 +429,6 @@ Topic 5.5 has 4 complete screens (Workbench, Logistics 2a, Logistics 2b, Circuit
 - [ ] 6 — Subspaces, Basis, Dimension
 - [ ] 7 — Projection & Least Squares
 - [ ] 8 — Eigenvalues & Eigenvectors
-- [ ] 9 — Complex Numbers in LA
+- [ ] 9 — Complex Numbers in LA (AC-circuit screen reuses Topic 5.5 Circuit topology + `circuit_parser` with complex impedances)
 - [ ] 10 — Fourier Matrices (DFT)
 - [ ] 11 — Linear Algebra in AI/ML (PCA & SVD)

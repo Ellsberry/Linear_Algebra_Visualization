@@ -26,6 +26,16 @@ def _all_pivots_nonzero(M, nc, tol=1e-9):
     return all(abs(M[i][i]) > tol for i in range(nc))
 
 
+def _active_pivot_tri(M, n_unknowns, tol=1e-9):
+    """Return (p, p) for the first column with nonzeros below the diagonal, or None."""
+    n = len(M)
+    for p in range(min(n, n_unknowns)):
+        for i in range(p + 1, n):
+            if abs(M[i][p]) > tol:
+                return (p, p)
+    return None
+
+
 # ---------------------------------------------------------------------------
 # State management
 # ---------------------------------------------------------------------------
@@ -282,7 +292,8 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix=""):
     # --- Right: equations + matrix (both read from M, update together) ---
     with right:
         st.latex(_equations_latex(M, n_unknowns))
-        st.latex(w.aug_array_latex(M, n_unknowns))
+        hp = _active_pivot_tri(M, n_unknowns)
+        st.latex(w.aug_array_latex(M, n_unknowns, highlight=hp))
         _show_scenario(M, n_unknowns)
 
         log = st.session_state.get(f"{key}_log", [])
