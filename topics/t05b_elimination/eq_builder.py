@@ -128,27 +128,31 @@ def _check_cb(key, target_aug, row_labels, parse_fn, equiv_fn):
         st.session_state[f"{key}_ready"] = True
 
 
-def _fill_cb(key, target_aug):
+def _fill_cb(key, target_aug, fill_equations):
     n = len(target_aug[0]) - 1
     for i, row in enumerate(target_aug):
-        st.session_state[f"{key}_eq__{i}"] = _row_to_eq_str(row, n)
+        if fill_equations is not None:
+            st.session_state[f"{key}_eq__{i}"] = fill_equations[i]
+        else:
+            st.session_state[f"{key}_eq__{i}"] = _row_to_eq_str(row, n)
     st.session_state[f"{key}_check_result"] = []
     st.session_state.pop(f"{key}_parse_errors", None)
     _load_aug(key, target_aug)
     st.session_state[f"{key}_ready"] = True
 
 
-def _node_balance_builder(key, n, row_labels, parse_fn, intro_md=None):
+def _node_balance_builder(key, n, row_labels, parse_fn, intro_md=None, placeholder=None):
     """Typed-equation builder: one text box per row, with live LaTeX preview."""
     if intro_md:
         st.markdown(intro_md)
+    _placeholder = placeholder if placeholder is not None else "e.g. x1 - x3 - x4 = 0"
     for i, node_label in enumerate(row_labels):
         col_input, col_preview = st.columns([2, 3])
         with col_input:
             st.text_input(
                 node_label,
                 key=f"{key}_eq__{i}",
-                placeholder="e.g. x1 - x3 - x4 = 0",
+                placeholder=_placeholder,
             )
         with col_preview:
             text = st.session_state.get(f"{key}_eq__{i}", "").strip()
@@ -164,7 +168,8 @@ def _node_balance_builder(key, n, row_labels, parse_fn, intro_md=None):
 
 def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
                      solution_labels, intro_md, reduce_caption, closing_md=None,
-                     builder_intro_md=None, parse_fn=None, equiv_fn=None):
+                     builder_intro_md=None, parse_fn=None, equiv_fn=None,
+                     fill_equations=None, placeholder=None):
     """Render the full equation-builder flow: diagram + node boxes, live [A|b], Check/Fill, workbench."""
     if parse_fn is None:
         from .eq_parser import parse_equation as parse_fn
@@ -176,7 +181,8 @@ def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
     with diagram_col:
         st.plotly_chart(diagram_fn(), use_container_width=True)
     with builder_col:
-        _node_balance_builder(key, n_unknowns, row_labels, parse_fn, intro_md=builder_intro_md)
+        _node_balance_builder(key, n_unknowns, row_labels, parse_fn,
+                              intro_md=builder_intro_md, placeholder=placeholder)
 
     st.markdown("**Your system as an augmented matrix [A | b]**")
     st.caption("Each equation you write becomes a row. Dashes mark rows you haven't written yet.")
@@ -188,7 +194,7 @@ def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
                   args=(key, target_aug, row_labels, parse_fn, equiv_fn))
     with c2:
         st.button("Fill it in for me", key=f"{key}_fill_btn", on_click=_fill_cb,
-                  args=(key, target_aug))
+                  args=(key, target_aug, fill_equations))
 
     check = st.session_state.get(f"{key}_check_result")
     if check is not None:

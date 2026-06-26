@@ -1,26 +1,22 @@
 import plotly.graph_objects as go
-import streamlit as st
 
-from .workbench import workbench, _load_aug
+from .eq_builder import equation_builder
+from .circuit_parser import parse_circuit_equation, rows_equivalent
 
 
 # ---------------------------------------------------------------------------
-# Screen 3 — Circuit (fill values, 3 currents)
+# Screen 3 — Circuit (KCL/KVL symbolic equations, 5 currents)
 # ---------------------------------------------------------------------------
 
-# Correct augmented matrix for the circuit: A=[[1,-1,-1],[2,4,0],[0,4,-4]], b=(0,12,0)
 _E3_AUG = [
-    [ 1.0, -1.0, -1.0,  0.0],   # KCL node:  I1 - I2 - I3 = 0
-    [ 2.0,  4.0,  0.0, 12.0],   # KVL loop 1: R1*I1 + R2*I2 = V
-    [ 0.0,  4.0, -4.0,  0.0],   # KVL loop 2: R2*I2 - R3*I3 = 0
+    [ 1, -1, -1,  0, -1,  0],   # KCL P: I1 - I2 - I3 - I5 = 0
+    [ 0,  1,  0, -1,  1,  0],   # KCL Q: I2 - I4 + I5 = 0
+    [ 2,  0,  8,  0,  0, 36],   # KVL1: R1 I1 + R3 I3 = V
+    [ 0,  6, -8,  4,  0,  0],   # KVL2: R2 I2 - R3 I3 + R4 I4 = 0
+    [ 0,  6,  0,  0,-12,  0],   # KVL3: R2 I2 - R5 I5 = 0
 ]
-
-_E3_NOTICE = """
-The unknowns are the currents. The same "what flows in must flow out" idea as
-the shipping network — electricity and freight obey the same linear algebra.
-Here the signs are set up for you; you just read the resistor and battery values
-off the diagram.
-"""
+_E3_ROW_LABELS = ["KCL node P", "KCL node Q", "Loop 1 (battery)", "Loop 2", "Loop 3"]
+_E3_LABELS     = ["I1", "I2", "I3", "I4", "I5"]
 
 
 def _circuit_diagram():
@@ -120,7 +116,7 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=1.18, y=2.35, text="<b>I₁↑</b>",
-                       showarrow=False, font=dict(size=11), xanchor="left")
+                       showarrow=False, font=dict(size=16), xanchor="left")
 
     # I2 rightward along R2 (between P and R2 box left edge)
     fig.add_annotation(x=4.4, y=7, ax=3.7, ay=7,
@@ -128,7 +124,7 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=4.05, y=7.42, text="<b>I₂→</b>",
-                       showarrow=False, font=dict(size=11))
+                       showarrow=False, font=dict(size=16))
 
     # I3 downward on motor branch (above motor circle)
     fig.add_annotation(x=3.5, y=5.1, ax=3.5, ay=5.65,
@@ -136,7 +132,7 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=3.65, y=5.32, text="<b>I₃↓</b>",
-                       showarrow=False, font=dict(size=11), xanchor="left")
+                       showarrow=False, font=dict(size=16), xanchor="left")
 
     # I4 downward on lamp branch (above lamp circle)
     fig.add_annotation(x=7, y=5.1, ax=7, ay=5.65,
@@ -144,7 +140,7 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=7.15, y=5.32, text="<b>I₄↓</b>",
-                       showarrow=False, font=dict(size=11), xanchor="left")
+                       showarrow=False, font=dict(size=16), xanchor="left")
 
     # I5 rightward on R5 raised rail (between P corner and R5 box left edge)
     fig.add_annotation(x=4.3, y=8.2, ax=3.7, ay=8.2,
@@ -152,7 +148,7 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=4.0, y=8.48, text="<b>I₅→</b>",
-                       showarrow=False, font=dict(size=11))
+                       showarrow=False, font=dict(size=16))
 
     # --- Loop indicators ---
     fig.add_annotation(x=2.25, y=1.8, text="Loop 1 ↻",
@@ -168,119 +164,33 @@ def _circuit_diagram():
     return fig
 
 
-def _circuit_matrix_latex(r1, r2, r3, v):
-    """LaTeX for the circuit augmented matrix, showing variable names for zero entries."""
-    def _val(x, name):
-        if abs(float(x)) < 1e-9:
-            return rf"\textit{{{name}}}"
-        xf = float(x)
-        return str(int(round(xf))) if abs(xf - round(xf)) < 1e-9 else f"{xf:.4g}"
-
-    def _neg(x, name):
-        if abs(float(x)) < 1e-9:
-            return rf"-\textit{{{name}}}"
-        xf = float(x)
-        s = str(int(round(xf))) if abs(xf - round(xf)) < 1e-9 else f"{xf:.4g}"
-        return f"-{s}"
-
-    R1 = _val(r1, "R_1"); R2 = _val(r2, "R_2"); nR3 = _neg(r3, "R_3"); V = _val(v, "V")
-    return (
-        r"\left[\begin{array}{ccc|c}"
-        rf"1 & -1 & -1 & 0 \\"
-        rf"{R1} & {R2} & 0 & {V} \\"
-        rf"0 & {R2} & {nR3} & 0"
-        r"\end{array}\right]"
-    )
-
-
-def _load_circuit():
-    _load_aug("t05b_e3", _E3_AUG)
-
-
-def _check_circuit_cb():
-    r1 = float(st.session_state.get("t05b_e3_R1", 0))
-    r2 = float(st.session_state.get("t05b_e3_R2", 0))
-    r3 = float(st.session_state.get("t05b_e3_R3", 0))
-    v  = float(st.session_state.get("t05b_e3_V",  0))
-    wrong = []
-    if abs(r1 - 2) > 1e-9: wrong.append("R1")
-    if abs(r2 - 4) > 1e-9: wrong.append("R2")
-    if abs(r3 - 4) > 1e-9: wrong.append("R3")
-    if abs(v - 12) > 1e-9: wrong.append("V")
-    st.session_state["t05b_e3_check_result"] = wrong
-    if not wrong:
-        _load_circuit()
-        st.session_state["t05b_e3_ready"] = True
-
-
-def _fill_circuit_cb():
-    st.session_state["t05b_e3_R1"] = 2.0
-    st.session_state["t05b_e3_R2"] = 4.0
-    st.session_state["t05b_e3_R3"] = 4.0
-    st.session_state["t05b_e3_V"]  = 12.0
-    st.session_state["t05b_e3_check_result"] = []
-    _load_circuit()
-    st.session_state["t05b_e3_ready"] = True
-
 
 def _example_three():
-    st.info(_E3_NOTICE)
-
-    st.markdown(
-        "**The circuit** — read the values (V, R1, R2, R3) and the current "
-        "directions off the diagram."
-    )
-    st.plotly_chart(_circuit_diagram(), use_container_width=True)
-
-    st.markdown("---")
-    st.markdown(
-        "**Fill in the values.** The equation structure and signs are already "
-        "placed — you just read V, R1, R2, R3 from the diagram and type them. "
-        "Notice R2 appears in both loop equations."
-    )
-
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        r1 = st.number_input("R1 (Ω)", min_value=0.0, step=1.0, format="%.1f",
-                             key="t05b_e3_R1")
-    with c2:
-        r2 = st.number_input("R2 (Ω)", min_value=0.0, step=1.0, format="%.1f",
-                             key="t05b_e3_R2")
-    with c3:
-        r3 = st.number_input("R3 (Ω)", min_value=0.0, step=1.0, format="%.1f",
-                             key="t05b_e3_R3")
-    with c4:
-        v  = st.number_input("V (volts)", min_value=0.0, step=1.0, format="%.1f",
-                             key="t05b_e3_V")
-
-    st.latex(_circuit_matrix_latex(r1, r2, r3, v))
-
-    cc1, cc2 = st.columns(2)
-    with cc1:
-        st.button("Check", key="t05b_e3_check_btn", on_click=_check_circuit_cb)
-    with cc2:
-        st.button("Fill it in for me", key="t05b_e3_fill_btn", on_click=_fill_circuit_cb)
-
-    check = st.session_state.get("t05b_e3_check_result")
-    if check is not None:
-        if not check:
-            st.success("All four values are correct.")
-        else:
-            st.warning(
-                f"Not quite — check {', '.join(check)}. "
-                "Read the labeled values from the diagram."
-            )
-
-    if st.session_state.get("t05b_e3_ready") and st.session_state.get("t05b_e3_M"):
-        st.markdown("---")
-        st.markdown("**Reduce it** — same three moves, three currents.")
-        workbench("t05b_e3", 3,
-                  solution_labels=["I₁", "I₂", "I₃"],
-                  solution_suffix=" A")
-
-    st.info(
-        "This circuit runs on steady (DC) current, so the answers are plain numbers. "
-        "In **Topic 9** the *same circuit* on alternating current uses **complex numbers** "
-        "to capture both the size and the timing of each current — same question, richer answer.",
-        icon="\U0001f52e",
+    equation_builder(
+        key="t05b_e3",
+        n_unknowns=5,
+        target_aug=_E3_AUG,
+        row_labels=_E3_ROW_LABELS,
+        diagram_fn=_circuit_diagram,
+        solution_labels=_E3_LABELS,
+        intro_md=("You're solving for the five branch currents I1..I5. Read the "
+                  "circuit, then write each node's KCL equation (current in = current "
+                  "out) and each marked loop's KVL equation. Use the resistor and "
+                  "source symbols, e.g. `R1*I1 + R3*I3 = V`."),
+        reduce_caption="**Reduce it** -- same three moves, five currents.",
+        parse_fn=parse_circuit_equation,
+        equiv_fn=rows_equivalent,
+        placeholder="e.g. R1*I1 + R3*I3 = V",
+        fill_equations=[
+            "I1 - I2 - I3 - I5 = 0",
+            "I2 - I4 + I5 = 0",
+            "R1*I1 + R3*I3 = V",
+            "R2*I2 - R3*I3 + R4*I4 = 0",
+            "R2*I2 - R5*I5 = 0",
+        ],
+        closing_md=("**One definite answer.** Elimination drives this to a single "
+                    "solution: I = (6, 2, 3, 3, 1) A. The same method that solved the "
+                    "freight network solves the circuit -- and in Topic 9, the very "
+                    "same circuit on alternating current uses complex numbers for a "
+                    "richer answer."),
     )
