@@ -6,6 +6,7 @@ Pattern: MULTI-EXAMPLE (3 screens).
 import streamlit as st
 
 from .circuit import _example_three
+from .inverse_elim import render_inverse_elim
 from .logistics import _example_two
 from .logistics_one import _example_two_a
 from .screen_workbench import _example_one
@@ -44,7 +45,7 @@ def render():
 
     example = st.radio(
         "Example",
-        ["1 · The workbench", "2a · Logistics (one plan)", "2b · Logistics (many plans)", "3 · Circuit"],
+        ["1 · The workbench", "2a · Logistics (one plan)", "2b · Logistics (many plans)", "3 · Circuit", "4 · Inverse by elimination"],
         horizontal=True,
         key="t05b_example",
     )
@@ -56,5 +57,7 @@ def render():
         _example_two_a()
     elif example.startswith("2b"):
         _example_two()
-    else:
+    elif example.startswith("3"):
         _example_three()
+    else:
+        render_inverse_elim()
