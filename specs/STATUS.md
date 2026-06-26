@@ -299,12 +299,13 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 **File structure:** `t05b_elimination` is now a per-screen package:
 - `__init__.py` — TITLE, SLUG, OVERVIEW, HOWTO (as `st.caption`), render() dispatcher
 - `workbench.py` — shared elimination engine (all row-op logic, state management, `workbench()` callable)
-- `eq_parser.py` — equation parser + equivalence checker (`parse_equation`, `rows_equivalent`, `ParseError`; hardcoded `N_VARS=7`)
-- `eq_builder.py` — shared equation-builder UI (`equation_builder(key, n_unknowns, target_aug, ...)`) — n-agnostic, proven at n=6 and n=7
+- `eq_parser.py` — numeric parser for Logistics (x-variables, N_VARS=7; `parse_equation`, `rows_equivalent`, `ParseError`)
+- `eq_builder.py` — shared equation-builder UI (`equation_builder(key, n_unknowns, target_aug, ...)`) — n-agnostic, parser-agnostic; powers three screens with two parsers
+- `circuit_parser.py` — symbolic parser for Circuit (I-variables + R/V symbol table; N_VARS=5)
 - `screen_workbench.py` — Screen 1 (The workbench: presets, math block)
 - `logistics_one.py` — Screen 2a (Logistics one plan: 6-route tree, unique solution)
 - `logistics.py` — Screen 2b (Logistics many plans: 7-route cycle, infinitely many)
-- `circuit.py` — Screen 3 (Circuit: fill-values, workbench reveal, Topic 9 pointer)
+- `circuit.py` — Screen 3 (Circuit: KCL/KVL symbolic equations, 5 currents, unique solution)
 
 - [x] Module exists and registered in `app.py`
 - [x] OVERVIEW
@@ -330,12 +331,16 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 - [x] Pivot count with quiet rank / Topic 6 seed
 - [x] **Bug fix:** `_show_scenario` now checks `n_pivots < n_unknowns` before reporting "infinitely many solutions" on a zero row — previously fired a false positive for over-determined systems (7 equations / 6 unknowns) where a redundant row zeros out after full elimination even though rank = n_unknowns and the solution is unique
 
-### Shared equation-builder (`eq_builder.py`)
-- [x] `equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn, solution_labels, intro_md, reduce_caption, closing_md, builder_intro_md)` — renders the full flow for any n
-- [x] Parameterized helpers: `_row_to_eq_str(row, n)`, `_row_to_latex(row, n)`, `_live_aug_latex(key, n, n_rows)`, `_assemble_from_builder(key, n, row_labels)`, `_node_balance_builder(key, n, row_labels, intro_md)`
-- [x] Parameterized callbacks: `_check_cb(key, target_aug, row_labels)`, `_fill_cb(key, target_aug)` — wired via Streamlit `on_click` + `args`
-- [x] **Bug fix:** `eq_parser.parse_equation` always returns a length-8 row (`N_VARS=7` hardcoded). For n=6, b is at `row[-1]` (index 7), not `row[n]` (index 6 = x₇ coefficient = 0). Fixed in `_row_to_latex`, `_live_aug_latex` (b reads), and `_check_cb` (condensed comparison: `list(parsed[:n]) + [parsed[-1]]` before `rows_equivalent`)
-- [x] **Bug fix:** `_live_aug_latex` previously looped `range(n_unknowns)`, hiding the last row of over-determined systems (e.g. Store D on 2a). Added `n_rows` param; `equation_builder` passes `len(target_aug)`
+### Shared equation-builder (`eq_builder.py`) — fully parameterized
+- [x] `equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn, solution_labels, intro_md, reduce_caption, closing_md, builder_intro_md, parse_fn, equiv_fn, fill_equations, placeholder)` — renders the full flow for any n with any parser
+- [x] **`parse_fn` / `equiv_fn`** — parser and equivalence checker; default to the numeric `eq_parser` functions so Logistics 2a/2b are unchanged. Circuit passes `circuit_parser.parse_circuit_equation` / `rows_equivalent`.
+- [x] **`fill_equations`** — optional list of correct equation strings (one per row) for "Fill it in for me". When `None`, falls back to auto-generated x-variable numeric strings (Logistics path). Circuit passes the five symbolic strings so Fill produces text the symbolic parser can read.
+- [x] **`placeholder`** — optional text-box hint; defaults to `"e.g. x1 - x3 - x4 = 0"`. Circuit passes `"e.g. R1*I1 + R3*I3 = V"`.
+- [x] All helpers accept `parse_fn` as a parameter; all `except ParseError` clauses changed to `except Exception` so any parser's error class is caught cleanly.
+- [x] Powers three screens with two parsers: Logistics 2a (numeric, n=6), Logistics 2b (numeric, n=7), Circuit (symbolic, n=5).
+- [x] **Bug fix:** `eq_parser.parse_equation` always returns length-8 rows (`N_VARS=7`). For n=6, b is at `row[-1]` not `row[n]`. Fixed in `_row_to_latex`, `_live_aug_latex`, and `_check_cb`.
+- [x] **Bug fix:** `_live_aug_latex` previously looped `range(n_unknowns)`, hiding rows of over-determined systems. Added `n_rows` param; `equation_builder` passes `len(target_aug)`.
+- [x] **Bug fix:** Fill always wrote x-variable numeric strings; symbolic parser could not read them, producing "(couldn't read)" on Circuit. Fixed via `fill_equations` param.
 
 ### Screen 1 — The workbench
 - [x] 4 presets (One solution / Needs a row swap / Redundant / Contradiction)
@@ -366,19 +371,29 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 - [x] **Workbench** (`workbench("t05b_e2", 7, ...)`) — engine detects free-variable outcome correctly.
 - [x] **Closing text:** explains the free variable as the B-delivery split and why a real logistics network needs the math (a family of plans, business picks the cheapest).
 
-### Screen 3 — Circuit (3 currents)
-- [x] Circuit diagram (plotly schematic with V, R1/R2/R3, I1/I2/I3 labeled)
-- [x] Value fill-in (R1, R2, R3, V) with Check / "Fill it in for me"
-- [x] Workbench renders after correct/filled values
-- [x] Solution labeled as currents (I₁, I₂, I₃ in amps)
-- [x] Looking-ahead note (Topic 9 / AC / complex numbers)
-- [x] Notice
+### Screen 3 — Circuit (redesigned — complete, no polish pending)
+
+**Spec:** `specs/topic5b_circuit_redesign.md`
+
+Student writes the five circuit equations themselves (2 KCL + 3 KVL, symbolic form e.g. `R1*I1 + R3*I3 = V`) and sees them assembled into [A|b], then eliminates.
+
+**Verified circuit:** V=36 V; R1=2 Ω (series), R2=6 Ω, R3=8 Ω (motor), R4=4 Ω (lightbulb), R5=12 Ω; five branch currents I1..I5; two nodes P, Q; three marked directional loops. Unique solution **I = (6, 2, 3, 3, 1) A** (clean integers). Matrix is not pre-triangular — 4 below-diagonal nonzeros — so elimination does real work.
+
+- [x] **`circuit_parser.py`** — symbolic parser: knows `{R1:2, R2:6, R3:8, R4:4, R5:12, V:36}`, substitutes values, accepts any rearranged/rescaled form, rejects wrong resistors or signs. Built and unit-tested (all cases pass) before wiring into the screen.
+- [x] **Compact Plotly diagram** — xrange [-0.5, 8], yrange [0, 9], height=420, `scaleanchor="x"` for round motor/lamp circles. Resistor boxes (R1, R2, R5), motor circle (M), lightbulb circle (X), labeled nodes P/Q, three directional loop markers, five current-direction arrows with size-16 subscript labels. No polish pending.
+- [x] **Symbolic equation boxes** — placeholder `"e.g. R1*I1 + R3*I3 = V"` (circuit-specific). Live [A|b] substitutes symbol values as student types.
+- [x] **Check / Fill it in for me** — Check validates against `_E3_AUG` via `circuit_parser.rows_equivalent`; Fill writes the five correct symbolic strings (parseable by the circuit parser).
+- [x] **Workbench** (`workbench("t05b_e3", 5, ...)`) — reduces to unique solution I = (6, 2, 3, 3, 1) A.
+- [x] **Closing text:** "One definite answer" with solution; Topic 9 AC-circuit forward-link.
+- [x] Powered by `equation_builder` with `parse_fn=parse_circuit_equation`, `equiv_fn=rows_equivalent`, `fill_equations=[...]`, `placeholder="e.g. R1*I1 + R3*I3 = V"`.
 
 ### Outstanding work (future design + build)
 
-- [ ] **(a) Circuit redesign** — the current Circuit screen (3) asks the student to fill in R/V values against a pre-structured matrix. The goal is a richer experience: a more complex diagram, and the student derives the KCL/KVL equations themselves via the shared `equation_builder` (same pattern as Logistics). Needs its own design session to settle the network topology, exact equations, and closing text before coding.
-- [ ] **(b) [A | I] inverse-by-elimination screen** — the Topic 4 ↔ 5.5 bridge: extend the workbench to full reduced row echelon form applied to [A | I] to produce A⁻¹. Specced separately, not yet built.
-- [ ] **(c) Pivot highlighting in LaTeX** — pivots counted but not visually marked (spec: bold/colored pivots in the augmented-matrix display). Minor; pending.
+Topic 5.5 has 4 complete screens (Workbench, Logistics 2a, Logistics 2b, Circuit). The only remaining net-new screen in 5.5 is:
+
+- [ ] **[A | I] inverse-by-elimination screen** — the Topic 4 ↔ 5.5 bridge: extend the workbench to full reduced row echelon form applied to [A | I] to produce A⁻¹. Specced separately, not yet built.
+- [ ] **Pivot highlighting in LaTeX** — pivots counted but not visually marked (spec: bold/colored pivots in the augmented-matrix display). Minor; pending.
+- [ ] **AC-circuit revisit (Topic 9)** — the same circuit topology reused with complex impedances; same 5 equations, complex solution. Keep circuit_parser and the topology clean for this future hook.
 
 ---
 
