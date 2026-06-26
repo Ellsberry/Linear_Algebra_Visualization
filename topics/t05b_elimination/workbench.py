@@ -178,12 +178,15 @@ def _show_scenario(M, n_unknowns):
                     "This system has no solution."
                 )
                 return
-            else:
+            # Zero RHS: redundant equation. Only a free variable if rank < n_unknowns.
+            n_pivots = sum(1 for k in range(min(n, nc)) if abs(M[k][k]) > TOL)
+            if n_pivots < nc:
                 st.info(
                     f"Row {i+1} became all zeros — that equation was redundant, "
                     "so there's a free variable: infinitely many solutions."
                 )
                 return
+            # n_pivots == nc: redundant but fully determined -- fall through to triangular check
     is_tri = _is_upper_triangular(M, nc)
     if is_tri:
         n_pivots = sum(1 for i in range(min(n, nc)) if abs(M[i][i]) > TOL)

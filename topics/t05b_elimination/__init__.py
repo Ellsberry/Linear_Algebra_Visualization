@@ -7,6 +7,7 @@ import streamlit as st
 
 from .circuit import _example_three
 from .logistics import _example_two
+from .logistics_one import _example_two_a
 from .screen_workbench import _example_one
 
 TITLE = "5.5 · Elimination & Triangular Form"
@@ -43,7 +44,7 @@ def render():
 
     example = st.radio(
         "Example",
-        ["1 · The workbench", "2 · Logistics", "3 · Circuit"],
+        ["1 · The workbench", "2a · Logistics (one plan)", "2b · Logistics (many plans)", "3 · Circuit"],
         horizontal=True,
         key="t05b_example",
     )
@@ -51,7 +52,9 @@ def render():
 
     if example.startswith("1"):
         _example_one()
-    elif example.startswith("2"):
+    elif example.startswith("2a"):
+        _example_two_a()
+    elif example.startswith("2b"):
         _example_two()
     else:
         _example_three()
