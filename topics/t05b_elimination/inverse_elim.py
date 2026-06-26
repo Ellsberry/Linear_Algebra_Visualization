@@ -4,6 +4,7 @@ from fractions import Fraction as Fr
 from .rref_reducer import (
     make_augmented, compute_one_step, run_to_reduced,
     left_is_identity, right_block,
+    op_swap, op_scale, op_add_multiple,
 )
 
 _N = 3
@@ -100,6 +101,36 @@ def _reset_cb():
     st.session_state[f"{_KEY}_status"] = None
 
 
+def _parse_row(s):
+    return int(s.split()[1]) - 1
+
+
+def _manual_apply_cb():
+    op = st.session_state.get(f"{_KEY}_op_type", "Add multiple of a row")
+    M = st.session_state[f"{_KEY}_M"]
+    st.session_state[f"{_KEY}_parse_err"] = None
+    try:
+        if op == "Add multiple of a row":
+            k = Fr(st.session_state.get(f"{_KEY}_add_k", "-1"))
+            src = _parse_row(st.session_state.get(f"{_KEY}_add_j", "Row 2"))
+            tgt = _parse_row(st.session_state.get(f"{_KEY}_add_i", "Row 1"))
+            new_M, desc = op_add_multiple(M, tgt, src, k)
+        elif op == "Swap two rows":
+            i = _parse_row(st.session_state.get(f"{_KEY}_swap_i", "Row 1"))
+            j = _parse_row(st.session_state.get(f"{_KEY}_swap_j", "Row 2"))
+            new_M, desc = op_swap(M, i, j)
+        else:
+            i = _parse_row(st.session_state.get(f"{_KEY}_scale_i", "Row 1"))
+            k = Fr(st.session_state.get(f"{_KEY}_scale_k", "2"))
+            new_M, desc = op_scale(M, i, k)
+    except Exception:
+        st.session_state[f"{_KEY}_parse_err"] = "Could not parse factor -- type a number or fraction like 1/2."
+        return
+    st.session_state.setdefault(f"{_KEY}_hist", []).append([row[:] for row in M])
+    st.session_state[f"{_KEY}_M"] = new_M
+    st.session_state[f"{_KEY}_log"].append(desc)
+
+
 def render_inverse_elim():
     st.markdown(
         "**[A | I] -> [I | A^-1].** "
@@ -142,6 +173,42 @@ def render_inverse_elim():
             st.success("Left block is the identity -- the right block is A^-1.")
 
     with left:
+        st.markdown("**Row operations**")
+        row_opts = [f"Row {i + 1}" for i in range(_N)]
+        op = st.selectbox(
+            "Operation type",
+            ["Add multiple of a row", "Swap two rows", "Scale a row"],
+            key=f"{_KEY}_op_type",
+        )
+        if op == "Add multiple of a row":
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                st.text_input("k", value="-1", key=f"{_KEY}_add_k")
+            with c2:
+                st.selectbox("Source j", row_opts, index=min(1, _N - 1),
+                             key=f"{_KEY}_add_j")
+            with c3:
+                st.selectbox("Target i", row_opts, key=f"{_KEY}_add_i")
+        elif op == "Swap two rows":
+            c1, c2 = st.columns(2)
+            with c1:
+                st.selectbox("Row i", row_opts, key=f"{_KEY}_swap_i")
+            with c2:
+                st.selectbox("Row j", row_opts, index=min(1, _N - 1),
+                             key=f"{_KEY}_swap_j")
+        else:
+            c1, c2 = st.columns(2)
+            with c1:
+                st.selectbox("Row i", row_opts, key=f"{_KEY}_scale_i")
+            with c2:
+                st.text_input("Factor k", value="2", key=f"{_KEY}_scale_k")
+        parse_err = st.session_state.get(f"{_KEY}_parse_err")
+        if parse_err:
+            st.caption(parse_err)
+        st.button("Apply", key=f"{_KEY}_apply_btn",
+                  on_click=_manual_apply_cb,
+                  disabled=done or singular)
+        st.markdown("---")
         st.markdown("**Guided reduction**")
         st.button("Do one step", key=f"{_KEY}_step_btn",
                   on_click=_step_cb,
@@ -167,3 +234,10 @@ def render_inverse_elim():
             "A^-1 * I = A^-1. So the right half gives you the inverse for free."
         )
         st.latex(r"A^{-1} = " + _bmatrix(inv))
+        A_fr = [[Fr(v) for v in row] for row in _EXAMPLES[choice]]
+        product = [
+            [sum(A_fr[i][k] * inv[k][j] for k in range(_N)) for j in range(_N)]
+            for i in range(_N)
+        ]
+        st.markdown("**Verify:** A * A^-1 = I")
+        st.latex(r"A \cdot A^{-1} = " + _bmatrix(product))
