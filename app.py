@@ -25,8 +25,23 @@ TOPICS = [
 ]
 
 labels = [label for label, _ in TOPICS]
-choice = st.selectbox("Topic", labels, key="topic_selector")
+if "topic_selector" not in st.session_state:
+    st.session_state["topic_selector"] = labels[0]
 
-module = dict(TOPICS)[choice]
+NCOLS = 3
+for start in range(0, len(labels), NCOLS):
+    cols = st.columns(NCOLS)
+    for col, label in zip(cols, labels[start:start + NCOLS]):
+        is_active = (label == st.session_state["topic_selector"])
+        if col.button(
+            label,
+            key=f"topicbtn_{label}",
+            type="primary" if is_active else "secondary",
+            use_container_width=True,
+        ):
+            st.session_state["topic_selector"] = label
+            st.rerun()
+
+module = dict(TOPICS)[st.session_state["topic_selector"]]
 st.header(module.TITLE)
 module.render()

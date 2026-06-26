@@ -6,16 +6,26 @@ Legend: [x] done · [~] partial · [ ] not started
 
 ---
 
-## Layout refactor + dark mode (app-wide)
+## App-level navigation
 
 - [x] Dark theme applied (`.streamlit/config.toml`: dark base, `#4dabf7` primary, `#0e1117` bg)
-- [x] Topic selector moved to top-of-page selectbox (sidebar topic nav removed)
+- [x] Topic selector replaced with a **3-column button grid** (full titles, active topic highlighted with `type="primary"`, scrolls with page — not sticky). Replaces the old sidebar nav and the interim top-of-page selectbox.
 - [x] Plotting palette re-tuned for dark backgrounds (transparent bg, light font/axes, brighter data colors)
 - [x] Graph heights reduced (2D ~420, 3D ~420) and Plotly margins tightened (`l=10,r=10,t=10,b=10`)
 - [x] `editable_matrix` bracket widget added to `engine/widgets.py` (editable + read-only `editable=False` modes; flexbox-centered bracket glyphs)
 - [x] `engine/layout.py` added (`two_col(ratio)` helper)
 
-**NOT yet refactored:** Topic 5.5 still uses the OLD layout (wide augmented matrices need a wider-math layout, not the standard 0.5/0.5 split — explicitly exempted). It also has outstanding content work (see Topic 5.5 section below).
+---
+
+## Layout refactor + dark mode (app-wide)
+
+All six topics are now refactored. Summary of what the refactor applied to each:
+- Controls in a full-width band above the columns
+- `st.columns([0.5, 0.5])` — math left, graph right (with per-topic exceptions noted below)
+- "Show the math" expanders removed — math always visible
+- `editable_matrix` widget in use where a matrix is shown
+
+**NOT yet refactored:** none — Topics 1, 2, 3, 4, 5, and 5.5 are all done.
 
 ---
 
@@ -282,23 +292,31 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] `new_figure_3d`
 - [x] `add_plane_3d`
 
-## Topic 5.5 — Elimination & Triangular Form (`t05b_elimination.py`)
+## Topic 5.5 — Elimination & Triangular Form (`topics/t05b_elimination/`)
 
-**Layout refactor not yet applied** — wide augmented matrices (6x7 in Logistics) need a wider-math layout, not the standard 0.5/0.5 split. Exempted until a custom layout is designed.
+**Spec:** `specs/topic5b_elimination.md`, `specs/topic5b_logistics_redesign.md`
+
+**File structure:** `t05b_elimination` is now a per-screen package:
+- `__init__.py` — TITLE, SLUG, OVERVIEW, HOWTO (as `st.caption`), render() dispatcher
+- `workbench.py` — shared elimination engine (all row-op logic, state management, `workbench()` callable)
+- `screen_workbench.py` — Screen 1 (The workbench: presets, math block)
+- `logistics.py` — Screen 2 (Logistics: redesigned, see below)
+- `circuit.py` — Screen 3 (Circuit: fill-values, workbench reveal, Topic 9 pointer)
+- `eq_parser.py` — equation parser + equivalence checker for the typed-equation builder
 
 - [x] Module exists and registered in `app.py`
 - [x] OVERVIEW
-- [x] HOWTO in collapsed expander
+- [x] HOWTO rendered as `st.caption` (no expander)
 - [x] Three screens (Workbench, Logistics, Circuit)
-- [x] `aug_array_latex` added to `engine/widgets.py`
+- [x] `aug_array_latex` in `engine/widgets.py`
 
-### Outstanding work (next priorities)
-- [~] **(a) Logistics row-order inversion** — warehouses first (rows 1-2), stores last (rows 3-6). Spec requires stores first (rows 1-4), warehouses last (rows 5-6), so the first two diagonal positions are zero and elimination *requires row swaps*. Current order has nonzero diagonal from the start, defeating the pedagogical point.
-- [~] **(b) Circuit equation-development step** — spec requires a 3-step guided process: (1) student enters coefficients for each of 3 laws (KCL node, KVL left loop, KVL right loop) with per-equation Check / Hint / "Show this equation"; (2) student assembles the 3x4 augmented matrix; (3) reduce. Code only asks for R/V values with a pre-structured matrix, skipping the equation-building pedagogy.
-- [ ] **(c) [A | I] inverse-by-elimination screen** — the Topic 4 <-> 5.5 bridge (specced separately, not yet built).
-- [ ] **(d) Pivot highlighting in LaTeX** — pivots counted but not visually marked (spec: bold/colored pivots).
+### Layout refactor
+- [x] Page-level "How to use this screen" expander removed; HOWTO now `st.caption` under OVERVIEW
+- [x] Workbench screen: "Show the math" expander removed — math block always shown below workbench
+- [x] Circuit screen: already expander-free; no change needed
+- [x] Workbench engine's internal expanders ("All operations (N)", "Back-substitution steps") retained — these are legitimate in-workbench UI, not content wrappers
 
-### Shared workbench
+### Shared workbench engine
 - [x] Equations displayed above augmented matrix (both update on every op)
 - [x] Augmented matrix via `aug_array_latex`
 - [x] Manual controls: Add multiple / Swap / Scale
@@ -307,29 +325,43 @@ Legend: [x] done · [~] partial · [ ] not started
 - [x] "Back-substitute & solve" (enabled once triangular with nonzero pivots)
 - [x] Undo + Reset
 - [x] Scenario detection: 0 = c (no solution), zero row (infinite), pivot count
-- [x] Pivot count with quiet rank/Topic 6 seed
+- [x] Pivot count with quiet rank / Topic 6 seed
 
 ### Screen 1 — The workbench
 - [x] 4 presets (One solution / Needs a row swap / Redundant / Contradiction)
 - [x] Notice
-- [x] Show the math (row operations + det = product of diagonal)
+- [x] Math block always shown (elementary row operations + det = product of pivots + rank preview)
 
-### Screen 2 — Logistics (6-variable shipping network)
-- [x] Network diagram (plotly, nodes + labeled arrows + demands)
-- [x] Editable 6x7 augmented grid
-- [x] Check button (flags wrong rows without revealing answer)
-- [x] "Fill it in for me" button
-- [x] Workbench renders after correct/filled matrix
-- [x] Solution labeled by route name (F->W1, etc.)
-- [x] Notice
+### Screen 2 — Logistics (REDESIGNED per `specs/topic5b_logistics_redesign.md`)
+
+**What changed and why:** The old screen had a pure-tree network whose augmented matrix was already upper-triangular, so elimination had nothing to do. The new screen fixes all three original flaws.
+
+- [x] **New cycle network** — Store B is fed by BOTH W1 (route x₄) and W2 (route x₅). This creates a cycle, making the system genuinely NOT pre-triangular and giving one free variable (infinitely many valid plans). 7 routes/unknowns: x₁ F→W1, x₂ F→W2, x₃ W1→A, x₄ W1→B, x₅ W2→B, x₆ W2→C, x₇ W2→D. Demands: A=30, B=20, C=25, D=25 (total 100 = factory supply).
+- [x] **Verified math:** 7×7 system, rank(A)=6, rank([A|b])=6 → exactly one free variable → infinitely many plans. The F row (total in = total out) is the redundant row. General solution: free parameter t = x₅ (freight to B via W2), 0 ≤ t ≤ 20.
+- [x] **Strict sign convention throughout:** in = +1, out = −1, RHS = net supply/demand. The F row is therefore −x₁ − x₂ = −100 (both routes out).
+- [x] **New `eq_parser.py`:** `parse_equation(s)` parses student-typed node-balance equations into `[a1..a7, b]` (Fraction arithmetic). `rows_equivalent(r1, r2)` accepts any nonzero scalar multiple of the target row, so rearranged or rescaled forms count as correct. `ParseError` for unreadable input.
+- [x] **Typed-equation builder:** one `st.text_input` per node (key `t05b_e2_eq__{i}`); label = node name only (no variable hints — student reads the diagram). Live LaTeX preview of what the parser understood (`st.latex`); faint `...` caption when empty or unparseable.
+- [x] **Side-by-side layout:** diagram column (left) + builder column (right) via `st.columns([0.5, 0.5], gap="large")` — the student sees the network while writing equations.
+- [x] **Framing sentence** at top: states the goal (7 route flows, flow-in = flow-out at every node, every demand met).
+- [x] **Check** validates each node's equation via `rows_equivalent`; distinguishes "couldn't read" from "wrong" in the error message.
+- [x] **Fill it in for me** sets each text box to the correct plain-text equation derived from `_E2_AUG`.
+- [x] **Assembled bracketed [A|b]** shown after Check/Fill succeeds (`w.aug_array_latex` + heading + caption).
+- [x] **Workbench** wired to `workbench("t05b_e2", 7, solution_labels=_E2_LABELS)` — correctly handles the 7-unknown system; engine detects the free-variable outcome.
+- [x] **Closing explanation** (always shown after workbench): explains the free variable as the B-delivery split, physical range 0 ≤ t ≤ 20, and why a real logistics network needs the math (a family of plans, not one answer).
 
 ### Screen 3 — Circuit (3 currents)
 - [x] Circuit diagram (plotly schematic with V, R1/R2/R3, I1/I2/I3 labeled)
 - [x] Value fill-in (R1, R2, R3, V) with Check / "Fill it in for me"
 - [x] Workbench renders after correct/filled values
-- [x] Solution labeled as currents (I1, I2, I3 in amps)
+- [x] Solution labeled as currents (I₁, I₂, I₃ in amps)
 - [x] Looking-ahead note (Topic 9 / AC / complex numbers)
 - [x] Notice
+
+### Outstanding work (new features, not refactor)
+
+- [ ] **(a) Circuit equation-building** — the Circuit screen asks the student to fill in R/V values against a pre-structured matrix; the spec calls for a guided derivation of the KCL node equation and KVL loop equations (like Logistics now has for node-balance). NOT yet built — needs its own design session.
+- [ ] **(b) [A | I] inverse-by-elimination screen** — the Topic 4 <-> 5.5 bridge: extend the workbench to full reduced row echelon form, applied to [A | I] to produce A⁻¹. Specced separately, not yet built.
+- [ ] **(c) Pivot highlighting in LaTeX** — pivots counted but not visually marked (spec: bold/colored pivots in the augmented-matrix display). Minor; pending.
 
 ---
 
