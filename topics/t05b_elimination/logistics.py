@@ -1,43 +1,101 @@
 import plotly.graph_objects as go
 import streamlit as st
+from fractions import Fraction
 
 from engine import plotting as plot
+from engine import widgets as w
+from .eq_parser import parse_equation, rows_equivalent, ParseError
 from .workbench import workbench, _load_aug
 
 
 # ---------------------------------------------------------------------------
-# Screen 2 — Logistics (6-variable shipping network)
+# Screen 2 -- Logistics (7-variable cycle shipping network)
 # ---------------------------------------------------------------------------
 
-# Augmented matrix [A | b] for the six balance equations
+# Augmented matrix [A | b] -- strict uniform sign rule: in=+1, out=-1, RHS=net supply/demand
 _E2_AUG = [
-    [ 1,  0, -1, -1,  0,  0,  0],   # W1: x1 - x3 - x4 = 0
-    [ 0,  1,  0,  0, -1, -1,  0],   # W2: x2 - x5 - x6 = 0
-    [ 0,  0,  1,  0,  0,  0, 30],   # A:  x3 = 30
-    [ 0,  0,  0,  1,  0,  0, 20],   # B:  x4 = 20
-    [ 0,  0,  0,  0,  1,  0, 25],   # C:  x5 = 25
-    [ 0,  0,  0,  0,  0,  1, 25],   # D:  x6 = 25
+    [-1, -1,  0,  0,  0,  0,  0, -100],   # F : -x1 - x2 = -100  (source, routes out)
+    [ 1,  0, -1, -1,  0,  0,  0,    0],   # W1: x1 - x3 - x4 = 0
+    [ 0,  1,  0,  0, -1, -1, -1,    0],   # W2: x2 - x5 - x6 - x7 = 0
+    [ 0,  0,  1,  0,  0,  0,  0,   30],   # A : x3 = 30
+    [ 0,  0,  0,  1,  1,  0,  0,   20],   # B : x4 + x5 = 20  (shared store)
+    [ 0,  0,  0,  0,  0,  1,  0,   25],   # C : x6 = 25
+    [ 0,  0,  0,  0,  0,  0,  1,   25],   # D : x7 = 25
 ]
-_E2_LABELS     = ["F→W1", "F→W2", "W1→A", "W1→B", "W2→C", "W2→D"]
-_E2_ROW_LABELS = ["W1 node", "W2 node", "Store A", "Store B", "Store C", "Store D"]
+_E2_LABELS     = ["F→W1", "F→W2", "W1→A", "W1→B", "W2→B", "W2→C", "W2→D"]
+_E2_ROW_LABELS = ["F (factory)", "W1 node", "W2 node", "Store A", "Store B", "Store C", "Store D"]
+_E2_RHS        = [-100, 0, 0, 30, 20, 25, 25]   # net supply/demand per node, F..D
 
-_E2_NOTICE = """
-The unknowns are how much travels on each route. "Flow in = flow out" at every
-node gives one equation each; solving the system is the shipping plan. Six
-unknowns — no picture for that — but the same three moves solve it. (Networks
-with alternative routes can have *many* valid plans; this tree has exactly one.)
-"""
+
+def _row_to_eq_str(row):
+    """Convert an _E2_AUG row to a plain-text equation string for the text box."""
+    parts = []
+    for j in range(7):
+        c = int(row[j])
+        if c == 0:
+            continue
+        var = f"x{j + 1}"
+        if not parts:
+            parts.append(f"-{var}" if c == -1 else (var if c == 1 else f"{c}{var}"))
+        else:
+            if c == 1:
+                parts.append(f"+ {var}")
+            elif c == -1:
+                parts.append(f"- {var}")
+            elif c > 0:
+                parts.append(f"+ {c}{var}")
+            else:
+                parts.append(f"- {abs(c)}{var}")
+    b = int(row[7])
+    lhs = " ".join(parts) if parts else "0"
+    return f"{lhs} = {b}"
+
+
+def _row_to_latex(row):
+    """Convert a parsed [a1..a7, b] row (Fractions) to a LaTeX string."""
+    parts = []
+    for j in range(7):
+        c = Fraction(row[j]).limit_denominator(10**6)
+        if c == 0:
+            continue
+        pos = c > 0
+        c_abs = abs(c)
+        if c_abs == 1:
+            coeff_str = ""
+        elif c_abs.denominator == 1:
+            coeff_str = str(c_abs.numerator)
+        else:
+            coeff_str = rf"\frac{{{c_abs.numerator}}}{{{c_abs.denominator}}}"
+        var = rf"x_{{{j + 1}}}"
+        term = f"{coeff_str}{var}"
+        if not parts:
+            parts.append(term if pos else f"-{term}")
+        else:
+            parts.append(rf"+ {term}" if pos else rf"- {term}")
+    b = Fraction(row[7]).limit_denominator(10**6)
+    if b.denominator == 1:
+        b_str = str(int(b))
+    else:
+        b_str = rf"\frac{{{b.numerator}}}{{{b.denominator}}}"
+    lhs = " ".join(parts) if parts else "0"
+    return lhs + rf" = {b_str}"
 
 
 def _check_grid_cb():
     wrong = []
+    parse_errors = []
     for i, target_row in enumerate(_E2_AUG):
-        for j, tv in enumerate(target_row):
-            wkey = f"t05b_e2_grid__{i}__{j}"
-            if abs(float(st.session_state.get(wkey, 0.0)) - float(tv)) > 1e-9:
-                if i not in wrong:
-                    wrong.append(i)
+        text = st.session_state.get(f"t05b_e2_eq__{i}", "").strip()
+        try:
+            parsed = parse_equation(text)
+        except ParseError:
+            parse_errors.append(i)
+            wrong.append(i)
+            continue
+        if not rows_equivalent(parsed, target_row):
+            wrong.append(i)
     st.session_state["t05b_e2_check_result"] = wrong
+    st.session_state["t05b_e2_parse_errors"] = parse_errors
     if not wrong:
         _load_aug("t05b_e2", _E2_AUG)
         st.session_state["t05b_e2_ready"] = True
@@ -45,9 +103,9 @@ def _check_grid_cb():
 
 def _fill_for_me_cb():
     for i, row in enumerate(_E2_AUG):
-        for j, val in enumerate(row):
-            st.session_state[f"t05b_e2_grid__{i}__{j}"] = float(val)
+        st.session_state[f"t05b_e2_eq__{i}"] = _row_to_eq_str(row)
     st.session_state["t05b_e2_check_result"] = []
+    st.session_state.pop("t05b_e2_parse_errors", None)
     _load_aug("t05b_e2", _E2_AUG)
     st.session_state["t05b_e2_ready"] = True
 
@@ -55,7 +113,7 @@ def _fill_for_me_cb():
 def _logistics_diagram():
     """Static plotly diagram of the 7-route cycle shipping network.
 
-    Store B is fed by BOTH W1 (x4) and W2 (x5) — the cycle that makes
+    Store B is fed by BOTH W1 (x4) and W2 (x5) -- the cycle that makes
     elimination necessary and produces infinitely many valid plans.
     """
     fig = go.Figure()
@@ -73,7 +131,7 @@ def _logistics_diagram():
     A  = [0.5, 2.5];  B  = [5.0, 2.5];  C = [8.0, 2.5];  D = [10.0, 2.5]
 
     # (src, dst, label, color, (label_x_offset, label_y_offset))
-    # x4 and x5 both arrive at B from opposite sides — offsets keep labels apart
+    # x4 and x5 both arrive at B from opposite sides -- offsets keep labels apart
     routes = [
         (F,  W1, "x₁", "royalblue",    (-0.40,  0.0)),
         (F,  W2, "x₂", "seagreen",     ( 0.40,  0.0)),
@@ -111,47 +169,62 @@ def _logistics_diagram():
     return fig
 
 
-def _grid_display():
-    """Editable 6×7 augmented-matrix grid (all cells default to 0)."""
-    col_labels = ["x₁", "x₂", "x₃", "x₄", "x₅", "x₆", "b"]
-    widths = [1.5] + [0.65] * 7
+def _assemble_from_builder():
+    """Parse each node's text input and return a 7x8 augmented matrix (floats).
 
-    hcols = st.columns(widths)
-    hcols[0].markdown("**Node**")
-    for j, lbl in enumerate(col_labels):
-        hcols[j + 1].markdown(f"**{lbl}**")
+    Nodes that fail to parse contribute None (handled by caller).
+    """
+    rows = []
+    for i in range(len(_E2_ROW_LABELS)):
+        text = st.session_state.get(f"t05b_e2_eq__{i}", "").strip()
+        try:
+            row = parse_equation(text)
+            rows.append([float(x) for x in row])
+        except (ParseError, Exception):
+            rows.append(None)
+    return rows
 
-    for i, row_label in enumerate(_E2_ROW_LABELS):
-        rcols = st.columns(widths)
-        rcols[0].markdown(f"*{row_label}*")
-        for j in range(7):
-            wkey = f"t05b_e2_grid__{i}__{j}"
-            if wkey not in st.session_state:
-                st.session_state[wkey] = 0.0
-            rcols[j + 1].number_input(
-                label=wkey, key=wkey, step=1.0, format="%.0f",
-                label_visibility="collapsed",
+
+def _node_balance_builder():
+    """Typed-equation builder: one text box per node, with live LaTeX preview."""
+    st.markdown(
+        "Read the network and write the balance equation for each node -- "
+        "flow in = flow out, with each store's demand and the factory's supply "
+        "on the right. Type equations like `x1 - x3 - x4 = 0`."
+    )
+    for i, node_label in enumerate(_E2_ROW_LABELS):
+        col_input, col_preview = st.columns([2, 3])
+        with col_input:
+            st.text_input(
+                node_label,
+                key=f"t05b_e2_eq__{i}",
+                placeholder="e.g. x1 - x3 - x4 = 0",
             )
+        with col_preview:
+            text = st.session_state.get(f"t05b_e2_eq__{i}", "").strip()
+            if text:
+                try:
+                    row = parse_equation(text)
+                    st.latex(_row_to_latex(row))
+                except ParseError:
+                    st.caption("...")
+            else:
+                st.caption("...")
 
 
 def _example_two():
-    st.info(_E2_NOTICE)
-
     st.markdown(
-        "**The shipping network** — every value you need to build the matrix "
-        "is labeled here."
-    )
-    st.plotly_chart(_logistics_diagram(), use_container_width=True)
-
-    st.markdown("---")
-    st.markdown(
-        "**Build the augmented matrix.** Six unknowns (one flow per route), "
-        "one balance equation per node: flow in = flow out. Fill in each "
-        "coefficient — **+1** if that route flows *into* the node, **−1** if "
-        "it flows *out*, **0** if it doesn't touch that node."
+        "You're solving for the amount of freight on each of the seven routes "
+        "(x₁…x₇) -- the shipping plan where flow in = flow out at every node "
+        "and every store's demand is met. Read the network, then write each "
+        "node's balance equation."
     )
 
-    _grid_display()
+    diagram_col, builder_col = st.columns([0.5, 0.5], gap="large")
+    with diagram_col:
+        st.plotly_chart(_logistics_diagram(), use_container_width=True)
+    with builder_col:
+        _node_balance_builder()
 
     c1, c2 = st.columns(2)
     with c1:
@@ -162,15 +235,37 @@ def _example_two():
     check = st.session_state.get("t05b_e2_check_result")
     if check is not None:
         if not check:
-            st.success("All six equations are correct.")
+            st.success("All seven equations are correct.")
         else:
-            wrong_names = [_E2_ROW_LABELS[i] for i in check]
-            st.warning(
-                f"Not quite — check {', '.join(wrong_names)}. "
-                "Remember: +1 if the route flows into the node, −1 if it flows out."
-            )
+            parse_errs = set(st.session_state.get("t05b_e2_parse_errors", []))
+            msgs = []
+            for i in check:
+                if i in parse_errs:
+                    msgs.append(f"{_E2_ROW_LABELS[i]} (couldn't read)")
+                else:
+                    msgs.append(f"{_E2_ROW_LABELS[i]} (wrong)")
+            st.warning(f"Not quite -- check {', '.join(msgs)}.")
 
     if st.session_state.get("t05b_e2_ready") and st.session_state.get("t05b_e2_M"):
+        st.markdown("**Your system as an augmented matrix [A | b]**")
+        st.caption(
+            "The seven equations you wrote, stacked. Each row is one node's "
+            "balance; the bar separates the coefficients A from the demands b. "
+            "Now reduce it."
+        )
+        st.latex(w.aug_array_latex(st.session_state["t05b_e2_M"], 7))
         st.markdown("---")
-        st.markdown("**Reduce it** — same three moves, six unknowns.")
-        workbench("t05b_e2", 6, solution_labels=_E2_LABELS)
+        st.markdown("**Reduce it** -- same three moves, seven unknowns.")
+        workbench("t05b_e2", 7, solution_labels=_E2_LABELS)
+        st.info(
+            "**Why infinitely many plans?** Elimination leaves a free variable -- "
+            "store B can be supplied from either warehouse. Send any amount from "
+            "0 to 20 units to B via W2 (route x₅), and the rest via W1 "
+            "(route x₄ = 20 − x₅); both warehouses' totals adjust to match "
+            "(x₁ = 50 − x₅, x₂ = 50 + x₅), and every choice is a valid "
+            "shipping plan. That free choice is the free variable -- and it's "
+            "exactly why a real logistics network needs the math: there isn't one "
+            "answer, there's a whole family, and the business picks the cheapest. "
+            "This is the 'infinitely many solutions' case from Topic 5, now in a "
+            "system too big to picture."
+        )
