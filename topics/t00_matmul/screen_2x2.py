@@ -5,33 +5,31 @@ import streamlit as st
 from engine.widgets import editable_matrix, set_matrix_state
 
 EXAMPLES = [
-    (np.array([[1.0, 2.0], [0.0, 1.0]]),
-     np.array([[2.0, 0.0], [1.0, 3.0]]),
-     np.array([[4.0, 6.0], [1.0, 3.0]])),
-    (np.array([[2.0, 1.0], [1.0, 2.0]]),
-     np.array([[1.0, 0.0], [2.0, 1.0]]),
-     np.array([[4.0, 1.0], [5.0, 2.0]])),
-    (np.array([[0.0, 1.0], [1.0, 0.0]]),
-     np.array([[3.0, 2.0], [1.0, 4.0]]),
-     np.array([[1.0, 4.0], [3.0, 2.0]])),
-    (np.array([[2.0, 0.0], [0.0, 3.0]]),
-     np.array([[1.0, 2.0], [2.0, 1.0]]),
-     np.array([[2.0, 4.0], [6.0, 3.0]])),
+    (np.array([[6.0, 4.0], [7.0, 5.0]]),
+     np.array([[3.0, 8.0], [9.0, 2.0]]),
+     np.array([[54.0, 56.0], [66.0, 66.0]])),
+    (np.array([[8.0, 0.0], [5.0, 7.0]]),
+     np.array([[6.0, 3.0], [4.0, 9.0]]),
+     np.array([[48.0, 24.0], [58.0, 78.0]])),
+    (np.array([[7.0, 3.0], [9.0, 0.0]]),
+     np.array([[5.0, 6.0], [8.0, 4.0]]),
+     np.array([[59.0, 54.0], [45.0, 54.0]])),
+    (np.array([[4.0, 7.0], [6.0, 5.0]]),
+     np.array([[9.0, 3.0], [2.0, 8.0]]),
+     np.array([[50.0, 68.0], [64.0, 58.0]])),
 ]
 
+_SYMBOL_STYLE = (
+    "display:flex;align-items:center;justify-content:center;"
+    "font-size:2em;color:#e6e6e6;height:116px;margin-top:32px"
+)
 
-def render_2x2():
-    st.markdown(
-        "**The rule:** entry (i, j) of the product A·B comes from row i of A "
-        "dotted with column j of B -- multiply the matching pairs, then add "
-        "them up."
-    )
-    st.caption("Shape rule: 2×2 · 2×2 → 2×2 (inner dimensions match: 2 and 2).")
 
-    labels = [f"Example {i + 1}" for i in range(len(EXAMPLES))]
-    choice = st.radio("Pick an example", labels, horizontal=True, key="t00_2x2_choice")
-    idx = labels.index(choice)
-    A, B, AB = EXAMPLES[idx]
+def _symbol(sym: str) -> None:
+    st.markdown(f'<div style="{_SYMBOL_STYLE}">{sym}</div>', unsafe_allow_html=True)
+
+
+def _example_block(idx: int, A: np.ndarray, B: np.ndarray, AB: np.ndarray) -> None:
     prefix = f"t00_2x2_ex{idx + 1}"
     ans_key = f"{prefix}_ans"
 
@@ -41,15 +39,18 @@ def render_2x2():
             if wkey not in st.session_state:
                 st.session_state[wkey] = 0.0
 
-    st.divider()
-
-    cols = st.columns(3)
+    st.markdown(f"**Example {idx + 1}**")
+    cols = st.columns([1.2, 0.2, 1.2, 0.2, 1.4, 3])
     with cols[0]:
-        editable_matrix(f"{prefix}_A", 2, label="A", editable=False, value=A)
+        editable_matrix(f"{prefix}_A", 2, label="A", editable=False, value=A, compact=True)
     with cols[1]:
-        editable_matrix(f"{prefix}_B", 2, label="B", editable=False, value=B)
+        _symbol("&middot;")
     with cols[2]:
-        answer = editable_matrix(ans_key, 2, label="A · B (your answer)", editable=True)
+        editable_matrix(f"{prefix}_B", 2, label="B", editable=False, value=B, compact=True)
+    with cols[3]:
+        _symbol("=")
+    with cols[4]:
+        answer = editable_matrix(ans_key, 2, label="Your answer", editable=True, compact=True)
 
     check_col, solve_col = st.columns(2)
     if check_col.button("Check", key=f"{prefix}_check"):
@@ -68,3 +69,27 @@ def render_2x2():
     if solve_col.button("Show solution", key=f"{prefix}_solve"):
         set_matrix_state(ans_key, AB)
         st.rerun()
+
+    st.divider()
+
+
+def render_2x2():
+    st.markdown(
+        "**The rule:** entry (i, j) of the product A·B comes from row i of A "
+        "dotted with column j of B -- multiply the matching pairs, then add "
+        "them up."
+    )
+    st.caption("Shape rule: 2×2 · 2×2 → 2×2 (inner dimensions match: 2 and 2).")
+    st.divider()
+
+    top_left, top_right = st.columns(2)
+    with top_left:
+        _example_block(0, *EXAMPLES[0])
+    with top_right:
+        _example_block(1, *EXAMPLES[1])
+
+    bottom_left, bottom_right = st.columns(2)
+    with bottom_left:
+        _example_block(2, *EXAMPLES[2])
+    with bottom_right:
+        _example_block(3, *EXAMPLES[3])

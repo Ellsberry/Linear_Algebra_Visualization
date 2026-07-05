@@ -10,12 +10,18 @@ import streamlit as st
 
 
 def editable_matrix(state_key: str, dim: int, label: str = "A",
-                    editable: bool = True, value=None) -> np.ndarray:
+                    editable: bool = True, value=None,
+                    compact: bool = False) -> np.ndarray:
     """Render a matrix in bracket form with editable or read-only cells.
 
     editable=True  → number_input cells using session_state keys {state_key}__i__j
                      (same keys as matrix_editor, so presets/Reset keep working).
     editable=False → static text displaying the provided `value` array.
+    compact=False (default, unchanged) preserves the original wide per-cell
+    st.columns layout used by every existing caller. compact=True tightens the
+    inter-cell spacing: read-only rows render as a single flex line (no
+    per-cell column gutters) and editable rows use a narrower bracket width
+    with gap="small" on the internal st.columns.
     Returns the matrix as a numpy array.
     """
     st.markdown(f"**{label} =**")
@@ -36,8 +42,92 @@ def editable_matrix(state_key: str, dim: int, label: str = "A",
     )
 
     M = np.zeros((dim, dim))
+
+    if compact and not editable:
+        row_style = (
+            "display:flex;align-items:center;justify-content:center;gap:0.5em;"
+            "font-size:1.05em;font-weight:500;color:#e6e6e6;min-height:58px"
+        )
+        for i in range(dim):
+            row = value[i] if value is not None else np.zeros(dim)
+            M[i, :] = [float(x) for x in row]
+            nums = "".join(
+                f'<span style="min-width:1.6em;text-align:right;">{float(x):.2f}</span>'
+                for x in row
+            )
+            cols = st.columns([0.07, 1, 0.07], gap="small")
+            cols[0].markdown(f'<div style="{bstyle}">{lb[i]}</div>', unsafe_allow_html=True)
+            cols[1].markdown(f'<div style="{row_style}">{nums}</div>', unsafe_allow_html=True)
+            cols[2].markdown(f'<div style="{bstyle}">{rb[i]}</div>', unsafe_allow_html=True)
+        return M
+
+    if compact and editable:
+        # Draw the bracket as CSS borders on the SINGLE container that is the
+        # immediate parent of the cell grid (the st.columns(...) call right
+        # below) -- nothing else lives in it, so its rendered height is
+        # exactly the two stacked number_input rows, never a guess and never
+        # inflated by an intermediate wrapper. (An earlier version split the
+        # left/right borders across two nested containers -- box_key wrapping
+        # an inner_key wrapping the grid -- which put border-left on a
+        # non-immediate ancestor; collapsing to one container removes that
+        # asymmetry.) Corner "ticks" are real absolutely-positioned divs
+        # (position:absolute is taken out of flow, so they add zero height)
+        # rather than ::before/::after, since one element only gets two
+        # pseudo-elements and we need all four corners. CSS is scoped to this
+        # widget's own container key so no other screen is affected.
+        box_key = f"{state_key}_compactbox"
+        bcolor = "#e6e6e6"
+        st.markdown(
+            f"""
+            <style>
+            .st-key-{box_key}[data-testid="stVerticalBlock"],
+            .st-key-{box_key} [data-testid="stVerticalBlock"] {{
+                gap: 0rem !important;
+            }}
+            .st-key-{box_key}[data-testid="stElementContainer"],
+            .st-key-{box_key} [data-testid="stElementContainer"] {{
+                margin: 0 !important;
+            }}
+            .st-key-{box_key} [data-testid="stWidgetLabel"] {{
+                display: none !important;
+            }}
+            .st-key-{box_key} {{
+                position: relative;
+                border-left: 2px solid {bcolor};
+                border-right: 2px solid {bcolor};
+                padding: 0 0.4em;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+        tick = "position:absolute;width:7px;height:2px;background:{0};".format(bcolor)
+        ticks_html = (
+            f'<div style="{tick}top:0;left:-2px;"></div>'
+            f'<div style="{tick}bottom:0;left:-2px;"></div>'
+            f'<div style="{tick}top:0;right:-2px;"></div>'
+            f'<div style="{tick}bottom:0;right:-2px;"></div>'
+        )
+        with st.container(key=box_key):
+            st.markdown(ticks_html, unsafe_allow_html=True)
+            cols = st.columns([1] * dim, gap="small")
+            for j in range(dim):
+                with cols[j]:
+                    for i in range(dim):
+                        wkey = f"{state_key}__{i}__{j}"
+                        if wkey not in st.session_state:
+                            st.session_state[wkey] = 1.0 if i == j else 0.0
+                        M[i, j] = st.number_input(
+                            label=wkey, key=wkey, step=0.1, format="%.2f",
+                            label_visibility="collapsed",
+                        )
+        return M
+
+    bracket_w = 0.05 if compact else 0.07
+    col_widths = [bracket_w] + [1] * dim + [bracket_w]
+
     for i in range(dim):
-        cols = st.columns([0.07] + [1] * dim + [0.07])
+        cols = st.columns(col_widths, gap="small") if compact else st.columns(col_widths)
         cols[0].markdown(
             f'<div style="{bstyle}">{lb[i]}</div>', unsafe_allow_html=True,
         )
