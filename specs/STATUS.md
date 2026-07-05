@@ -36,7 +36,13 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 **Status:** NEW standalone topic, built BEFORE Topic 1 in the learnable order.
 
 - [x] Registered **first** in `app.py`'s `TOPICS` list (imports as `topics.t00_matmul`, `TITLE = "0 · Matrix multiplication"`)
-- [x] Module structure: `__init__.py` (OVERVIEW + screen dispatch), `screen_2x2.py` (Screen 1)
+- [x] Module structure: `__init__.py` (OVERVIEW + screen dispatch, screen order "0 · Operations" then "1 · The rule (2x2)"), `screen_ops.py` (Screen 0), `screen_2x2.py` (Screen 1)
+
+### Screen 0 — Operations Overview (COMPLETE)
+- [x] All 7 operations described (Addition, Subtraction, Scalar Multiplication, Matrix Multiplication, Transpose, Inverse, Division), each with What it is / Why it matters / real-world example bullets (expanded to short explanatory clauses, not bare labels)
+- [x] Inline PRACTICE for Addition, Subtraction, Scalar Multiplication — 3 verified 2×2 examples each, shown 3-across, `compact=True` read-only operands + editable answer, per-cell Check + Show solution (shared `_check_and_solve` helper)
+- [x] Inline PRACTICE for Transpose — single verified 4×4 example (`A` read-only, `A^T` editable answer), confirming `editable_matrix`'s compact path is dim-generic (works identically at dim=4, not just dim=2)
+- [x] Matrix Multiplication, Inverse, Division are description-only (per spec), each with a pointer caption to where they're covered ("Practiced on Screens 1-3." / "see Topics 4 and 5.5." / "Described only.")
 
 ### Screen 1 — Rules + four 2×2 · 2×2 (COMPLETE)
 - [x] Rule text (row·column rule) + shape rule (2×2 · 2×2 → 2×2) at top
@@ -48,10 +54,10 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 ### `editable_matrix` (`engine/widgets.py`) — new `compact` path
 - [x] Added optional `compact: bool = False` parameter (default unchanged — every existing caller, e.g. t02/t03/t04/t05, is unaffected)
 - [x] `compact=True, editable=False` — read-only rows render as a single tight flex line (no per-cell column gutters)
-- [x] `compact=True, editable=True` — tight 2-row cell grid; bracket rendered as a CSS border (`border-left`/`border-right` + four absolutely-positioned corner ticks) on the single container that is the immediate parent of the cell grid, so the bracket height always equals the actual rendered cell content — no fixed/guessed height, no overhang
+- [x] `compact=True, editable=True` — tight cell grid; bracket rendered as a CSS border (`border-left`/`border-right` + four absolutely-positioned corner ticks) on the single container that is the immediate parent of the cell grid, so the bracket height always equals the actual rendered cell content — no fixed/guessed height, no overhang
+- [x] Confirmed dim-generic, not just 2×2: Screen 0's Transpose practice exercises the same compact-editable code path at dim=4
 
 ### T00 remaining (not started)
-- [ ] Screen 0 — Operations overview (7 operations described; addition/subtraction/scalar/transpose get inline practice; matrix-mult described only, practice deferred to Screens 1–3)
 - [ ] Screen 2 — four 3×3 · 3×3 practice examples (same pattern as Screen 1)
 - [ ] Screen 3 — rectangular multiplication + shape rule + non-conformable rejection message. **Needs `editable_matrix` extended for non-square (rows ≠ cols)** — decide at build time (e.g. a `cols` param, or a new `editable_matrix_rect`); keep existing square callers unchanged
 - [ ] Screen 4 — Special matrices (identity, upper-triangular, RREF) — definitions + why + example, not practice
