@@ -1,11 +1,12 @@
 """
 Topic 0 -- Matrix Multiplication.
 
-Pattern: MULTI-EXAMPLE. Only Screen 1 is built so far; screens 2-4 (per
+Pattern: MULTI-EXAMPLE. Screens 0-1 are built so far; screens 2-4 (per
 specs/topic00_matrix_multiplication.md) plug into the same radio dispatch.
 """
 import streamlit as st
 
+from .screen_ops import render_ops
 from .screen_2x2 import render_2x2
 
 TITLE = "0 · Matrix multiplication"
@@ -24,11 +25,13 @@ def render():
 
     screen = st.radio(
         "Screen",
-        ["1 · The rule (2x2)"],
+        ["0 · Operations", "1 · The rule (2x2)"],
         horizontal=True,
         key="t00_screen",
     )
     st.divider()
 
-    if screen.startswith("1"):
+    if screen.startswith("0"):
+        render_ops()
+    elif screen.startswith("1"):
         render_2x2()
