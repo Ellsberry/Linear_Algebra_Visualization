@@ -29,6 +29,38 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 
 ---
 
+## Topic 0 — Matrix Operations & Multiplication (`topics/t00_matmul/`)
+
+**Spec:** `specs/topic00_matrix_multiplication.md`
+
+**Status:** NEW standalone topic, built BEFORE Topic 1 in the learnable order.
+
+- [x] Registered **first** in `app.py`'s `TOPICS` list (imports as `topics.t00_matmul`, `TITLE = "0 · Matrix multiplication"`)
+- [x] Module structure: `__init__.py` (OVERVIEW + screen dispatch), `screen_2x2.py` (Screen 1)
+
+### Screen 1 — Rules + four 2×2 · 2×2 (COMPLETE)
+- [x] Rule text (row·column rule) + shape rule (2×2 · 2×2 → 2×2) at top
+- [x] Four verified practice examples, inputs 3–9 (one zero, in Ex2 only, per spec)
+- [x] All four shown at once — no radio/selector — arranged in a 2×2 grid (`st.columns(2)` pairs, top row Ex1/Ex2, bottom row Ex3/Ex4)
+- [x] Each example: A, B read-only + editable answer matrix in narrow side-by-side columns (reads "A · B = answer"), unique `state_key` per example
+- [x] Per-example Check (per-cell, flags wrong `(row, col)` without revealing values) + Show solution
+
+### `editable_matrix` (`engine/widgets.py`) — new `compact` path
+- [x] Added optional `compact: bool = False` parameter (default unchanged — every existing caller, e.g. t02/t03/t04/t05, is unaffected)
+- [x] `compact=True, editable=False` — read-only rows render as a single tight flex line (no per-cell column gutters)
+- [x] `compact=True, editable=True` — tight 2-row cell grid; bracket rendered as a CSS border (`border-left`/`border-right` + four absolutely-positioned corner ticks) on the single container that is the immediate parent of the cell grid, so the bracket height always equals the actual rendered cell content — no fixed/guessed height, no overhang
+
+### T00 remaining (not started)
+- [ ] Screen 0 — Operations overview (7 operations described; addition/subtraction/scalar/transpose get inline practice; matrix-mult described only, practice deferred to Screens 1–3)
+- [ ] Screen 2 — four 3×3 · 3×3 practice examples (same pattern as Screen 1)
+- [ ] Screen 3 — rectangular multiplication + shape rule + non-conformable rejection message. **Needs `editable_matrix` extended for non-square (rows ≠ cols)** — decide at build time (e.g. a `cols` param, or a new `editable_matrix_rect`); keep existing square callers unchanged
+- [ ] Screen 4 — Special matrices (identity, upper-triangular, RREF) — definitions + why + example, not practice
+
+### Related cleanup
+- [x] Removed the stray top-level `topics/t05b_elimination.py` module that shadowed the real `topics/t05b_elimination/` package (superseded; package version is authoritative)
+
+---
+
 ## Topic 1 — Vectors & Combinations (`topics/t01_vectors/`)
 
 **Spec:** `specs/topic1_vectors.md`
