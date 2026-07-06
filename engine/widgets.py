@@ -9,9 +9,10 @@ import numpy as np
 import streamlit as st
 
 
-def editable_matrix(state_key: str, dim: int, label: str = "A",
+def editable_matrix(state_key: str, dim: int = None, label: str = "A",
                     editable: bool = True, value=None,
-                    compact: bool = False) -> np.ndarray:
+                    compact: bool = False, rows: int = None,
+                    cols: int = None) -> np.ndarray:
     """Render a matrix in bracket form with editable or read-only cells.
 
     editable=True  → number_input cells using session_state keys {state_key}__i__j
@@ -22,15 +23,22 @@ def editable_matrix(state_key: str, dim: int, label: str = "A",
     inter-cell spacing: read-only rows render as a single flex line (no
     per-cell column gutters) and editable rows use a narrower bracket width
     with gap="small" on the internal st.columns.
-    Returns the matrix as a numpy array.
+    dim renders a square dim x dim matrix (unchanged default behavior). For a
+    non-square matrix, pass rows and cols instead (dim can be omitted); when
+    rows/cols are omitted they each fall back to dim, so existing square
+    callers are unaffected.
+    Returns the matrix as a numpy array of shape (rows, cols).
     """
     st.markdown(f"**{label} =**")
 
-    if dim == 1:
+    nrows = rows if rows is not None else dim
+    ncols = cols if cols is not None else dim
+
+    if nrows == 1:
         lb, rb = ["["], ["]"]
     else:
-        lb = ["⎡"] + ["⎢"] * (dim - 2) + ["⎣"]
-        rb = ["⎤"] + ["⎥"] * (dim - 2) + ["⎦"]
+        lb = ["⎡"] + ["⎢"] * (nrows - 2) + ["⎣"]
+        rb = ["⎤"] + ["⎥"] * (nrows - 2) + ["⎦"]
 
     bstyle = (
         "display:flex;align-items:center;justify-content:center;"
@@ -41,24 +49,42 @@ def editable_matrix(state_key: str, dim: int, label: str = "A",
         "font-size:1.05em;font-weight:500;color:#e6e6e6;min-height:58px"
     )
 
-    M = np.zeros((dim, dim))
+    M = np.zeros((nrows, ncols))
 
     if compact and not editable:
+        # A per-row st.columns([0.07, 1, 0.07]) call, nested inside a loop,
+        # sits three Streamlit-column levels deep once this widget is itself
+        # placed inside a caller's own columns (e.g. a 2x2 example grid whose
+        # cells are A/B/answer columns). At dim=3+ (3+ loop iterations at
+        # that depth) this produced phantom duplicate "0.00" rows -- a known
+        # class of Streamlit rendering artifact from nesting st.columns more
+        # than the officially-supported one level, especially inside a loop.
+        # Fix: render each row as a single flex <div> (pure CSS, one
+        # st.markdown() call, no nested st.columns at all) -- same approach
+        # already used for the compact editable bracket below.
         row_style = (
-            "display:flex;align-items:center;justify-content:center;gap:0.5em;"
-            "font-size:1.05em;font-weight:500;color:#e6e6e6;min-height:58px"
+            "display:flex;align-items:center;gap:0.35em;"
+            "font-size:1.05em;font-weight:500;color:#e6e6e6;min-height:40px"
         )
-        for i in range(dim):
-            row = value[i] if value is not None else np.zeros(dim)
+        row_bstyle = (
+            "display:flex;align-items:center;justify-content:center;"
+            "font-size:2.4em;line-height:1;color:#e6e6e6;"
+        )
+        for i in range(nrows):
+            row = value[i] if value is not None else np.zeros(ncols)
             M[i, :] = [float(x) for x in row]
             nums = "".join(
                 f'<span style="min-width:1.6em;text-align:right;">{float(x):.2f}</span>'
                 for x in row
             )
-            cols = st.columns([0.07, 1, 0.07], gap="small")
-            cols[0].markdown(f'<div style="{bstyle}">{lb[i]}</div>', unsafe_allow_html=True)
-            cols[1].markdown(f'<div style="{row_style}">{nums}</div>', unsafe_allow_html=True)
-            cols[2].markdown(f'<div style="{bstyle}">{rb[i]}</div>', unsafe_allow_html=True)
+            row_html = (
+                f'<div style="display:flex;align-items:center;gap:0.3em;">'
+                f'<div style="{row_bstyle}">{lb[i]}</div>'
+                f'<div style="{row_style}">{nums}</div>'
+                f'<div style="{row_bstyle}">{rb[i]}</div>'
+                f'</div>'
+            )
+            st.markdown(row_html, unsafe_allow_html=True)
         return M
 
     if compact and editable:
@@ -110,10 +136,10 @@ def editable_matrix(state_key: str, dim: int, label: str = "A",
         )
         with st.container(key=box_key):
             st.markdown(ticks_html, unsafe_allow_html=True)
-            cols = st.columns([1] * dim, gap="small")
-            for j in range(dim):
+            cols = st.columns([1] * ncols, gap="small")
+            for j in range(ncols):
                 with cols[j]:
-                    for i in range(dim):
+                    for i in range(nrows):
                         wkey = f"{state_key}__{i}__{j}"
                         if wkey not in st.session_state:
                             st.session_state[wkey] = 1.0 if i == j else 0.0
@@ -124,14 +150,14 @@ def editable_matrix(state_key: str, dim: int, label: str = "A",
         return M
 
     bracket_w = 0.05 if compact else 0.07
-    col_widths = [bracket_w] + [1] * dim + [bracket_w]
+    col_widths = [bracket_w] + [1] * ncols + [bracket_w]
 
-    for i in range(dim):
+    for i in range(nrows):
         cols = st.columns(col_widths, gap="small") if compact else st.columns(col_widths)
         cols[0].markdown(
             f'<div style="{bstyle}">{lb[i]}</div>', unsafe_allow_html=True,
         )
-        for j in range(dim):
+        for j in range(ncols):
             if editable:
                 wkey = f"{state_key}__{i}__{j}"
                 if wkey not in st.session_state:
@@ -147,7 +173,7 @@ def editable_matrix(state_key: str, dim: int, label: str = "A",
                     f'<div style="{vstyle}">{v:.2f}</div>',
                     unsafe_allow_html=True,
                 )
-        cols[dim + 1].markdown(
+        cols[ncols + 1].markdown(
             f'<div style="{bstyle}">{rb[i]}</div>', unsafe_allow_html=True,
         )
     return M
@@ -205,10 +231,14 @@ def scalar_slider(state_key: str, label: str, lo: float, hi: float,
 
 
 def set_matrix_state(state_key: str, M: np.ndarray) -> None:
-    """Write a matrix into session_state so the editor picks it up (used by presets/Reset)."""
-    n = M.shape[0]
-    for i in range(n):
-        for j in range(n):
+    """Write a matrix into session_state so the editor picks it up (used by presets/Reset).
+
+    Works for non-square M too (uses both dimensions of M.shape, not just
+    rows) -- square callers are unaffected since rows == cols for them.
+    """
+    nrows, ncols = M.shape
+    for i in range(nrows):
+        for j in range(ncols):
             st.session_state[f"{state_key}__{i}__{j}"] = float(M[i, j])
 
 

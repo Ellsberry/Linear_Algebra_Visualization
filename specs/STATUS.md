@@ -29,14 +29,15 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 
 ---
 
-## Topic 0 — Matrix Operations & Multiplication (`topics/t00_matmul/`)
+## Topic 0 — Matrix Operations & Multiplication (`topics/t00_matmul/`) — COMPLETE
 
 **Spec:** `specs/topic00_matrix_multiplication.md`
 
 **Status:** NEW standalone topic, built BEFORE Topic 1 in the learnable order.
+All 5 screens built and working.
 
 - [x] Registered **first** in `app.py`'s `TOPICS` list (imports as `topics.t00_matmul`, `TITLE = "0 · Matrix multiplication"`)
-- [x] Module structure: `__init__.py` (OVERVIEW + screen dispatch, screen order "0 · Operations" then "1 · The rule (2x2)"), `screen_ops.py` (Screen 0), `screen_2x2.py` (Screen 1)
+- [x] Module structure: `__init__.py` (OVERVIEW + screen dispatch, screen order "0 · Operations", "1 · Multiply 2x2", "2 · Multiply 3x3", "3 · Rectangular", "4 · Special matrices"), `screen_ops.py` (Screen 0), `screen_2x2.py` (Screen 1), `screen_3x3.py` (Screen 2), `screen_rect.py` (Screen 3), `screen_special.py` (Screen 4)
 
 ### Screen 0 — Operations Overview (COMPLETE)
 - [x] All 7 operations described (Addition, Subtraction, Scalar Multiplication, Matrix Multiplication, Transpose, Inverse, Division), each with What it is / Why it matters / real-world example bullets (expanded to short explanatory clauses, not bare labels)
@@ -49,18 +50,28 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 - [x] Four verified practice examples, inputs 3–9 (one zero, in Ex2 only, per spec)
 - [x] All four shown at once — no radio/selector — arranged in a 2×2 grid (`st.columns(2)` pairs, top row Ex1/Ex2, bottom row Ex3/Ex4)
 - [x] Each example: A, B read-only + editable answer matrix in narrow side-by-side columns (reads "A · B = answer"), unique `state_key` per example
-- [x] Per-example Check (per-cell, flags wrong `(row, col)` without revealing values) + Show solution
+- [x] Per-example Check (per-cell, flags wrong `(row, col)` without revealing values) + Show solution, via the reveal-flag pattern (Show solution sets a `{ans_key}_reveal` flag + reruns; the actual write happens at the top of the render, before that run's answer widgets are instantiated — avoids the `StreamlitAPIException` from writing a widget's session_state key after it's already been created this run)
 
-### `editable_matrix` (`engine/widgets.py`) — new `compact` path
+### Screen 2 — four 3×3 · 3×3 (COMPLETE)
+- [x] Mirrors Screen 1 exactly at dim=3 (four verified practice examples, 2×2 grid arrangement, same reveal-flag Check/Show solution pattern, unique `t00_3x3_ex*` state keys)
+- [x] Fixed a real dim>2 bug found here: the read-only compact path's per-row `st.columns([0.07, 1, 0.07])` call, nested 3 Streamlit-column-levels deep inside a loop, produced phantom duplicate "0.00" rows once the loop ran 3+ times (fine at dim=2, broken at dim=3+). Fixed by rendering each row as a single flex `<div>` (one `st.markdown()` call, no nested `st.columns`) instead — see `editable_matrix` entry below
+
+### Screen 3 — Rectangular multiplication (COMPLETE)
+- [x] Shape rule stated (A(m×n)·B(p×q) needs n=p; result is m×q)
+- [x] Three verified practice examples at genuinely different shapes: 2×3·3×2=2×2, 5×3·3×2=5×2, 3×3·3×1=3×1 — each using `editable_matrix(..., rows=, cols=)` (the new non-square support) for A, B, and the answer independently
+- [x] Fourth block: non-conformable pair (2×2 vs 3×3) rejected with a message instead of an answer grid, no Check button
+- [x] Required extending `editable_matrix` to non-square shapes (done — see below) and fixing `set_matrix_state`, which assumed square (`M.shape[0]` for both loop bounds) and would have mis-written non-square Show-solution reveals (e.g. the 5×2 and 3×1 results here)
+
+### Screen 4 — Special matrices (COMPLETE)
+- [x] Exposition only, no practice, no widget changes: Identity (definition + why + 3×3 example with a live `I · A = A` demo), Upper-triangular (definition + why + `[[2,3,1],[0,4,2],[0,0,5]]` example), RREF (definition + why + `[[1,0,2],[0,1,3],[0,0,0]]` example contrasted with a NOT-RREF example of the same shape)
+
+### `editable_matrix` (`engine/widgets.py`) — `compact` path + non-square support
 - [x] Added optional `compact: bool = False` parameter (default unchanged — every existing caller, e.g. t02/t03/t04/t05, is unaffected)
-- [x] `compact=True, editable=False` — read-only rows render as a single tight flex line (no per-cell column gutters)
+- [x] `compact=True, editable=False` — read-only rows render as a single tight flex `<div>` per row (no nested `st.columns` at all — fixes the dim=3+ phantom-row bug found on Screen 2)
 - [x] `compact=True, editable=True` — tight cell grid; bracket rendered as a CSS border (`border-left`/`border-right` + four absolutely-positioned corner ticks) on the single container that is the immediate parent of the cell grid, so the bracket height always equals the actual rendered cell content — no fixed/guessed height, no overhang
-- [x] Confirmed dim-generic, not just 2×2: Screen 0's Transpose practice exercises the same compact-editable code path at dim=4
-
-### T00 remaining (not started)
-- [ ] Screen 2 — four 3×3 · 3×3 practice examples (same pattern as Screen 1)
-- [ ] Screen 3 — rectangular multiplication + shape rule + non-conformable rejection message. **Needs `editable_matrix` extended for non-square (rows ≠ cols)** — decide at build time (e.g. a `cols` param, or a new `editable_matrix_rect`); keep existing square callers unchanged
-- [ ] Screen 4 — Special matrices (identity, upper-triangular, RREF) — definitions + why + example, not practice
+- [x] Confirmed dim-generic square case at dim=4 (Screen 0's Transpose practice) before non-square support existed
+- [x] Added optional `rows`/`cols` params for non-square matrices (`dim` is now optional and used as the fallback for both when `rows`/`cols` are omitted) — every rendering branch (compact read-only, compact editable, and the original non-compact default path) uses `nrows`/`ncols` throughout. **Non-compact callers (t02/t03/t04/t05) are completely unaffected** — they only ever pass `dim`, so `rows`/`cols` fall back to it and behavior is identical to before
+- [x] `set_matrix_state` fixed alongside this to use both dimensions of `M.shape` (was `M.shape[0]` for both loop bounds, silently assuming square) — needed so Show solution writes correctly for non-square results (Screen 3)
 
 ### Related cleanup
 - [x] Removed the stray top-level `topics/t05b_elimination.py` module that shadowed the real `topics/t05b_elimination/` package (superseded; package version is authoritative)
@@ -458,7 +469,7 @@ The Topic 4 ↔ 5.5 bridge: augment A with the identity to form [A | I], row-red
 
 ## Core curriculum status
 
-**Topics 1–5 and 5.5 are FULLY COMPLETE** — all refactored to the dark-mode layout, all screens built and verified, all engines shared and tested. The core curriculum (vectors → transformations → determinant → inverse → linear systems → elimination & inversion) is done.
+**Topics 0, 1–5, and 5.5 are FULLY COMPLETE** — all refactored to the dark-mode layout, all screens built and verified, all engines shared and tested. The core curriculum (matrix operations → vectors → transformations → determinant → inverse → linear systems → elimination & inversion) is done.
 
 ---
 

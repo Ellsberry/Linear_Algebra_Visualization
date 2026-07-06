@@ -75,7 +75,18 @@ def _op_header(title: str, subtitle: str, what_it_is: str, why_it_matters: str,
         st.markdown("\n".join(f"- {e}" for e in examples))
 
 
-def _init_answer(ans_key: str, dim: int) -> None:
+def _init_answer(ans_key: str, dim: int, result: np.ndarray) -> None:
+    # Show solution must set the answer cells BEFORE the number_input widgets
+    # are instantiated this run -- writing to a widget's session_state key
+    # after it has already been created in the same run raises
+    # StreamlitAPIException. So _check_and_solve's button only sets this
+    # flag + reruns; the actual write happens here, at the top of the caller,
+    # before editable_matrix(..., editable=True) creates the widgets.
+    reveal_key = f"{ans_key}_reveal"
+    if st.session_state.get(reveal_key):
+        set_matrix_state(ans_key, result)
+        st.session_state[reveal_key] = False
+
     for i in range(dim):
         for j in range(dim):
             wkey = f"{ans_key}__{i}__{j}"
@@ -100,14 +111,14 @@ def _check_and_solve(prefix: str, ans_key: str, answer: np.ndarray,
             st.warning(f"Not quite -- check: {cells}")
 
     if solve_col.button("Show solution", key=f"{prefix}_solve"):
-        set_matrix_state(ans_key, result)
+        st.session_state[f"{ans_key}_reveal"] = True
         st.rerun()
 
 
 def _binary_example(prefix: str, symbol: str, A: np.ndarray, B: np.ndarray,
                      result: np.ndarray) -> None:
     ans_key = f"{prefix}_ans"
-    _init_answer(ans_key, 2)
+    _init_answer(ans_key, 2, result)
 
     cols = st.columns([1, 0.2, 1, 0.2, 1])
     with cols[0]:
@@ -126,7 +137,7 @@ def _binary_example(prefix: str, symbol: str, A: np.ndarray, B: np.ndarray,
 
 def _scalar_example(prefix: str, k, A: np.ndarray, result: np.ndarray) -> None:
     ans_key = f"{prefix}_ans"
-    _init_answer(ans_key, 2)
+    _init_answer(ans_key, 2, result)
 
     cols = st.columns([0.6, 0.2, 1, 0.2, 1])
     with cols[0]:
@@ -147,7 +158,7 @@ def _transpose_example() -> None:
     prefix = "t00_ops_transpose"
     ans_key = f"{prefix}_ans"
     dim = 4
-    _init_answer(ans_key, dim)
+    _init_answer(ans_key, dim, TRANSPOSE_AT)
 
     cols = st.columns([1, 0.2, 1])
     with cols[0]:
