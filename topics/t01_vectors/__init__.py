@@ -47,7 +47,7 @@ HOWTO = """
 """
 
 BANANA = np.array([1.0, 4.0])
-PEANUT = np.array([4.0, 1.0])
+PEANUT = np.array([8.0, 2.0])
 PROTEIN_AXIS = "protein →"
 SUGAR_AXIS = "sugar ↑"
 

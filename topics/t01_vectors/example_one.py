@@ -5,48 +5,56 @@ import streamlit as st
 from engine import widgets as w
 from engine import plotting as plot
 
-from . import BANANA, PROTEIN_AXIS, SUGAR_AXIS, VIEW
+from . import BANANA, PEANUT, PROTEIN_AXIS, SUGAR_AXIS, VIEW
 
-_E1_PRESETS = {
-    "More scoops": ("The arrow keeps its direction and just gets longer. "
-                    "Scaling a vector stretches it without turning it.", 3.0, False),
-    "Half a scoop": ("You land halfway out. Scaling works with fractions, "
-                     "not just whole steps.", 0.5, False),
-    "Read the recipe": ("banana = (1, 4) means 1 step along the protein axis plus "
-                        "4 along the sugar axis. So even a single vector is a "
-                        "combination of those two axis directions — that's where "
-                        "\"basis\" comes from.", 1.0, True),
+_ING = {
+    "Banana": dict(
+        vec=BANANA, name="banana", color="darkorange", faint="rgba(180,140,0,0.45)",
+        own_ratio="4×", other_name="peanut butter",
+        other_line="sugar = ¼·protein",
+    ),
+    "Peanut butter": dict(
+        vec=PEANUT, name="peanut butter", color="sienna", faint="rgba(160,82,45,0.45)",
+        own_ratio="¼×", other_name="banana",
+        other_line="sugar = 4·protein",
+    ),
 }
 
 
 def _example_one():
     st.markdown(
-        "**One ingredient.** Start with one ingredient — banana, at (1, 4): "
-        "one gram of protein and four of sugar per scoop. The slider is how "
-        "many scoops. Watch the arrow grow as you add scoops and shrink back "
-        "toward the origin as you take them away."
+        "**One ingredient.** The goal: a smoothie with a target amount of "
+        "protein and sugar. Your ingredients are banana and peanut butter. "
+        "Each ingredient is a vector -- (protein, sugar) per scoop. Banana "
+        "is (1, 4). Peanut butter is (8, 2). This screen uses one "
+        "ingredient at a time."
     )
-    preset = st.selectbox("Example", list(_E1_PRESETS), key="t01e1_preset")
-    notice, c_default, brk_default = _E1_PRESETS[preset]
 
-    if st.session_state.get("t01e1_last") != preset:
-        st.session_state["t01e1_c"] = c_default
-        st.session_state["t01e1_break"] = brk_default
-        st.session_state["t01e1_last"] = preset
+    ingredient = st.radio("Ingredient", list(_ING), horizontal=True,
+                         key="t01e1_ingredient")
+    info = _ING[ingredient]
+    vec, name = info["vec"], info["name"]
 
-    st.info(notice, icon="💡")
-    c = w.scalar_slider("t01e1_c", "Scoops of banana", -3.0, 5.0, c_default, step=0.25)
+    if st.session_state.get("t01e1_ing_last") != ingredient:
+        st.session_state["t01e1_c"] = 1.0
+        st.session_state["t01e1_ing_last"] = ingredient
+
+    c = w.scalar_slider("t01e1_c", f"Scoops of {name}", -3.0, 5.0, 1.0, step=0.25)
     show_break = st.checkbox("Show the recipe breakdown", key="t01e1_break")
+    show_span = st.checkbox("Show the span line", key="t01e1_span")
 
-    end = c * BANANA
+    end = c * vec
 
     left, right = st.columns([0.5, 0.5], gap="large")
 
     with right:
         fig = plot.new_figure_2d(VIEW, PROTEIN_AXIS, SUGAR_AXIS)
-        plot.add_vector_2d(fig, [0, 0], BANANA, "rgba(180,140,0,0.45)",
-                           "banana (1 scoop)", dash="dot")
-        plot.add_vector_2d(fig, [0, 0], end, "darkorange", f"{c:g} scoops")
+        if show_span:
+            plot.add_line_2d(fig, vec[1], -vec[0], 0, "rgba(200,200,200,0.35)",
+                             f"span of {name}", rng=VIEW)
+        plot.add_vector_2d(fig, [0, 0], vec, info["faint"],
+                           f"{name} (1 scoop)", dash="dot")
+        plot.add_vector_2d(fig, [0, 0], end, info["color"], f"{c:g} scoops")
         if show_break:
             plot.add_vector_2d(fig, [0, 0], [end[0], 0], "crimson",
                                "protein part", dash="dash", arrow=False)
@@ -55,6 +63,21 @@ def _example_one():
         st.plotly_chart(fig, use_container_width=True)
 
     with left:
-        st.latex(rf"{c:g} \cdot " + w.bmatrix(BANANA.reshape(-1, 1))
+        st.latex(rf"{c:g} \cdot " + w.bmatrix(vec.reshape(-1, 1))
                  + " = " + w.bmatrix(end.reshape(-1, 1)))
-        st.caption("Scaling multiplies every component by the same number.")
+        st.caption("Every choice stretches or shrinks the same arrow -- the "
+                   "direction never changes.")
+
+        other_cap = info["other_name"].capitalize()
+        st.markdown(
+            f"One ingredient spans only a line. With {name} alone, every "
+            f"reachable smoothie is c·({vec[0]:g}, {vec[1]:g}) = "
+            f"({vec[0]:g}c, {vec[1]:g}c): sugar is always exactly "
+            f"{info['own_ratio']} protein, no matter the scoops. All those "
+            "points lie on one line through the origin — that line is "
+            f"the span of {name}. You cannot reach most targets with {name} "
+            "alone: a target like (14, 11) is off this line, so no number "
+            f"of {name} scoops makes it. {other_cap} alone gives a "
+            f"different line ({info['other_line']}) — still just a "
+            "line. Reaching the whole plane needs both."
+        )

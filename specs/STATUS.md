@@ -95,17 +95,22 @@ All 5 screens built and working.
 
 ### Content additions
 - [x] Light Ax = b gesture added to OVERVIEW ("The question we keep circling...")
-- [x] Explicit ingredients-to-algebra mapping added after Example 3's math (ingredients→A columns, scoops→x, target→b)
 
 ### Layout refactor (all three screens)
 - [x] Per-screen package split complete (example_one.py, example_two.py, example_three.py)
 - [x] Controls in full-width band above the two columns
 - [x] `st.columns([0.5, 0.5])` — math left, graph right
 - [x] All "Show the math" expanders removed — math always visible in left column
-- [x] Example 3: DEFINITION block full-width above columns; readouts under graph in right column; Ax = b mapping + Challenge + Reality check all full-width always-shown at bottom (expanders removed)
 - [x] Notice/closing content full-width at bottom
 
-**Note:** Topic 1 uses hardcoded light-mode plot colors (e.g. "darkorange", "crimson", "navy") unlike Topics 2-4 which use the engine's dark-palette constants. May need a color-tune follow-up if anything looks dim on dark backgrounds.
+### Reworked — smoothie-focused redesign (all three screens rebuilt)
+- [x] Shared constant `PEANUT` changed from (4, 1) to (8, 2) in `__init__.py` (ratio unchanged — still the 4:1 protein:sugar direction, just double the magnitude per scoop)
+- [x] **Screen 1 (One ingredient):** banana ⇄ peanut-butter toggle (`st.radio`) drives a single set of inputs — the slider, arrow, live math, and text all follow whichever ingredient is selected. New "Show the span line" checkbox draws a faint line through the origin along the active ingredient's direction. Basis/span text always shown below the math: "one ingredient spans only a line," reachable points are `c·(1,4)` or `c·(8,2)`, with (14, 11) called out as unreachable by either ingredient alone. Old preset dropdown (More scoops / Half a scoop / Read the recipe) removed — superseded by the toggle + always-shown span text.
+- [x] **Screen 2 (Two ingredients, added):** old free-vector presets (Tip-to-tail / Same direction / Opposite directions) removed. Two scalar sliders now scale the fixed BANANA/PEANUT constants directly — c1 (scoops of banana, default 3) and c2 (scoops of peanut butter, default 1) — matching the worked example `3·(1,4) + 1·(8,2) = (11,14)`. Tip-to-tail / Parallelogram view toggle kept (both constructions land on the same resultant). Live math shows `c1·banana + c2·PB = resultant`; a per-axis basis/span paragraph reads off protein/sugar sums and notes the resultant is off banana's line alone.
+- [x] **Screen 3 (The smoothie mixer):** fixed target (14, 11); two scalar sliders (c1 = scoops banana, c2 = scoops peanut butter) default to the exact solution (2, 1.5). New "Allow negative scoops" checkbox (default off): OFF shows only the non-negative reachable wedge (the cone between the two vectors) shaded and floors both sliders at 0; ON floors sliders at −5 and shades the whole plane. Text adapts to match ("Real smoothies use non-negative scoops... reaches the wedge" vs. the basis/span sentence, which stays present either way). Kept: the two scalar target equations (Protein: 1c1 + 8c2 = 14, Sugar: 4c1 + 2c2 = 11), the det = −30 independence/basis explanation, the exact-solution check, and the target star + moving "your smoothie" point. Old preset dropdown, DEFINITION callout, Challenge, Reality check, and Ax=b-preview blocks all removed — superseded by this simplified design.
+- [x] **Basis and span are now shown in numbers and words on all three screens** — Screen 1 shows a single ingredient's span as a line (with the span-line visual), Screen 2 shows a specific combination landing off that line, and Screen 3 shows the full basis payoff (determinant, uniqueness, wedge-vs-plane) with a live toggle between the "real" non-negative case and the full mathematical span.
+
+**Note:** Topic 1 uses hardcoded light-mode plot colors (e.g. "darkorange", "crimson", "navy", "sienna", "gold") unlike Topics 2-4 which use the engine's dark-palette constants. May need a color-tune follow-up if anything looks dim on dark backgrounds.
 
 ## Topic 2 — Linear Transformations (`t02_transformations.py`)
 
