@@ -112,32 +112,51 @@ All 5 screens built and working.
 
 **Note:** Topic 1 uses hardcoded light-mode plot colors (e.g. "darkorange", "crimson", "navy", "sienna", "gold") unlike Topics 2-4 which use the engine's dark-palette constants. May need a color-tune follow-up if anything looks dim on dark backgrounds.
 
-## Topic 2 — Linear Transformations (`topics/t02_transformations/`)
+## Topic 2 — Linear Transformations (`topics/t02_transformations/`) — COMPLETE (2 screens)
 
 **Spec:** rework done via chat; no standalone spec file (unlike Topics 1, 5.5).
 
-**File structure:** single-file package — `topics/t02_transformations/__init__.py` holds everything (TITLE, SLUG, INTRO, `_NOTICE`, `PRESET_NAMES`, `_PRESET_MATRICES`, `CORNERS`, `VIEW`, `_corner_latex`, `render()`). Refactored from the old flat `topics/t02_transformations.py` module (a clean 100% git rename, no behavior change at the time of that refactor).
+**File structure:** per-screen package, matching the pattern used by Topics 0, 1, 3, 4, 5, 5.5:
+- `__init__.py` — TITLE, SLUG, INTRO, top-level "Example" radio (2D / 3D), dispatches to `_render_2d()` / `_render_3d()`
+- `screen_2d.py` — Screen 1 (2D: parallelogram / rocket) — `_NOTICE`, `PRESET_NAMES`, `_PRESET_MATRICES`, `CORNERS`, `VIEW`, `ROCKET_POINTS`, `ROCKET_LABELS`, `_corner_latex`, `_render_2d()`
+- `screen_3d.py` — Screen 2 (3D: cube) — `GOAL`, `V1`..`V8`/`VERTICES`, `FACES`, `FACE_COLORS`, `EDGES`, `VIEW_3D`, `PRESET_NAMES_3D`, `_PRESET_MATRICES_3D`, `_vertex_latex`, `_add_wireframe`, `_add_solid_faces`, `_render_3d()`
 
-- [x] Module exists and registered in `app.py` (imports as `topics.t02_transformations`; a package resolves identically to a flat module for that import — verified)
-- [x] Ax = b intro with vertex/vector definitions (kept from the original; the vertex example now points at "a corner of the parallelogram" instead of the old rocket/unit-square wording)
+- [x] Module exists and registered in `app.py` (imports as `topics.t02_transformations`)
+- [x] Ax = b intro with vertex/vector definitions (kept from the original rework; still points at "a corner of the parallelogram")
+- [x] Restructured from a single-screen package into a 2-screen package: `__init__.py` now holds only TITLE/SLUG/INTRO + the selector/dispatch; both screens' bodies moved out verbatim into `screen_2d.py`/`screen_3d.py`
 
-### Reworked — asymmetric parallelogram, presets instead of sliders (built via chat, no spec file)
-- [x] Refactored from a flat module into a package: `topics/t02_transformations.py` → `topics/t02_transformations/__init__.py`
-- [x] Object replaced: the unit-square/rocket toggle is gone; the screen now uses one fixed asymmetric parallelogram, corners (−3,−2), (4,−1), (3,4), (−4,3) — one per quadrant, no 0s/1s, so no corner reads as a basis vector
-- [x] Removed entirely: the morph slider (`t02_t`) and all `interpolate`/morph logic (the transform is now static, no animation); the big `editable_matrix` widget; the 2D/3D toggle and the whole 3D path; the î/ĵ basis-vector arrows on the graph (removed per explicit request — the graph now shows only the before/after parallelograms, no legend entries for basis vectors)
-- [x] Control: nine preset buttons (Identity, Shear, Rotation 45°, Reflection, Scale ×2, Non-uniform scale, General warp, Collapse (singular), Custom) in a 3×3 grid, tracked via `st.session_state["t02_preset"]`; Custom reveals four compact `st.number_input` cells (not the bracket widget)
-- [x] Matrix A shown beside the preset buttons (`A = ` LaTeX + "columns = where î, ĵ land" + î/ĵ columns line)
-- [x] Per-corner A·x=b math ("Where each corner lands", four equations) shown beside the graph, in the same `st.columns()` row as the graph so both start at the same vertical position (not pushed down by a taller column above)
-- [x] Before (faint, transparent fill, muted gray outline) / after (bold, semi-transparent orange fill, solid orange outline) parallelograms in clearly distinct colors, with matching legend entries
-- [x] Layout: controls + Matrix A in a top band; below it, corner math + determinant + meaning + preset notice on the left, graph on the right, both starting at the same height
-- [x] `engine/plotting.py`: `shade_polygon` extended with optional `line_color`/`line_width` params (defaults preserve every existing caller's behavior exactly); no new `figure_2d` branch was added — the graph is built inline from generic primitives (`new_figure_2d`, `shade_polygon`), so `figure_2d`/`figure_3d` (still used by Topics 3 and 4) were left untouched
+### Screen 1 — 2D (parallelogram / rocket) — `screen_2d.py`
+- [x] Object: asymmetric parallelogram, corners (−3,−2), (4,−1), (3,4), (−4,3) — one per quadrant, no 0s/1s so no corner reads as a basis vector
+- [x] Object toggle: parallelogram ↔ rocket (`st.radio`), reusing `engine.plotting`'s existing `_ROCKET` outline scaled ×3 so it spans all four quadrants like the parallelogram
+- [x] Preset buttons (3-per-row grid): Identity, Shear, Rotation 45°, Reflection, Scale ×2, Non-uniform scale, General warp, Collapse (singular), Custom — tracked via `st.session_state["t02_preset"]`; Custom reveals four compact `st.number_input` cells (not the bracket widget)
+- [x] Matrix A shown beside the buttons (`A = ` LaTeX + "columns = where î, ĵ land" + î/ĵ columns line)
+- [x] Per-corner A·x=b math beside the graph — when Rocket is selected, four representative rocket vertices (nose, right fin tip, left fin tip, base) are labeled and shown instead of the four parallelogram corners
+- [x] Before (faint, transparent fill, muted gray outline) / after (bold, semi-transparent orange fill, solid orange outline) shapes, matching legend entries — same `shade_polygon` calls drive both the parallelogram and the rocket
+- [x] Determinant text + preset notice
+- [x] No sliders anywhere on this screen (the old morph slider is gone — see "Removed" below)
 
-**Note:** the "General warp" preset's notice text still references a "sample vector x" toggle-and-compare interaction (turn on the sample vector, compare A·x to x, hunt for eigenvectors) that no longer exists on this screen — flagged during the rework, not yet resolved. Either restore that interaction or trim the notice text.
+### Screen 2 — 3D (cube) — `screen_3d.py`
+- [x] Object: origin-centered cube, vertices (±2, ±2, ±2) — went through two intermediate shapes during development (tetrahedron → asymmetric hexahedron) before settling here per explicit request
+- [x] 6 quad faces (standard cube topology: bottom/top/front/right/back/left), each a distinct solid color, fully opaque (`opacity=1.0`)
+- [x] The original (untransformed) cube is drawn as a bright white wireframe overlay (12 edges, one `Scatter3d` "lines" trace) added AFTER the solid transformed faces, so the outline sits on top of them for direct before/after comparison
+- [x] Preset buttons mirror Screen 1's layout, with verified 3D matrices: Identity, Scale ×2 (=2I, det=8), Non-uniform scale (diag(2,1,0.5), det=1), Shear (xy) (det=1), Rotation 90° z (det=1), Reflection z (det=−1), Collapse (singular, det=0), Custom (compact 3×3 `editable_matrix`, 9 cells)
+- [x] Goal description + live 8-vertex list at the top, generated directly from the `VERTICES` array (can't drift out of sync with the geometry)
+- [x] Matrix A 3×3 LaTeX display + "columns = where the basis vectors land" caption
+- [x] 3-vertex (v1, v2, v3) A·x=b corner math, with a note that the other five vertices transform the same way
+- [x] Determinant text: |det| = volume scale factor; sign = orientation flip; det=0 collapses the solid to a flat plane
+- [x] Layout mirrors Screen 1: preset buttons + Matrix A in a top band; vertex math + determinant + meaning on the left, graph on the right, both starting at the same height
 
-### Topic 2 REMAINING (not yet built)
-- [ ] **Restore the rocket as a 2D object** — add a toggle (parallelogram ↔ rocket) back onto the current 2D screen. `engine/plotting.py`'s `_ROCKET` / `_ROCKET_WINDOW` constants and `figure_2d`'s `obj="rocket"` branch are still there (used by Topic 3's graphics screen and Topic 4), so the rocket geometry doesn't need to be rebuilt — only the toggle and wiring on Topic 2's screen do.
-- [ ] **Add a separate 3D screen** — Topic 2 becomes multi-screen (2D parallelogram = screen 1, 3D = screen 2), matching the per-screen package pattern used by Topics 0, 1, 3, 4, 5, 5.5. `engine/plotting.py`'s `figure_3d` (3D cube + basis vectors) still exists and is still used by Topic 3's biology screen, so check it — and the pre-parallelogram-rework git history (the old flat `topics/t02_transformations.py`, before it was replaced by this package, had a working 3D path: `figure_3d`, 3D presets, three-axis-corner math) — before rebuilding the 3D presets/logic from scratch.
-- [ ] Resolve the dangling "General warp" notice text (see note above) once the rocket/3D decision is made, since the sample-vector-x eigenvector-hunt feature may or may not return as part of either addition.
+### Removed from Topic 2 (across both screens)
+- [x] The morph slider (`t02_t`) and all `interpolate`/morph logic — both screens are static, no animation
+- [x] The big `editable_matrix` widget from the pre-rework version (Screen 1 hand-rolls four compact number_inputs; Screen 2 uses `editable_matrix(..., compact=True)` only for its 9-cell Custom entry)
+- [x] î/ĵ basis-vector arrows on the graph — both screens show only the object itself, no basis-vector legend entries
+- [x] The old unit-square/unit-cube framing — replaced by the asymmetric parallelogram/rocket (Screen 1) and the 6-colored cube (Screen 2)
+
+**Shared code:** `engine/plotting.py`'s `_ROCKET`/`_ROCKET_WINDOW` constants and `figure_2d`'s `obj="rocket"`/`obj="square"` branches are unchanged and still serve Topic 3's graphics/medical screens and Topic 4's medical/robotics screens; `figure_3d` (the old basis-vector-arrow cube figure) is also unchanged and still used by Topic 3's biology screen. Topic 2 no longer calls `figure_2d`/`figure_3d` at all — both of its own screens build their pictures from generic primitives instead (`new_figure_2d`/`shade_polygon` for 2D; `new_figure_3d` plus raw `go.Mesh3d`/`go.Scatter3d` for 3D).
+
+**Notes (flagged, not yet resolved):**
+- The "General warp" preset's notice text (Screen 1) still references a "sample vector x" toggle-and-compare interaction (turn on the sample vector, compare A·x to x, hunt for eigenvectors) that does not exist on this screen — flagged during the original rework, still unresolved. Either restore that interaction or trim the notice text.
+- `__init__.py`'s screen-selector radio option still reads "2 · 3D (tetrahedron)" even though the 3D object is now a cube (it went tetrahedron → hexahedron → cube across three follow-up requests and the label was never updated to match). Flagging rather than silently editing lesson-adjacent UI text.
 
 ## Topic 3 — Determinant (`topics/t03_determinant/`)
 
