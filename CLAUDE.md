@@ -36,8 +36,9 @@ terminal, or a Run Configuration with module `streamlit`, parameters `run app.py
 - `engine/plotting.py` — shared Plotly figures (`figure_2d`, `figure_3d`). These
   draw whatever matrix they're given; callers pass the already-morphed matrix.
 - `engine/animate.py` — `interpolate(M, t)` morphs identity → M.
-- `topics/tNN_*.py` — one module per topic. **`topics/t02_transformations.py` is
-  the canonical template.**
+- `topics/tNN_*.py` — one module per topic (or a `topics/tNN_*/` package with
+  an `__init__.py` once a topic outgrows a single file). **`topics/t02_transformations/`
+  (its `__init__.py`) is the canonical template** for the single-screen pattern.
 
 ## The topic contract
 
@@ -71,7 +72,7 @@ Each finished topic's spec stays in `specs/` as the record of what was agreed.
 
 ## Two topic patterns (pick the one that fits)
 
-- **Single surface + presets** — template `t02_transformations.py`. One set of
+- **Single surface + presets** — template `t02_transformations/__init__.py`. One set of
   inputs and one visual; a preset dropdown swaps the *values* (via
   `widgets.set_matrix_state` / `set_vector_state`). Use when every example is the
   same picture with different numbers. Aim ~100 lines.
