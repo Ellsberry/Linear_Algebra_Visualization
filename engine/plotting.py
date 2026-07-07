@@ -231,12 +231,12 @@ def add_point_2d(fig, p, color, name, size=13, symbol="circle"):
                              name=name))
 
 
-def shade_polygon(fig, pts, fillcolor, name=None):
-    """Shade a filled region given its corner points."""
+def shade_polygon(fig, pts, fillcolor, name=None, line_color="rgba(0,0,0,0)", line_width=1):
+    """Shade a filled region given its corner points (border transparent by default)."""
     xs = [p[0] for p in pts] + [pts[0][0]]
     ys = [p[1] for p in pts] + [pts[0][1]]
     fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines", fill="toself",
-                             fillcolor=fillcolor, line=dict(color="rgba(0,0,0,0)"),
+                             fillcolor=fillcolor, line=dict(color=line_color, width=line_width),
                              name=name, hoverinfo="skip", showlegend=bool(name)))
 
 

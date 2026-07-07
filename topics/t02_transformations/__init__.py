@@ -11,7 +11,6 @@ import streamlit as st
 
 from engine import widgets as w
 from engine import plotting as plot
-from engine.animate import interpolate
 
 TITLE = "2 · Linear Transformations"
 SLUG = "transformations"
@@ -26,8 +25,8 @@ x*. Later we'll turn it around and ask the harder question: given b, which x get
 you there?
 
 Two words we'll use a lot:
-- A **vertex** is a corner of the shape — a specific point, like the nose of the
-  rocket or the (1,1) corner of the square. "Vertex" is the geometry word.
+- A **vertex** is a corner of the shape — a specific point, like a corner of the
+  parallelogram below. "Vertex" is the geometry word.
 - A **vector** is the arrow from the origin to that point — the column of numbers
   you actually multiply by A. "Vector" is the algebra word.
 
@@ -35,13 +34,13 @@ These are two views of the same thing: **every corner of a shape is described by
 a vector**, and that's exactly why a matrix can transform a shape — it multiplies
 the vector of each corner, and the corners move.
 
-The columns of A tell you where the basis vectors (î, ĵ, and in 3D ẑ) land. Watch
-the grid deform: edit the cells of A or pick an example, and drag the **Morph**
-slider to see the identity turn into your matrix A.
+The columns of A tell you where the basis vectors (î, ĵ) land. Pick a preset
+below (or choose Custom to set the four entries yourself) and watch the
+parallelogram transform.
 """
 
-# Each preset returns the target matrix for the given dimension, plus a "notice"
-# that ends with where this transformation shows up in the real world.
+# Each preset's notice ends with where this transformation shows up in the
+# real world.
 _NOTICE = {
     "Identity": "Nothing moves — every vector maps to itself. It's the "
                 "\"do nothing\" transform that every animation morphs out of.",
@@ -78,195 +77,106 @@ _NOTICE = {
 }
 PRESET_NAMES = list(_NOTICE.keys())
 
+# Fixed matrices for every preset except "Custom" (built live from the four
+# number_inputs instead).
+_PRESET_MATRICES = {
+    "Identity": np.array([[1.0, 0.0], [0.0, 1.0]]),
+    "Shear": np.array([[1.0, 1.0], [0.0, 1.0]]),
+    "Rotation 45°": np.array([[0.707, -0.707], [0.707, 0.707]]),
+    "Reflection": np.array([[1.0, 0.0], [0.0, -1.0]]),
+    "Scale ×2": np.array([[2.0, 0.0], [0.0, 2.0]]),
+    "Non-uniform scale": np.array([[2.0, 0.0], [0.0, 0.5]]),
+    "General warp": np.array([[1.0, 0.5], [-0.5, 1.2]]),
+    "Collapse (singular)": np.array([[1.0, 2.0], [2.0, 4.0]]),
+}
 
-def _build_preset(name: str, dim: int):
-    """Return the matrix for a preset, or None for 'Custom' (leave cells as-is)."""
-    if name == "Custom":
-        return None
-    A = np.eye(dim)
-    if name == "Identity":
-        return A
-    if name == "Shear":
-        A[0, 1] = 1.0
-        return A
-    if name == "Rotation 45°":
-        a = np.pi / 4
-        c, s = np.cos(a), np.sin(a)
-        A[0, 0], A[0, 1], A[1, 0], A[1, 1] = c, -s, s, c
-        return A
-    if name == "Reflection":
-        A[1, 1] = -1.0
-        return A
-    if name == "Scale ×2":
-        return 2.0 * np.eye(dim)
-    if name == "Non-uniform scale":
-        factors = [2.0, 1.0] if dim == 2 else [2.0, 1.0, 0.5]
-        return np.diag(factors)
-    if name == "General warp":
-        A[0, 0], A[0, 1], A[1, 0], A[1, 1] = 2.0, 1.0, 1.0, 3.0
-        return A  # in 3D the z-axis is left alone, so the warp acts on the xy-plane
-    if name == "Collapse (singular)":
-        A[1, 1] = 0.0
-        return A
-    return A
+# An asymmetric parallelogram, one corner in each quadrant, no 0s or 1s so no
+# corner is mistakable for a basis vector. Columns are the four corners.
+CORNERS = np.array([
+    [-3.0, 4.0, 3.0, -4.0],
+    [-2.0, -1.0, 4.0, 3.0],
+])
+
+VIEW = 14
 
 
-def _corner_latex(T: np.ndarray, v: np.ndarray) -> str:
-    """Return LaTeX showing the live numeric matrix T times v equals result."""
-    result = T @ v
-    return w.bmatrix(T) + w.bmatrix(v.reshape(-1, 1)) + r" = " + w.bmatrix(result.reshape(-1, 1))
-
-
-def _reset():
-    """Reset callback: jump back to Identity. Runs before the rerun."""
-    st.session_state["t02_preset"] = "Identity"
-    st.session_state["t02_last"] = None
+def _corner_latex(A: np.ndarray, v: np.ndarray) -> str:
+    """Return LaTeX showing the numeric matrix A times corner v equals result."""
+    result = A @ v
+    return w.bmatrix(A) + w.bmatrix(v.reshape(-1, 1)) + r" = " + w.bmatrix(result.reshape(-1, 1))
 
 
 def render():
     st.markdown(INTRO)
 
-    # --- full-width control band ---
-    c = st.columns([1, 1, 1.3, 1.3, 3])
-    with c[0]:
-        dim = 3 if st.radio("Space", ["2D", "3D"], horizontal=True,
-                            key="t02_dim") == "3D" else 2
-    obj = "square"
-    with c[1]:
-        if dim == 2:
-            obj = "rocket" if st.radio(
-                "Object", ["Unit square", "Rocket 🚀"], horizontal=True,
-                key="t02_obj") == "Rocket 🚀" else "square"
-    with c[2]:
-        preset = st.selectbox("Example", PRESET_NAMES, key="t02_preset")
-    with c[3]:
-        show_vec = st.checkbox("Show a sample vector x", value=False, key="t02_showvec")
+    if "t02_preset" not in st.session_state:
+        st.session_state["t02_preset"] = "Identity"
 
-    # Apply a preset only when the (preset, dim) selection changes, so manual
-    # cell edits are preserved afterwards.
-    signature = (preset, dim)
-    if st.session_state.get("t02_last") != signature:
-        A_preset = _build_preset(preset, dim)
-        if A_preset is not None:
-            w.set_matrix_state("t02_A", A_preset)
-        # The eigenvector hunt only makes sense with the sample vector shown.
-        if preset == "General warp":
-            st.session_state["t02_showvec"] = True
-        st.session_state["t02_last"] = signature
+    # --- control band: Matrix A + notice left, preset buttons right ---
+    band_left, band_right = st.columns([0.5, 0.5], gap="large")
 
-    t = w.scalar_slider("t02_t", "Morph t: identity → matrix A", 0.0, 1.0, 1.0, step=0.01)
-    st.info(_NOTICE[preset], icon="💡")
+    with band_right:
+        st.markdown("**Choose a transformation**")
+        rows = [PRESET_NAMES[i:i + 3] for i in range(0, len(PRESET_NAMES), 3)]
+        for row in rows:
+            btn_cols = st.columns(3)
+            for btn_col, name in zip(btn_cols, row):
+                with btn_col:
+                    if st.button(name, key=f"t02_btn_{name}", use_container_width=True):
+                        st.session_state["t02_preset"] = name
+        preset = st.session_state["t02_preset"]
 
-    # --- two-column body ---
+        if preset == "Custom":
+            st.caption("Set the four entries of A:")
+            r1c1, r1c2 = st.columns(2)
+            with r1c1:
+                a11 = st.number_input("a11", value=1.0, step=0.1, format="%.2f",
+                                      key="t02_custom_a11")
+            with r1c2:
+                a12 = st.number_input("a12", value=0.0, step=0.1, format="%.2f",
+                                      key="t02_custom_a12")
+            r2c1, r2c2 = st.columns(2)
+            with r2c1:
+                a21 = st.number_input("a21", value=0.0, step=0.1, format="%.2f",
+                                      key="t02_custom_a21")
+            with r2c2:
+                a22 = st.number_input("a22", value=1.0, step=0.1, format="%.2f",
+                                      key="t02_custom_a22")
+            A = np.array([[a11, a12], [a21, a22]])
+        else:
+            A = _PRESET_MATRICES[preset]
+
+    with band_left:
+        st.latex(r"A = " + w.bmatrix(A))
+        st.caption("Columns = where î and ĵ land.")
+        st.markdown("The basis vectors land on the **columns** of A:")
+        st.latex(r"\hat{i} \to " + w.bmatrix(A[:, 0]) + r" \quad \hat{j} \to " + w.bmatrix(A[:, 1]))
+
+    # --- two-column row: corner math/determinant/meaning/notice left, graph right ---
     left, right = st.columns([0.5, 0.5], gap="large")
 
     with left:
-        A = w.editable_matrix("t02_A", dim, label="Matrix A (its columns = where the basis lands)")
-
-        x = None
-        if show_vec:
-            default_x = [1.0, 1.0] if dim == 2 else [1.0, 1.0, 1.0]
-            x = w.vector_editor("t02_v", dim, default_x, label="Vector x")
-
-        st.button("↺ Reset to identity", on_click=_reset)
-
-        At = interpolate(A, t)
-        xt = (At @ x) if (show_vec and x is not None) else None
-
-        det_final = float(np.linalg.det(A))
-        det_live = float(np.linalg.det(At))
-        dim_word = "area" if dim == 2 else "volume"
-        st.latex(r"A = " + w.bmatrix(A))
-        det_msg = (
-            f"**Determinant now:** `{det_live:.3f}` "
-            f"· **final (your matrix A):** `{det_final:.3f}`"
-        )
-        if det_final < 0:
-            det_msg += " Negative final value ⇒ orientation flips."
-        if abs(det_final) < 1e-9:
-            det_msg += " **Zero final value ⇒ space collapses and A has no inverse.**"
-        st.markdown(det_msg)
-        st.markdown(
-            f"**Meaning:** The determinant tells you how the transform scales "
-            f"{dim_word}: {dim_word} is multiplied by **|det|**, and the **sign** of the "
-            f"determinant tells you whether orientation flipped (negative = mirror image)."
-        )
-        mid_morph = (
-            "(Mid-morph the shape isn't a pure rotation yet, so its determinant dips "
-            "below 1; at t = 1 it's exactly 1."
-        )
-        if det_final < 0:
-            mid_morph += (
-                " For a reflection the live determinant likewise dips through 0 "
-                "before reaching its final negative value."
-            )
-        mid_morph += ")"
-        st.markdown(mid_morph)
-        st.markdown("The basis vectors land on the **columns** of A:")
-        cols_latex = " ,\\quad ".join(
-            (["\\hat{i}", "\\hat{j}", "\\hat{z}"][k] + r" \to " + w.bmatrix(A[:, k]))
-            for k in range(dim)
-        )
-        st.latex(cols_latex)
-        if show_vec and x is not None:
-            st.latex(r"A\,x = " + w.bmatrix(A) + w.bmatrix(x.reshape(-1, 1))
-                     + r" = " + w.bmatrix((A @ x).reshape(-1, 1)))
-
-        st.markdown("---")
         st.markdown("**Where each corner lands**")
-        if abs(t) < 0.01:
-            t_word = "the identity — nothing moves"
-        elif abs(t - 1.0) < 0.01:
-            t_word = "your full matrix A"
-        else:
-            t_word = "part-way from the identity to A"
-        st.markdown(
-            f"These are the matrix's numbers right now "
-            f"(morph **t = {t:.2f}** — {t_word}). "
-            f"Drag t to 1 to reach A."
-        )
+        for i in range(CORNERS.shape[1]):
+            st.latex(r"{\small " + _corner_latex(A, CORNERS[:, i]) + r"}")
 
-        if dim == 2:
-            if obj == "square":
-                for v_col in [np.array([0.0, 0.0]), np.array([1.0, 0.0]),
-                               np.array([1.0, 1.0]), np.array([0.0, 1.0])]:
-                    st.latex(r"{\small " + _corner_latex(At, v_col) + r"}")
-            else:  # rocket
-                nose = plot._ROCKET[:, 0]
-                fin_tip = plot._ROCKET[:, 3]
-                window = plot._ROCKET_WINDOW
-                for v_col, label in [(nose, "nose"), (fin_tip, "fin tip"), (window, "window")]:
-                    st.markdown(f"*{label}*")
-                    st.latex(r"{\small " + _corner_latex(At, v_col) + r"}")
-                st.markdown("Every other vertex transforms the same way.")
-        else:  # 3D
-            for v_col in [np.array([1.0, 0.0, 0.0]),
-                           np.array([0.0, 1.0, 0.0]),
-                           np.array([0.0, 0.0, 1.0])]:
-                st.latex(r"{\small " + _corner_latex(At, v_col) + r"}")
-
-        st.markdown(
-            "> Two of these corners are special. The corner **(1,0)** is the basis vector **î**,"
-            " and **(0,1)** is **ĵ**. Look at where they land: **A · (1,0)** is the **first"
-            " column of A**, and **A · (0,1)** is the **second column**. That's the rule from"
-            " the top of this topic — \"the columns of A are where the basis vectors go\" — and"
-            " you can check it right here."
-            " *(Check it with the Morph slider all the way over at t = 1; mid-morph the numbers"
-            " above are the columns of the in-between transform, not yet your final A.)*"
-        )
+        det = float(np.linalg.det(A))
+        st.markdown(f"**Determinant:** `{det:.3f}`")
+        meaning = f"Area is multiplied by **|det|** = `{abs(det):.3f}`."
+        if det < 0:
+            meaning += " The **negative sign** means orientation flips (a mirror image)."
+        if abs(det) < 1e-9:
+            meaning += " **det = 0 means the transform collapses space** — A has no inverse."
+        st.markdown(meaning)
+        st.info(_NOTICE[preset], icon="💡")
 
     with right:
-        if dim == 2:
-            st.plotly_chart(plot.figure_2d(At, show_vec, x, xt, obj=obj),
-                            use_container_width=True)
-        else:
-            st.caption("Drag to rotate · scroll to zoom")
-            st.plotly_chart(plot.figure_3d(At, show_vec, x, xt), use_container_width=True)
-
-    st.markdown("**Try this**")
-    st.markdown(
-        "- Make a matrix whose **determinant is negative**. What happens to the square/cube?\n"
-        "- Find a non-identity matrix that leaves the sample vector **x pointing the same way** "
-        "(only its length changes). You've just found an *eigenvector* — Topic 8.\n"
-        "- Set a column equal to another column. Why does the area collapse to zero?"
-    )
+        fig = plot.new_figure_2d(VIEW)
+        before_pts = [tuple(CORNERS[:, i]) for i in range(CORNERS.shape[1])]
+        after = A @ CORNERS
+        after_pts = [tuple(after[:, i]) for i in range(after.shape[1])]
+        plot.shade_polygon(fig, before_pts, "rgba(0,0,0,0)", "before (original)",
+                           line_color="rgba(190,190,190,0.55)", line_width=1.5)
+        plot.shade_polygon(fig, after_pts, "rgba(255,140,0,0.35)", "after (A applied)",
+                           line_color="#ff8c00", line_width=3)
+        st.plotly_chart(fig, use_container_width=True)
