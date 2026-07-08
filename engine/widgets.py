@@ -12,7 +12,7 @@ import streamlit as st
 def editable_matrix(state_key: str, dim: int = None, label: str = "A",
                     editable: bool = True, value=None,
                     compact: bool = False, rows: int = None,
-                    cols: int = None) -> np.ndarray:
+                    cols: int = None, hide_steppers: bool = False) -> np.ndarray:
     """Render a matrix in bracket form with editable or read-only cells.
 
     editable=True  → number_input cells using session_state keys {state_key}__i__j
@@ -127,6 +127,18 @@ def editable_matrix(state_key: str, dim: int = None, label: str = "A",
             """,
             unsafe_allow_html=True,
         )
+        if hide_steppers:
+            st.markdown(
+                f"""
+                <style>
+                .st-key-{box_key} [data-testid="stNumberInputStepUp"],
+                .st-key-{box_key} [data-testid="stNumberInputStepDown"] {{
+                    display: none !important;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
         tick = "position:absolute;width:7px;height:2px;background:{0};".format(bcolor)
         ticks_html = (
             f'<div style="{tick}top:0;left:-2px;"></div>'
