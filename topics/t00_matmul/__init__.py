@@ -11,6 +11,9 @@ from .screen_2x2 import render_2x2
 from .screen_3x3 import render_3x3
 from .screen_rect import render_rect
 from .screen_special import render_special
+from .screen_rows import render_rows
+from .screen_cols import render_cols
+from .screen_outer import render_outer
 
 TITLE = "0 · Matrix multiplication"
 SLUG = "matmul"
@@ -29,7 +32,8 @@ def render():
     screen = st.radio(
         "Screen",
         ["0 · Operations", "1 · Multiply 2x2", "2 · Multiply 3x3", "3 · Rectangular",
-         "4 · Special matrices"],
+         "4 · Special matrices", "5 · Row picture", "6 · Column picture",
+         "7 · Outer products"],
         horizontal=True,
         key="t00_screen",
     )
@@ -45,3 +49,9 @@ def render():
         render_rect()
     elif screen.startswith("4"):
         render_special()
+    elif screen.startswith("5"):
+        render_rows()
+    elif screen.startswith("6"):
+        render_cols()
+    elif screen.startswith("7"):
+        render_outer()

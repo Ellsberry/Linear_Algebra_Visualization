@@ -103,6 +103,30 @@ screen functions. Nothing else in `__init__.py` changes.
 - "Row 2 of C" highlights row 2 of A and writes:
   `Row 2 of C = 0·(1, 4) + 2·(2, 5) + 1·(3, 1) = (7, 11)`.
 
+**Worked Example 2 (permutation) — same structure, own highlight selector:**
+A = [[0,1,0],[1,0,0],[0,0,1]], B = [[1,4],[2,5],[3,1]], C = [[2,5],[1,4],[3,1]].
+Read-only, compact; `st.radio("Building:", ["Row 1 of C", "Row 2 of C",
+"Row 3 of C"], horizontal=True, key="t00_rows_worked2")`. Live combination per row
+(weights = row i of A, colored):
+- Row 1: `0·(1,4) + 1·(2,5) + 0·(3,1) = (2,5)`
+- Row 2: `1·(1,4) + 0·(2,5) + 0·(3,1) = (1,4)`
+- Row 3: `0·(1,4) + 0·(2,5) + 1·(3,1) = (3,1)`
+Caption (verbatim): "This A is a permutation matrix — each row of C picks exactly
+one row of B (weight 1), so multiplying just reorders B's rows. Here rows 1 and 2 of
+B swap."
+
+**Worked Example 3 (elimination step) — same structure, own highlight selector:**
+A = [[1,0,0],[-2,1,0],[0,0,1]], B = [[1,4],[2,5],[3,1]], C = [[1,4],[0,-3],[3,1]].
+Read-only, compact; `st.radio("Building:", ["Row 1 of C", "Row 2 of C",
+"Row 3 of C"], horizontal=True, key="t00_rows_worked3")`. Live combination per row:
+- Row 1: `1·(1,4) + 0·(2,5) + 0·(3,1) = (1,4)`
+- Row 2: `-2·(1,4) + 1·(2,5) + 0·(3,1) = (0,-3)`
+- Row 3: `0·(1,4) + 0·(2,5) + 1·(3,1) = (3,1)`
+Caption (verbatim): "This A is an elimination matrix — the kind you'll use to solve
+systems later. Rows 1 and 3 of B pass through unchanged, but row 2 of C is *row 2 of
+B minus 2 times row 1* (weights −2, 1, 0). That single subtraction is one step of the
+elimination method, written as a matrix."
+
 **Practice (build C one ROW at a time; verified answers):**
 
 - **Practice 1 (aided) — A(2×2)·B(2×2):**
@@ -136,6 +160,31 @@ screen functions. Nothing else in `__init__.py` changes.
 - "Column 2 of C" highlights column 2 of B and writes:
   `Column 2 of C = 4·(2, 0) + 5·(1, 2) + 1·(3, 1) = (16, 11)`.
   (Columns of A are (2,0), (1,2), (3,1); column of C is written as a column.)
+
+**Worked Example 2 (column permutation) — own highlight selector:**
+A = [[2,1,3],[4,2,5]], B = [[0,1,0],[1,0,0],[0,0,1]], C = [[1,2,3],[2,4,5]].
+Read-only, compact; `st.radio("Building:", ["Column 1 of C", "Column 2 of C",
+"Column 3 of C"], horizontal=True, key="t00_cols_worked2")`. Weights = column j of B,
+applied to columns of A ((2,4),(1,2),(3,5)); result column shown vertically as a
+bmatrix. Live combination per column:
+- Col 1: `0·(2,4) + 1·(1,2) + 0·(3,5) = (1,2)`
+- Col 2: `1·(2,4) + 0·(1,2) + 0·(3,5) = (2,4)`
+- Col 3: `0·(2,4) + 0·(1,2) + 1·(3,5) = (3,5)`
+Caption (verbatim): "This B is a permutation matrix — each column of C picks exactly
+one column of A (weight 1), so multiplying reorders A's columns. Here columns 1 and 2
+of A swap."
+
+**Worked Example 3 (diagonal scale) — own highlight selector:**
+A = [[2,1,3],[4,2,5]], B = [[1,0,0],[0,1,0],[0,0,2]], C = [[2,1,6],[4,2,10]].
+Read-only, compact; `st.radio("Building:", ["Column 1 of C", "Column 2 of C",
+"Column 3 of C"], horizontal=True, key="t00_cols_worked3")`. Result column vertical
+bmatrix. Live combination per column:
+- Col 1: `1·(2,4) + 0·(1,2) + 0·(3,5) = (2,4)`
+- Col 2: `0·(2,4) + 1·(1,2) + 0·(3,5) = (1,2)`
+- Col 3: `0·(2,4) + 0·(1,2) + 2·(3,5) = (6,10)`
+Caption (verbatim): "This B is diagonal, so each column of C is just one column of A
+scaled: column 1 unchanged, column 2 unchanged, column 3 doubled (weight 2). A
+diagonal B scales each column independently."
 
 **Practice (build C one COLUMN at a time; SAME three pairs; verified answers):**
 
