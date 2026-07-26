@@ -76,28 +76,30 @@ All 5 screens built and working.
 ### Related cleanup
 - [x] Removed the stray top-level `topics/t05b_elimination.py` module that shadowed the real `topics/t05b_elimination/` package (superseded; package version is authoritative)
 
-### Screens 5-7 -- Three views of multiplication (BUILT)
+### Screens 5-7 -- Three views of multiplication (BUILT; Screen 7 practice layout pending)
 
 **Spec:** `specs/topic00_multiplication_views.md` (scoped addition -- Screens 5-7
 only; does not modify Screens 0-4).
 
 - [x] Screen 5 -- Row picture (`screen_rows.py`): rows of C are combinations of rows
-      of B. Worked Example 1 (general mix) + Example 2 (permutation, rows 1&2 swap) +
-      Example 3 (elimination step, row 2 = row2 - 2*row1), each with its own
-      3-row highlight selector; then 3 practice examples (P1 aided, P2/P3 unaided)
-      built one row at a time with per-row Check / Show solution.
+      of B. Worked Ex 1 (general mix) + Ex 2 (permutation) + Ex 3 (elimination step),
+      each with its own 3-row highlight selector. Practice redesigned: A·B=C top row
+      with touch-tracked live-fill C (blank-until-touched, real 0 shows as 0),
+      per-row work stacked, per-row Check / Show solution.
 - [x] Screen 6 -- Column picture (`screen_cols.py`): columns of C are combinations of
-      columns of A. Worked Example 1 (general mix, result rendered as vertical
-      bmatrix) + Example 2 (column permutation, cols 1&2 swap) + Example 3 (diagonal
-      scale, col 3 doubled), each with its own 3-column highlight selector; then 3
-      practice examples (P1 aided, P2/P3 unaided) built one column at a time.
-- [ ] Screen 7 -- Outer products (`screen_outer.py`): AB = sum of (col of A)(row of B).
+      columns of A. Worked Ex 1 (general mix, result as vertical bmatrix) + Ex 2
+      (column permutation) + Ex 3 (diagonal scale), each with its own 3-column
+      highlight selector. Practice redesigned: A·B=C top row with touch-tracked
+      live-fill C (blank-until-touched, real 0 shows as 0), per-column work side by
+      side, per-column Check / Show solution.
+- [~] Screen 7 -- Outer products (`screen_outer.py`): AB = sum of (col of A)(row of B).
       Worked example (Term 1/2/3/Sum selector) + 3 practice examples building each
-      term then the sum. [BUILD PROMPT ISSUED -- confirm before marking done.]
-- [x] Selector in `__init__.py` extended: "5 · Row picture", "6 · Column picture",
+      term then the sum -- BUILT and registered, but practice layout NOT yet
+      redesigned to match Screens 5/6 (still original stacked layout); pending review.
+- [x] Selector in `__init__.py`: "5 · Row picture", "6 · Column picture",
       "7 · Outer products" after "4 · Special matrices".
 - [x] Shared worked example A(2x3)*B(3x2) = C(2x2) = [[13,16],[7,11]] on all three;
-      same three practice A/B pairs across all three screens.
+      same three practice A/B pairs across all screens.
 
 ---
 

@@ -77,6 +77,18 @@ screen functions. Nothing else in `__init__.py` changes.
     one box per column; outer products → one box per term, plus a final box for
     the sum). Use `editable_matrix(..., editable=True, compact=True,
     hide_steppers=True)` for answer boxes.
+  - **Practice layout (Screens 5 and 6):** top row shows `A · B = C` on one line
+    as matrices, C being a read-only live-fill display. Below it, the per-unit work
+    (rows stacked top-to-bottom on Screen 5; columns side by side via `st.columns(p)`
+    on Screen 6), each unit with its recipe (aided only), answer box, and Check /
+    Show solution. C fills in per unit only after that unit's Check or Show solution
+    is clicked (touch-tracked).
+  - **Blank-until-touched:** track a `{prefix}_{unit}{k}_touched` flag per unit
+    (default False), set True on that unit's Check OR Show solution. C's unit renders
+    BLANK until touched; once touched it shows the entered values, including a
+    legitimate 0 answer (must show as 0, never blank). C uses a small local HTML
+    render helper (`_answer_matrix_html`), not `editable_matrix`, so blank cells are
+    possible.
   - **Check (per unit, per-cell reveal-flag pattern, like Screens 1–3)** and
     **Show solution** on each practice example. Check flags wrong cells without
     revealing the value; Show solution writes the correct answer via the
@@ -127,7 +139,8 @@ systems later. Rows 1 and 3 of B pass through unchanged, but row 2 of C is *row 
 B minus 2 times row 1* (weights −2, 1, 0). That single subtraction is one step of the
 elimination method, written as a matrix."
 
-**Practice (build C one ROW at a time; verified answers):**
+**Practice (build C one ROW at a time; A · B = C top row with live-fill C; per-row
+work stacked top-to-bottom; blank-until-touched; verified answers):**
 
 - **Practice 1 (aided) — A(2×2)·B(2×2):**
   A = [[2,1],[1,3]], B = [[1,2],[4,1]], C = [[6,5],[13,5]].
@@ -186,7 +199,9 @@ Caption (verbatim): "This B is diagonal, so each column of C is just one column 
 scaled: column 1 unchanged, column 2 unchanged, column 3 doubled (weight 2). A
 diagonal B scales each column independently."
 
-**Practice (build C one COLUMN at a time; SAME three pairs; verified answers):**
+**Practice (build C one COLUMN at a time; A · B = C top row with live-fill C;
+per-column work side by side; blank-until-touched; SAME three pairs; verified
+answers):**
 
 - **Practice 1 (aided) — A(2×2)·B(2×2):** same A, B as Screen 5 Practice 1.
   C columns: col 1 = (6, 13), col 2 = (5, 5).

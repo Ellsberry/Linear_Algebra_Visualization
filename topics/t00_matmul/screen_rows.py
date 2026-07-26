@@ -166,6 +166,50 @@ def _worked_example3() -> None:
     st.divider()
 
 
+def _answer_matrix_html(prefix: str, m: int, p: int) -> str:
+    """Live read-only C display assembled from the student's per-row answer
+    boxes. Row i renders blank until f"{prefix}_r{i}_touched" is True (set
+    when that row's Check or Show solution is clicked); once touched, every
+    cell in that row shows its current entered value, including a genuine
+    0."""
+    if m == 1:
+        lb, rb = ["["], ["]"]
+    else:
+        lb = ["⎡"] + ["⎢"] * (m - 2) + ["⎣"]
+        rb = ["⎤"] + ["⎥"] * (m - 2) + ["⎦"]
+
+    row_bstyle = (
+        "display:flex;align-items:center;justify-content:center;"
+        "font-size:2.4em;line-height:1;color:#e6e6e6;"
+    )
+    row_style = (
+        "display:flex;align-items:center;gap:0.35em;"
+        "font-size:1.05em;font-weight:500;color:#e6e6e6;min-height:40px"
+    )
+
+    rows_html = []
+    for i in range(m):
+        touched = st.session_state.get(f"{prefix}_r{i}_touched", False)
+        cells = []
+        for j in range(p):
+            if not touched:
+                text = ""
+            else:
+                fv = float(st.session_state.get(f"{prefix}_r{i}__0__{j}", 0.0))
+                text = f"{fv:.0f}" if abs(fv - round(fv)) < 1e-9 else f"{fv:.2f}"
+            cells.append(
+                f'<span style="min-width:1.6em;text-align:right;">{text}</span>'
+            )
+        rows_html.append(
+            f'<div style="display:flex;align-items:center;gap:0.3em;">'
+            f'<div style="{row_bstyle}">{lb[i]}</div>'
+            f'<div style="{row_style}">{"".join(cells)}</div>'
+            f'<div style="{row_bstyle}">{rb[i]}</div>'
+            f'</div>'
+        )
+    return "".join(rows_html)
+
+
 def _practice_block(idx: int, A: np.ndarray, B: np.ndarray, C: np.ndarray,
                      aided: bool) -> None:
     m, n = A.shape
@@ -173,32 +217,58 @@ def _practice_block(idx: int, A: np.ndarray, B: np.ndarray, C: np.ndarray,
     prefix = f"t00_rows_p{idx + 1}"
 
     st.markdown(f"**Practice {idx + 1}** -- {m}x{n} . {n}x{p} = {m}x{p}")
-    top = st.columns([1, 1, 3])
-    with top[0]:
-        editable_matrix(f"{prefix}_A", label="A", editable=False, value=A,
-                         compact=True, rows=m, cols=n)
-    with top[1]:
-        editable_matrix(f"{prefix}_B", label="B", editable=False, value=B,
-                         compact=True, rows=n, cols=p)
 
+    # Show-solution write + default-seed pass for every row, done BEFORE
+    # any widget this run (including the live C display below) reads
+    # session_state -- same reveal-flag mechanism as before, just hoisted
+    # above the top row so C reflects a just-revealed row immediately.
+    #
+    # Show solution must set the answer cells BEFORE the number_input
+    # widgets below are instantiated this run -- writing to a widget's
+    # session_state key after it has already been created in the same
+    # run raises StreamlitAPIException. So the button only sets this
+    # flag + reruns; the actual write happens here, at the top, on the
+    # following run.
     for i in range(m):
         ans_key = f"{prefix}_r{i}"
         reveal_key = f"{ans_key}_reveal"
-
-        # Show solution must set the answer cells BEFORE the number_input
-        # widgets below are instantiated this run -- writing to a widget's
-        # session_state key after it has already been created in the same
-        # run raises StreamlitAPIException. So the button only sets this
-        # flag + reruns; the actual write happens here, at the top, on the
-        # following run.
+        touched_key = f"{ans_key}_touched"
         if st.session_state.get(reveal_key):
             set_matrix_state(ans_key, C[i:i + 1, :])
             st.session_state[reveal_key] = False
-
         for j in range(p):
             wkey = f"{ans_key}__0__{j}"
             if wkey not in st.session_state:
                 st.session_state[wkey] = 0.0
+        if touched_key not in st.session_state:
+            st.session_state[touched_key] = False
+
+    op_style = (
+        "display:flex;align-items:center;justify-content:center;"
+        "font-size:1.8em;line-height:1;color:#e6e6e6;min-height:58px"
+    )
+
+    top = st.columns([1, 0.3, 1, 0.3, 1.2])
+    with top[0]:
+        editable_matrix(f"{prefix}_A", label="A", editable=False, value=A,
+                         compact=True, rows=m, cols=n)
+    with top[1]:
+        st.markdown("&nbsp;")
+        st.markdown(f'<div style="{op_style}">·</div>', unsafe_allow_html=True)
+    with top[2]:
+        editable_matrix(f"{prefix}_B", label="B", editable=False, value=B,
+                         compact=True, rows=n, cols=p)
+    with top[3]:
+        st.markdown("&nbsp;")
+        st.markdown(f'<div style="{op_style}">=</div>', unsafe_allow_html=True)
+    with top[4]:
+        st.markdown("**C =**")
+        st.markdown(_answer_matrix_html(prefix, m, p), unsafe_allow_html=True)
+
+    for i in range(m):
+        ans_key = f"{prefix}_r{i}"
+        reveal_key = f"{ans_key}_reveal"
+        touched_key = f"{ans_key}_touched"
 
         if aided:
             weights = A[i, :]
@@ -220,6 +290,7 @@ def _practice_block(idx: int, A: np.ndarray, B: np.ndarray, C: np.ndarray,
 
         check_col, solve_col = st.columns(2)
         if check_col.button("Check", key=f"{ans_key}_check"):
+            st.session_state[touched_key] = True
             wrong = [
                 j + 1 for j in range(p)
                 if abs(answer[0, j] - C[i, j]) > 1e-6
@@ -232,6 +303,7 @@ def _practice_block(idx: int, A: np.ndarray, B: np.ndarray, C: np.ndarray,
 
         if solve_col.button("Show solution", key=f"{ans_key}_solve"):
             st.session_state[reveal_key] = True
+            st.session_state[touched_key] = True
             st.rerun()
 
     st.divider()
