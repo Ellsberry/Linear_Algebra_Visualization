@@ -86,6 +86,7 @@ def render():
         "times. And when the matrix is simple, like the diagonal one in biology, almost "
         "everything is zero and it collapses to just the diagonal multiplied together."
     )
+    st.markdown("Determinants can only be calculated for square matrices.")
 
     st.caption(
         "The left panel sets the numbers and shows the math; the right panel "

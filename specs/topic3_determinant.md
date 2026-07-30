@@ -80,6 +80,8 @@ Top selector (st.radio, horizontal, key `t03_example`), in THIS order:
 > times a little 2×2 determinant of what's left — it's the 2D formula used three
 > times. And when the matrix is simple, like the diagonal one in biology, almost
 > everything is zero and it collapses to just the diagonal multiplied together.
+>
+> Determinants can only be calculated for square matrices.
 
 (Render both formulas with `st.latex` using proper bmatrix notation.)
 
@@ -103,6 +105,9 @@ the determinant becomes a concrete area, built step by step from the corner poin
 - P, key `t03e1_P`, default `(1, 1)`, label "Corner P (m)"
 - Q, key `t03e1_Q`, default `(6, 2)`, label "Corner Q (m)"
 - R, key `t03e1_R`, default `(3, 5)`, label "Corner R (m)"
+- Each of P, Q, R renders inside its own narrow left sub-column
+  (`st.columns([0.35, 0.65])`, using the first slot) so it reads as a single
+  (x, y) point rather than spanning the full width of the left panel.
 
 **Compute (build A from the points, visibly):** edge vectors `u = Q - P` and
 `v = R - P`. **These two edges are the columns of A:** `A = [[u0, v0], [u1, v1]]`.

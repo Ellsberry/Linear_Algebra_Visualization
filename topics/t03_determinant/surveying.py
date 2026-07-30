@@ -12,9 +12,15 @@ def _example_surveying():
         "The two edges from P become the columns of a matrix A whose "
         "determinant equals twice the triangle's area."
     )
-    P = w.vector_editor("t03e1_P", 2, (1.0, 1.0), label="Corner P (m)")
-    Q = w.vector_editor("t03e1_Q", 2, (6.0, 2.0), label="Corner Q (m)")
-    R = w.vector_editor("t03e1_R", 2, (3.0, 5.0), label="Corner R (m)")
+    pc, _ = st.columns([0.35, 0.65])
+    with pc:
+        P = w.vector_editor("t03e1_P", 2, (1.0, 1.0), label="Corner P (m)")
+    qc, _ = st.columns([0.35, 0.65])
+    with qc:
+        Q = w.vector_editor("t03e1_Q", 2, (6.0, 2.0), label="Corner Q (m)")
+    rc, _ = st.columns([0.35, 0.65])
+    with rc:
+        R = w.vector_editor("t03e1_R", 2, (3.0, 5.0), label="Corner R (m)")
 
     u = Q - P
     v = R - P
