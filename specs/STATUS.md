@@ -194,6 +194,7 @@ only; does not modify Screens 0-4).
 
 - [x] Module exists and registered in `app.py` (imports as `topics.t03_determinant`)
 - [x] OVERVIEW with 2D and 3D formulas in LaTeX + "each 3D term is the 2D formula" framing
+- [x] OVERVIEW notes determinants are only defined for square matrices
 - [x] HOWTO folded into a caption under the overview (no separate expander)
 - [x] Four examples in correct order (Surveying, Medical, Biology, Graphics)
 - [x] `_det_meter` shared helper on every screen
@@ -208,6 +209,7 @@ only; does not modify Screens 0-4).
 
 ### Example 1 — Surveying
 - [x] Editable P, Q, R corners (A reserved for matrix)
+- [x] P, Q, R each rendered in a narrow left sub-column (`st.columns([0.35, 0.65])`) so each reads as a single (x, y) point instead of spanning the panel
 - [x] Parallelogram + triangle + edge arrows + corner markers on figure
 - [x] Determinant meter (area_tri)
 - [x] Orientation note when det < 0 (clockwise corners)
@@ -261,6 +263,11 @@ only; does not modify Screens 0-4).
 - `medical.py` — Example 3
 - `business.py` — Example 4 (includes `_E4_PRESETS`)
 
+**Naming pass:** the topic now uses A/A⁻¹ naming throughout (intro, meter, radios)
+except the Cryptography Hill-cipher key, which stays M by design. OVERVIEW now
+ends with the "ONLY SQUARE MATRICES HAVE AN INVERSE. How to calculate an inverse
+will be shown in lesson 5.5." note.
+
 - [x] Module exists and registered in `app.py` (imports as `topics.t04_inverse`)
 - [x] OVERVIEW (Topic 3 cliffhanger callback)
 - [x] HOWTO in collapsed expander
@@ -279,16 +286,21 @@ only; does not modify Screens 0-4).
 - [x] Cryptography: custom math-left / table-right layout (no graph; table + inverse meter in right column)
 - [x] Business: custom 0.6/0.4 layout (5-step algebra in wide left column with `{\small}`, skinny graph + meter right); target solver stays as expander
 
-### Example 1 — Robotics
-- [x] Editable matrix + presets (Reachable / Singular)
-- [x] There-and-back: Apply M / Undo with M⁻¹ radio + morph slider
-- [x] Singular pose disables undo + warning
-- [x] Desired hand target vector editor
-- [x] Required input x = A⁻¹ · target + verify A·x = target
-- [x] Notice
-- [x] Math: A, A⁻¹, det, 1/det, recovered x, check (always shown, `{\small}`)
+### Example 1 — Robotics — REDESIGNED (destination-driven)
+- [x] Preset sets arm map A (Reachable / Singular); destination b editable in a
+      narrow sub-column; arm map A shown compact in a narrow sub-column
+- [x] NO slider, NO Apply/Undo radio (solve-and-show, not there-and-back)
+- [x] Graph rebuilt from primitives (actuator-column arrows + destination b +
+      tip-to-tail solved controls landing on b; singular draws the reachable
+      line and marks b unreachable when off it) — no figure_2d, no square warp
+- [x] Math is 3 steps: (1) A/det A then A⁻¹ with det A⁻¹ shown as 1/det A,
+      (2) x = A⁻¹b, (3) check A·x = b. Singular shows the "column 2 = column 1
+      → det 0 → no inverse" explanation instead
+- [x] Actuator framing: columns of A are the two actuator directions
 
 ### Example 2 — Cryptography
+Naming: key stays **M** by design (Hill-cipher key mod 26 is a distinct object
+from the topic's geometric transformation matrix) — not part of the M→A pass.
 - [x] Text input for message + cipher key selectbox (Key 1, Key 2, Broken)
 - [x] Hill cipher mod 26 logic (encode + decode)
 - [x] Table: plaintext / # / cipher # / ciphertext / decoded
@@ -297,6 +309,11 @@ only; does not modify Screens 0-4).
 - [x] Math: M, c = Mp, M⁻¹, p = M⁻¹c (always shown, `{\small}`)
 
 ### Example 3 — Medical imaging
+Naming: **NOT yet renamed** — `medical.py` still uses M / `t04e3_M` in its own
+code and math (see "Math" line below), but the shared `_inv_meter` helper now
+always renders its label as A⁻¹, so this screen currently shows a mismatch
+(meter says A⁻¹, screen's own math says M). Flagging rather than marking this
+done; needs its own pass if M→A should extend here too.
 - [x] Editable matrix + presets (Full data / Unstable / Singular)
 - [x] There-and-back on rocket
 - [x] Singular disables undo

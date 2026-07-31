@@ -19,16 +19,19 @@ SLUG = "inverse"
 OVERVIEW = """
 Topic 3 ended on a cliffhanger: det = 0 means a transformation can't be undone.
 This topic is the answer. The **inverse** of a transformation is the one that
-reverses it — apply M, then apply M⁻¹, and every point lands exactly back where
+reverses it — apply A, then apply A⁻¹, and every point lands exactly back where
 it started. It exists only when det ≠ 0, and it scales area by 1/det. We'll meet
 "undoing" as the central question in four fields: robotics, secret codes,
 medical scans, and business planning.
+
+Note: ONLY SQUARE MATRICES HAVE AN INVERSE. How to calculate an inverse will
+be shown in lesson 5.5.
 """
 
 HOWTO = """
 The left panel sets the numbers; the right panel shows the shape or the result.
-On the visual screens, use **Apply M / Undo with M⁻¹** to watch a shape deform
-and then return home. The **inverse meter** shows M⁻¹ and 1/det — or warns you
+On the visual screens, use **Apply A / Undo with A⁻¹** to watch a shape deform
+and then return home. The **inverse meter** shows A⁻¹ and 1/det — or warns you
 when there's no inverse.
 """
 
@@ -65,7 +68,7 @@ def _inv_meter(M):
     st.metric("Determinant", f"{det:.4f}")
     if abs(det) > 1e-9:
         Minv = np.linalg.inv(M)
-        st.latex(r"M^{-1} = " + w.bmatrix(Minv))
+        st.latex(r"A^{-1} = " + w.bmatrix(Minv))
         st.markdown(f"invertible — area scales by 1/det = {1/det:.3f}")
     else:
         st.warning("det = 0 — no inverse. This transform can't be undone.")
