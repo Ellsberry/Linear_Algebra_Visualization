@@ -2,9 +2,14 @@
 Topic 4 -- Inverse Transformations.
 
 Pattern: MULTI-EXAMPLE. A top selector chooses one of four screens.
-Two recurring devices used throughout:
-  - There-and-back: slider t in [0,1] + radio Apply M / Undo with M-1.
-  - Inverse meter: shows M-1 and 1/det, or warns when det = 0.
+Two recurring devices:
+  - There-and-back: slider t in [0,1] + radio Apply A / Undo with A-1.
+    Not currently used by any of the four screens (Robotics is
+    solve-and-show, Medical uses an error slider, Cryptography is a
+    table, Business is algebra-first) -- kept as a pattern for future
+    screens.
+  - Inverse meter: shows A-1 and 1/det, or warns when det = 0. Used on
+    every screen.
 """
 import numpy as np
 import streamlit as st
@@ -29,10 +34,9 @@ be shown in lesson 5.5.
 """
 
 HOWTO = """
-The left panel sets the numbers; the right panel shows the shape or the result.
-On the visual screens, use **Apply A / Undo with A⁻¹** to watch a shape deform
-and then return home. The **inverse meter** shows A⁻¹ and 1/det — or warns you
-when there's no inverse.
+The left panel sets the numbers and shows the math; the right panel shows the
+picture. Some screens have a there-and-back demo; others solve directly. The
+inverse meter shows A⁻¹ and 1/det — or warns you when there's no inverse.
 """
 
 _E1_PRESETS = {

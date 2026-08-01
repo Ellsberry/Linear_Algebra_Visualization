@@ -188,88 +188,192 @@ than the ordinary 1/det.
 
 ## Example 3 — Medical imaging: measure, then reconstruct
 
-**Concept:** a scanner measures a transformed version of the body; reconstructing
-the true image means applying the inverse of the measurement. If the data is
-nearly incomplete (det close to 0), the inverse is huge and unstable.
+**Narrative / intro (verbatim):**
+> **Medical imaging.** A CT scanner can't photograph a slice of you directly. It
+> shoots X-rays through the body from many angles and records how much comes out the
+> other side. Each reading isn't a picture — it's a blend of everything along that
+> X-ray's path.
+>
+> The shape below is a cross-section of a leg bone: the outer ring is hard bone, the
+> inner ring is the soft marrow inside. We pick out specific points on it — call them
+> p1, p2 — the true positions of the bone's edge and the marrow's edge.
+>
+> **Matrix A is built into the scanner.** It's set by the manufacturer and describes
+> the physics of how X-rays pass through and get measured — how many angles, where
+> the detectors sit. Multiplying a true point by the matrix A gives the scanner's
+> measurement of that point — so A turns each real position on the slice into the
+> reading the machine records.
+>
+> **Matrix A⁻¹ runs it backward.** It takes the scanner's measurements and unmixes
+> them to recover the true points p1, p2 — turning the raw readings back into a
+> picture of the bone and marrow you can actually look at. That recovery *is* the
+> reconstructed image on your screen.
+>
+> The catch: real readings carry a little error, and when det A is close to zero, A⁻¹
+> magnifies that error enormously — so the reconstructed bone comes out badly wrong.
+> Drag the error slider on each preset to see it.
+
+**The object:** a **leg-bone cross-section** — an outer bone-ring polygon with an
+inner marrow-ring polygon. Shown as a faint GHOST (true slice) and a solid
+RECONSTRUCTED slice; they overlap when reconstruction is good and separate when it's
+unstable.
 
 **Inputs:**
-- `editable_matrix("t04e3_A", 2, compact=True, label="Measurement A")`.
-- Preset selectbox `t04e3_preset`:
-  - **"Full data"** → `[[1.0, 0.5], [0.5, 1.0]]` (det = 0.75 — clean
-    reconstruction).
-  - **"Too few angles (unstable)"** → `[[1.0, 1.0], [1.0, 1.05]]` (det = 0.05 —
-    invertible but A⁻¹ has large entries; small errors blow up).
-  - **"No data in a direction (singular)"** → `[[1.0, 1.0], [1.0, 1.0]]` (det = 0
-    — can't reconstruct; information is lost).
-- There-and-back slider + radio on the **rocket** (`plotting.figure_2d(T(t),
-  obj="rocket")`), framed as "measure" (Apply A) then "reconstruct" (Undo with
-  A⁻¹).
+- Preset selectbox `t04e3_preset` — sets the scanner matrix **A**:
+  - **"Full data"** -> `[[1.0, 0.5], [0.5, 1.0]]` (det = 0.75; stable).
+  - **"Too few angles (unstable)"** -> `[[1.0, 1.0], [1.0, 1.05]]` (det = 0.05;
+    invertible but A⁻¹ entries ~21 — the same error is amplified ~19-29x).
+  - **"No data in a direction (singular)"** -> `[[1.0, 1.0], [1.0, 1.0]]` (det = 0;
+    no inverse — the slice can't be reconstructed).
+- Scanner matrix A: `editable_matrix("t04e3_A", 2, compact=True,
+  label="Scanner matrix A")`, narrow sub-column.
+- **Measurement error slider** `scalar_slider("t04e3_err", "Measurement error", 0.0,
+  0.5, 0.0, 0.01)` — adds a small error (in the x direction) to each reading before
+  reconstruction. At 0 the reconstruction is perfect.
+- No morph slider, no Apply/Undo radio.
 
-**Inverse meter** under the figure. For the unstable preset, the large 1/det and
-large A⁻¹ entries should be visible — that *is* the instability.
+**The graph (leg-bone cross-section, ghost vs reconstructed, from primitives):**
+Two closed polygons: outer bone ring and inner marrow ring (coordinates supplied in
+the build prompt). Two labeled landmark points: p1 = bone edge (top of the outer
+ring), p2 = marrow edge. For every polygon point p: reading = A·p; add error
+E = (err, 0); reconstructed = A⁻¹·(A·p + E).
+- Draw the TRUE bone (both rings) as a faint ghost, labeled "true slice".
+- Draw the RECONSTRUCTED bone (both rings) solid, labeled "reconstructed". At error 0
+  they coincide; on the unstable preset a small error tears the reconstruction away.
+- Mark p1 ("bone edge") and p2 ("marrow edge") on the true bone.
+- rng ~10. SINGULAR: no A⁻¹ — draw only the ghost + "no inverse — the slice can't be
+  reconstructed."
+
+**Inverse meter** `_inv_meter(A)` under the figure.
+
+**Math (left column) — matrices shown once with plain-word labels, then a live
+5-step pipeline in plain English (numbers as illustration, no bare symbols leading).
+A⁻¹ does not change when error is added; steps 2-5 do. State this.**
+
+Header (fixed as the slider moves):
+- `A = [..]` labeled "**A**: real slice → scanner reading" and `det A = ..`.
+- Invertible: `A⁻¹ = [..]` labeled "**A⁻¹**: scanner reading → recovered image",
+  `det A⁻¹ = 1/det A = ..`, plus the line "A⁻¹ doesn't change when you add error — the
+  error is in the reading, not the matrix." (When det A is near zero, note A⁻¹'s
+  entries are huge — that is the instability.)
+
+Then the LIVE pipeline as four lines (both landmarks per line where sensible), plus
+one closing sentence. Lines 2 and 4 show the ACTUAL MATRIX ARITHMETIC via st.latex +
+w.bmatrix (one equation per landmark), not just result tuples. Lines 2-4 change with
+the slider; A and A⁻¹ stay fixed:
+1. (plain sentence) "The actual bone edge p1 is at (p1); the actual marrow edge p2 is
+   at (p2)."
+2. (plain sentence) "The scanner measures each point by multiplying it by A:" THEN
+   two st.latex lines:
+     A·p1:  A [p1] = [A][p1] = [reading1]   (bmatrix of A, bmatrix of p1, bmatrix of A·p1)
+     A·p2:  A [p2] = [A][p2] = [reading2]
+3. (plain sentence) "If the machine is off by {err} in the x-direction, the readings
+   become (reading1+err) and (reading2+err)." (plain, no matrix math)
+4. (plain sentence) "A⁻¹ unmixes the (errored) readings back into positions:" THEN
+   two st.latex lines:
+     A⁻¹(reading1+err) = [A⁻¹][reading1+err] = [recon1]
+     A⁻¹(reading2+err) = [A⁻¹][reading2+err] = [recon2]
+   then a plain line: "— instead of the true (p1) and (p2)."
+5. (sentence) "On Full data these barely move; on Too few angles the same error
+   throws them far off."
+
+**Instability sentence (verbatim, invertible only):**
+> A tiny det makes 1/det and the entries of A⁻¹ large — so every small measurement
+> error gets amplified by that factor. On "Full data" the reconstruction barely
+> moves; on "Too few angles" the same error throws it far off. That is the
+> instability.
+
+**Singular message (verbatim, when det = 0):**
+> det A = 0 — no inverse. The scan lost information in one direction, so there is no
+> way to unmix the readings back into the true slice.
 
 **Notice (always shown):**
-> A CT scanner never sees your insides directly — it measures transformed data
-> and *inverts* the transformation to reconstruct the image. With too little data
+> A CT scanner never sees your insides directly — it measures blended data and
+> *unmixes* it (applies the inverse) to reconstruct the image. With too little data
 > the inverse becomes unstable, so small measurement errors explode — which is why
-> scans need enough angles. (Topic 10 shows the real version: MRI reconstruction
-> is an inverse Fourier transform.)
-
-**Show the math (expander):** A, A⁻¹ (or none), det, 1/det; note that a tiny det
-makes 1/det and A⁻¹ large = unstable.
+> scans need enough angles. (Topic 10 shows the real version: MRI reconstruction is
+> an inverse Fourier transform.)
 
 ---
 
 ## Example 4 — Business / economics: the algebra, forward and back. ENDS THE TOPIC.
 
-**Concept:** a matrix maps production → resources used; the inverse answers "I
-have these resources — how much of each product can I make?" Here the **algebra is
-the centerpiece**, shown openly (not hidden in an expander).
+**The story:** a bakery makes two products — **cakes** and **cookies** — from two
+resources — **flour** and **sugar**. The matrix A is the recipe table: each COLUMN is
+one product's recipe (how much flour and sugar it needs). Run A forward and it tells
+you the total resources a batch uses; run it backward (the inverse) and it answers
+"I have this much flour and sugar — how many cakes and cookies can I make?" This is
+the screen where the **algebra is the star**, shown openly and explained line by line.
+
+**Intro line (verbatim):**
+> **Business.** A bakery makes cakes and cookies out of flour and sugar. The recipe
+> matrix A has one column per product: column 1 is a cake's recipe (flour, sugar),
+> column 2 is a cookie's recipe. Multiply A by how many of each you bake and it tells
+> you the total flour and sugar used. The inverse runs it backward: given the flour
+> and sugar you have, it finds how many cakes and cookies that makes.
 
 **Inputs:**
-- `editable_matrix("t04e4_A", 2, compact=True, label="Resource-usage matrix A (column j = resources for product j)")`.
-- `widgets.vector_editor("t04e4_x", 2, (4.0, 2.0), label="Production x (units of each product)")`.
-- Preset selectbox `t04e4_preset`:
-  - **"Two distinct products"** → `[[2, 1], [1, 3]]` (det = 5, invertible).
-  - **"Proportional products (singular)"** → `[[2, 4], [1, 2]]` (det = 0 — the two
-    products use resources in the same proportion; the inverse fails).
+- Preset selectbox `t04e4_preset` — sets the recipe matrix **A**:
+  - **"Two different recipes"** -> `[[2.0, 1.0], [1.0, 3.0]]` (det = 5; a cake needs
+    2 flour + 1 sugar, a cookie needs 1 flour + 3 sugar — genuinely different, so the
+    inverse works).
+  - **"Recipes in the same ratio (singular)"** -> `[[2.0, 4.0], [1.0, 2.0]]` (det = 0;
+    the cookie uses exactly twice the cake's flour AND twice its sugar — same ratio,
+    so from totals alone you can't tell them apart, and the inverse fails).
+- Recipe matrix A: `editable_matrix("t04e4_A", 2, compact=True,
+  label="Recipe matrix A (col 1 = cake, col 2 = cookie; rows = flour, sugar)")`,
+  narrow sub-column.
+- Production x: `vector_editor("t04e4_x", 2, (4.0, 2.0),
+  label="How many you bake (cakes, cookies)")`, narrow sub-column.
 
-**Compute:** `r = A @ x` (resources used). If invertible, also recover `x = A⁻¹ @
-r` to show the round trip returns the original production.
+**Compute:** `r = A @ x` (flour and sugar used). If invertible, recover
+`x = A⁻¹ @ r` to show the round trip returns the original batch.
 
-**Right panel (secondary):** `plotting.new_figure_2d(rng=14, x_title="resource 1",
-y_title="resource 2")` showing the production carried to the resource point
-`r = Ax` (an arrow/point), and on recovery the same point mapped back. Keep it
-light — the math is the star here.
+**Right panel (secondary, keep light):** `new_figure_2d(rng=14,
+x_title="flour used", y_title="sugar used")` showing the resource point r = Ax (an
+arrow/point), and on recovery the round-trip point mapped back. The math is the star.
 
-**The algebra block (render openly with `st.latex`, in this order):**
-1. Forward, general: `r = A x = [[a11,a12],[a21,a22]] [x1,x2]ᵀ = [a11 x1 + a12 x2,
-   a21 x1 + a22 x2]ᵀ`.
-2. Forward, with his live numbers (substitute A and x, show r).
-3. Inverse, general formula:
-   `A⁻¹ = (1/det A) [[a22, -a12], [-a21, a11]]`, with
-   `det A = a11 a22 − a12 a21` — emphasize the **det in the denominator**.
-4. Inverse, with his numbers (substitute, show A⁻¹).
-5. Recover and verify: `x = A⁻¹ r = [original x]` — the round trip.
+**The algebra block — each step LED BY A PLAIN SENTENCE, formula after. In order:**
 
-**Singular preset behavior:** when det = 0, step 3 shows `1/det = 1/0` is
-**undefined** — render the formula with the denominator highlighted and the
-caption: "These two products use resources in the same proportion, so from the
-resources alone you can't tell how much of each you made. There's no way to work
-backwards — the inverse doesn't exist."
+1. **"How the resources add up (in general):"**
+   `r = A x` written out: `[[a11,a12],[a21,a22]][x1,x2] = [a11 x1 + a12 x2, a21 x1 +
+   a22 x2]`. Gloss: "each product uses some flour and some sugar; the total used is
+   A times how many you bake."
+2. **"With your recipes and batch:"** the same with live numbers — A, x, and the
+   resulting r, via w.bmatrix. Gloss naming the result: "so this batch uses {r1}
+   flour and {r2} sugar."
+3. **"To work backward, we need A⁻¹."** Show the 2x2 inverse formula
+   `A⁻¹ = (1/det A) [[a22, -a12], [-a21, a11]]` with det A = a11 a22 − a12 a21.
+   Gloss (plain-English explanation of the adjugate, verbatim): "For a 2×2 you build
+   the inverse by a fixed recipe: swap the two diagonal numbers, flip the sign of the
+   other two, and divide everything by the determinant. The determinant sits in the
+   denominator — so if it's zero, you're dividing by zero and there is no inverse."
+   Show det A = {value}.
+4. **"Your A⁻¹ (with numbers):"** the numeric inverse via w.bmatrix.
+5. **"How many of each product the resources make:"**
+   `x = A⁻¹ r = [A⁻¹][r] = [x]` live, and the success line "Round trip returns
+   {x1} cakes and {x2} cookies ✓".
 
-**Optional sub-expander "Solve for a resource target":** let him enter a resource
-target r directly via `vector_editor`; compute `x = A⁻¹ r`. If any component of x
-is negative, show the honesty note: "The algebra returns a negative number of
-products — mathematically valid, physically impossible. The model is more
-permissive than a real factory."
+**Singular preset behavior (det = 0), verbatim caption under step 3 instead of steps
+4-5:**
+> These two recipes use flour and sugar in the very same ratio — the cookie is just a
+> double cake. So from the flour and sugar totals alone you can't tell how many of
+> each you made. There's no way to work backward, and the inverse doesn't exist
+> (dividing by det A = 0).
 
-**Notice (always shown):**
-> Run the matrix forward and it tells you resources used; run it backward (the
-> inverse) and it tells you how much to produce to use exactly what you have. This
-> "solve A x = r for x" is the exact question of the next topic — linear systems.
+**Optional sub-expander "Solve for a resource target":** let the student enter a
+flour/sugar amount directly via `vector_editor` (label "Flour and sugar on hand");
+compute `x = A⁻¹ r`. If any component is negative, show the honesty note (verbatim):
+> The algebra returns a negative number of cakes or cookies — mathematically valid,
+> physically impossible. The model is more permissive than a real bakery.
 
-**Inverse meter** under the algebra.
+**Inverse meter** `_inv_meter(A)` under the graph.
+
+**Notice (always shown, verbatim):**
+> Run the recipe matrix forward and it tells you the resources a batch uses; run it
+> backward (the inverse) and it tells you how much to bake to use exactly the flour
+> and sugar you have. This "solve A x = r for x" is the exact question of the next
+> topic — linear systems.
 
 ---
 
@@ -299,12 +403,26 @@ In `app.py`: add `t04_inverse` to the `from topics import ...` line and insert
 - [ ] **Cryptography:** typing a word shows scrambled ciphertext letters and a
       correctly decoded word with Key 1 and Key 2; the broken key shows the
       "can't be undone" warning and no valid decode.
-- [ ] **Medical:** "Full data" reconstructs cleanly; "Too few angles" shows a
-      large 1/det / large A⁻¹ entries (instability); "No data" is singular and
-      can't reconstruct.
-- [ ] **Business:** the five-step algebra renders with live numbers; round trip
-      returns the original x; the singular preset shows 1/det = 1/0 undefined with
-      the caption; the optional target solver shows the negative-production note
-      when applicable.
+- [ ] **Medical (redesigned, mix/unmix leg bone):** narrative explains CT X-rays in
+      plain words (readings are a blend along each path; A is built into the scanner;
+      A⁻¹ unmixes readings back to true points p1,p2); object is a LEG-BONE
+      cross-section (outer bone ring + marrow ring) shown ghost (true) vs solid
+      (reconstructed); preset sets scanner A (Full/unstable/singular) compact in a
+      narrow sub-column; measurement-error slider, NO morph/radio; math shows A and
+      A⁻¹ once with plain-word labels (real slice->reading / reading->recovered), then
+      a LIVE 5-step pipeline for two landmarks (bone edge, marrow edge) each led by a
+      plain sentence with numbers after, steps 2-5 moving with the slider while A⁻¹
+      stays fixed (stated); singular shows ghost only + "no inverse -- can't unmix";
+      naming A/A⁻¹ throughout.
+- [ ] **Business (de-crypted, bakery):** concrete story — cakes & cookies from flour
+      & sugar; A is the recipe table (col 1 = cake, col 2 = cookie; rows = flour,
+      sugar), shown compact in a narrow sub-column; production input labeled "how many
+      you bake (cakes, cookies)"; the 5 algebra steps each led by a PLAIN SENTENCE
+      with the formula after; step 3 explains the 2×2 adjugate in words (swap the
+      diagonal, flip the other two signs, divide by det) and why det=0 kills it;
+      round trip returns the original batch; the singular preset ("recipes in the same
+      ratio") shows the cookie-is-a-double-cake caption; the optional target solver
+      shows the negative-cakes/cookies honesty note; presets renamed to "Two different
+      recipes" / "Recipes in the same ratio (singular)".
 - [ ] Every screen shows the inverse meter; app runs with `streamlit run app.py`
       and no import errors.

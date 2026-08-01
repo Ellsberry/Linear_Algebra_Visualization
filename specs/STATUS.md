@@ -263,10 +263,11 @@ only; does not modify Screens 0-4).
 - `medical.py` — Example 3
 - `business.py` — Example 4 (includes `_E4_PRESETS`)
 
-**Naming pass:** the topic now uses A/A⁻¹ naming throughout (intro, meter, radios)
-except the Cryptography Hill-cipher key, which stays M by design. OVERVIEW now
-ends with the "ONLY SQUARE MATRICES HAVE AN INVERSE. How to calculate an inverse
-will be shown in lesson 5.5." note.
+**Topic 4 — naming + intro:** A/A⁻¹ used throughout (intro, inverse meter, all
+screens) EXCEPT Cryptography's Hill-cipher key, which stays M by design. OVERVIEW
+ends with "ONLY SQUARE MATRICES HAVE AN INVERSE. How to calculate an inverse will be
+shown in lesson 5.5." HOWTO reworded (not every screen is there-and-back). Spec file
+specs/topic4_inverse.md fully updated to match.
 
 - [x] Module exists and registered in `app.py` (imports as `topics.t04_inverse`)
 - [x] OVERVIEW (Topic 3 cliffhanger callback)
@@ -286,54 +287,27 @@ will be shown in lesson 5.5." note.
 - [x] Cryptography: custom math-left / table-right layout (no graph; table + inverse meter in right column)
 - [x] Business: custom 0.6/0.4 layout (5-step algebra in wide left column with `{\small}`, skinny graph + meter right); target solver stays as expander
 
-### Example 1 — Robotics — REDESIGNED (destination-driven)
-- [x] Preset sets arm map A (Reachable / Singular); destination b editable in a
-      narrow sub-column; arm map A shown compact in a narrow sub-column
-- [x] NO slider, NO Apply/Undo radio (solve-and-show, not there-and-back)
-- [x] Graph rebuilt from primitives (actuator-column arrows + destination b +
-      tip-to-tail solved controls landing on b; singular draws the reachable
-      line and marks b unreachable when off it) — no figure_2d, no square warp
-- [x] Math is 3 steps: (1) A/det A then A⁻¹ with det A⁻¹ shown as 1/det A,
-      (2) x = A⁻¹b, (3) check A·x = b. Singular shows the "column 2 = column 1
-      → det 0 → no inverse" explanation instead
-- [x] Actuator framing: columns of A are the two actuator directions
-
-### Example 2 — Cryptography
-Naming: key stays **M** by design (Hill-cipher key mod 26 is a distinct object
-from the topic's geometric transformation matrix) — not part of the M→A pass.
-- [x] Text input for message + cipher key selectbox (Key 1, Key 2, Broken)
-- [x] Hill cipher mod 26 logic (encode + decode)
-- [x] Table: plaintext / # / cipher # / ciphertext / decoded
-- [x] Inverse meter (crypto variant): det, M⁻¹ mod 26, or "can't be undone" warning
-- [x] Notice
-- [x] Math: M, c = Mp, M⁻¹, p = M⁻¹c (always shown, `{\small}`)
-
-### Example 3 — Medical imaging
-Naming: **NOT yet renamed** — `medical.py` still uses M / `t04e3_M` in its own
-code and math (see "Math" line below), but the shared `_inv_meter` helper now
-always renders its label as A⁻¹, so this screen currently shows a mismatch
-(meter says A⁻¹, screen's own math says M). Flagging rather than marking this
-done; needs its own pass if M→A should extend here too.
-- [x] Editable matrix + presets (Full data / Unstable / Singular)
-- [x] There-and-back on rocket
-- [x] Singular disables undo
-- [x] Inverse meter (large 1/det visible for unstable preset)
-- [x] Notice (Topic 10 forward-link)
-- [x] Math: M, M⁻¹, det, instability note (always shown, `{\small}`)
-
-### Example 4 — Business
-- [x] Editable matrix + production vector editor + presets (Distinct / Proportional)
-- [x] Resource point plotted on figure
-- [x] 5-step algebra in left column (with `{\small}`)
-  - [x] Step 1: forward general
-  - [x] Step 2: forward with live numbers
-  - [x] Step 3: inverse formula with det in denominator
-  - [x] Step 4: inverse with live numbers
-  - [x] Step 5: recover and verify round trip
-- [x] Singular: 1/det = 1/0 undefined + caption
-- [x] Optional target solver with negative-production note (in expander)
-- [x] Inverse meter (under graph)
-- [x] Notice (bridges to Topic 5)
+- [x] Example 1 — Robotics: REDESIGNED, destination-driven. Preset sets arm map A
+      (actuator columns); destination b editable; NO slider/radio; graph from
+      primitives (actuator-column arrows + destination b + tip-to-tail solved
+      controls landing on b; singular draws the reachable line and marks b
+      unreachable); 3-step math (A/detA, A⁻¹/detA⁻¹=1/detA, x=A⁻¹b, check A·x=b);
+      singular shows "column 2 = column 1 → det 0 → no inverse". Inputs narrow.
+- [x] Example 2 — Cryptography: Hill cipher unchanged; key stays M by design.
+- [x] Example 3 — Medical: REDESIGNED, mix/unmix leg bone. Plain-English CT
+      narrative; object is a leg-bone cross-section (outer ring + marrow) shown ghost
+      (true) vs solid (reconstructed); preset sets scanner A; measurement-error
+      slider (no morph/radio); math shows A & A⁻¹ with plain-word labels then a live
+      4-line pipeline for two landmarks (bone edge, marrow edge) with real matrix
+      arithmetic on lines 2 and 4; unstable preset visibly blows up; singular shows
+      ghost only + "no inverse — can't unmix". A/A⁻¹ naming.
+- [x] Example 4 — Business: DE-CRYPTED, bakery. Cakes & cookies from flour & sugar;
+      A is the recipe table (col 1 = cake, col 2 = cookie; rows = flour, sugar);
+      5 algebra steps each led by a plain sentence; step 3 explains the 2×2 adjugate
+      in words; round trip returns the batch; singular = "cookie is a double cake";
+      presets renamed "Two different recipes" / "Recipes in the same ratio (singular)".
+- [x] Shared _inv_meter renders A⁻¹; all matrix inputs compact/narrow (no screen-wide
+      matrices).
 
 ## Topic 5 — Linear Systems (`topics/t05_systems/`)
 
