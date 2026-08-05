@@ -11,6 +11,11 @@ from .logistics import _example_two
 from .logistics_one import _example_two_a
 from .screen_workbench import _example_one
 
+try:
+    from .infinite_nosolution import render_infinite_nosolution
+except ImportError:
+    render_infinite_nosolution = None
+
 TITLE = "5.5 · Elimination & Triangular Form"
 SLUG = "elimination"
 
@@ -45,19 +50,31 @@ def render():
 
     example = st.radio(
         "Example",
-        ["1 · The workbench", "2a · Logistics (one plan)", "2b · Logistics (many plans)", "3 · Circuit", "4 · Inverse by elimination"],
+        [
+            "1 · Augmented Matrix",
+            "2 · Inverse by elimination",
+            "3 · Infinite and No Solutions",
+            "4 · Logistics (one plan)",
+            "5 · Logistics (many plans)",
+            "6 · Circuit",
+        ],
         horizontal=True,
         key="t05b_example",
     )
     st.divider()
 
-    if example.startswith("1"):
+    if example.startswith("1 "):
         _example_one()
-    elif example.startswith("2a"):
-        _example_two_a()
-    elif example.startswith("2b"):
-        _example_two()
-    elif example.startswith("3"):
-        _example_three()
-    else:
+    elif example.startswith("2 "):
         render_inverse_elim()
+    elif example.startswith("3 "):
+        if render_infinite_nosolution is not None:
+            render_infinite_nosolution()
+        else:
+            st.info("Coming soon.")
+    elif example.startswith("4 "):
+        _example_two_a()
+    elif example.startswith("5 "):
+        _example_two()
+    elif example.startswith("6 "):
+        _example_three()

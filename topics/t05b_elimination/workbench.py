@@ -36,6 +36,16 @@ def _active_pivot_tri(M, n_unknowns, tol=1e-9):
     return None
 
 
+def _completed_pivots(M, n_unknowns, tol=1e-9):
+    """Diagonal positions that are nonzero with all zeros below them in-column."""
+    n = len(M)
+    out = []
+    for p in range(min(n, n_unknowns)):
+        if abs(M[p][p]) > tol and all(abs(M[i][p]) <= tol for i in range(p+1, n)):
+            out.append((p, p))
+    return out
+
+
 # ---------------------------------------------------------------------------
 # State management
 # ---------------------------------------------------------------------------
@@ -293,7 +303,10 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix=""):
     with right:
         st.latex(_equations_latex(M, n_unknowns))
         hp = _active_pivot_tri(M, n_unknowns)
-        st.latex(w.aug_array_latex(M, n_unknowns, highlight=hp))
+        hl = {cell: "#ffd43b" for cell in _completed_pivots(M, n_unknowns)}
+        if hp is not None:
+            hl[hp] = "#4dabf7"
+        st.latex(w.aug_array_latex(M, n_unknowns, highlights=hl))
         _show_scenario(M, n_unknowns)
 
         log = st.session_state.get(f"{key}_log", [])
@@ -323,10 +336,11 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix=""):
     # --- Left: controls ---
     with left:
         st.markdown("**Row operations**")
-        op = st.selectbox(
+        op = st.radio(
             "Operation type",
             ["Add multiple of a row", "Swap two rows", "Scale a row"],
             key=f"{key}_op_type",
+            horizontal=True,
         )
 
         if op == "Add multiple of a row":
@@ -335,10 +349,10 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix=""):
                 st.number_input("k", value=-1.0, step=0.5, format="%.2f",
                                 key=f"{key}_add_k")
             with c2:
-                st.selectbox("Source j", row_opts,
-                             index=min(1, n - 1), key=f"{key}_add_j")
+                st.radio("Source j", row_opts,
+                         index=min(1, n - 1), key=f"{key}_add_j", horizontal=True)
             with c3:
-                st.selectbox("Target i", row_opts, key=f"{key}_add_i")
+                st.radio("Target i", row_opts, key=f"{key}_add_i", horizontal=True)
             k_d = st.session_state.get(f"{key}_add_k", -1.0)
             j_d = st.session_state.get(f"{key}_add_j", row_opts[min(1, n - 1)])
             i_d = st.session_state.get(f"{key}_add_i", row_opts[0])
@@ -347,14 +361,14 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix=""):
         elif op == "Swap two rows":
             c1, c2 = st.columns(2)
             with c1:
-                st.selectbox("Row i", row_opts, key=f"{key}_swap_i")
+                st.radio("Row i", row_opts, key=f"{key}_swap_i", horizontal=True)
             with c2:
-                st.selectbox("Row j", row_opts,
-                             index=min(1, n - 1), key=f"{key}_swap_j")
+                st.radio("Row j", row_opts,
+                         index=min(1, n - 1), key=f"{key}_swap_j", horizontal=True)
         else:  # Scale a row
             c1, c2 = st.columns(2)
             with c1:
-                st.selectbox("Row i", row_opts, key=f"{key}_scale_i")
+                st.radio("Row i", row_opts, key=f"{key}_scale_i", horizontal=True)
             with c2:
                 st.number_input("Factor k", value=2.0, step=0.5, format="%.2f",
                                 key=f"{key}_scale_k")

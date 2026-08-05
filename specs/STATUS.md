@@ -382,26 +382,27 @@ specs/topic4_inverse.md fully updated to match.
 
 ## Topic 5.5 — Elimination & Triangular Form (`topics/t05b_elimination/`)
 
-**Spec:** `specs/topic5b_elimination.md`, `specs/topic5b_logistics_redesign.md`
+**Spec:** `specs/topic5b_elimination.md`, `specs/topic5b_logistics_redesign.md`, `specs/topic5b_infinite_nosolution.md`
 
 **File structure:** `t05b_elimination` is now a per-screen package:
 - `__init__.py` — TITLE, SLUG, OVERVIEW, HOWTO (as `st.caption`), render() dispatcher
-- `workbench.py` — shared elimination engine (all row-op logic, state management, `workbench()` callable); includes `_active_pivot_tri` for pivot highlighting
+- `workbench.py` — shared elimination engine (all row-op logic, state management, `workbench()` callable); includes `_active_pivot_tri` (active pivot, blue) and `_completed_pivots` (finished pivots, yellow) for pivot highlighting
 - `eq_parser.py` — numeric parser for Logistics (x-variables, N_VARS=7; `parse_equation`, `rows_equivalent`, `ParseError`)
 - `eq_builder.py` — shared equation-builder UI (`equation_builder(key, n_unknowns, target_aug, ...)`) — n-agnostic, parser-agnostic; powers three screens with two parsers
 - `circuit_parser.py` — symbolic parser for Circuit (I-variables + R/V symbol table; N_VARS=5)
 - `rref_reducer.py` — dedicated Gauss-Jordan RREF reducer for [A|I] inversion (`make_augmented`, `compute_one_step`, `run_to_reduced`, `op_*`); uses Fraction; pure logic, no Streamlit; built and unit-tested before wiring
-- `screen_workbench.py` — Screen 1 (The workbench: presets, math block)
-- `logistics_one.py` — Screen 2a (Logistics one plan: 6-route tree, unique solution)
-- `logistics.py` — Screen 2b (Logistics many plans: 7-route cycle, infinitely many)
-- `circuit.py` — Screen 3 (Circuit: KCL/KVL symbolic equations, 5 currents, unique solution)
-- `inverse_elim.py` — Screen 4 ([A|I] inverse-by-elimination; spec: `specs/topic5b_inverse_elimination.md`)
+- `screen_workbench.py` — Screen 1 (Augmented Matrix: presets, math block) — renamed from "The workbench" this session
+- `inverse_elim.py` — Screen 2 ([A|I] inverse-by-elimination; spec: `specs/topic5b_inverse_elimination.md`)
+- `infinite_nosolution.py` — Screen 3 (Infinite and No Solutions: two presets, reuses `workbench()` unchanged; spec: `specs/topic5b_infinite_nosolution.md`) — NEW this session
+- `logistics_one.py` — Screen 4 (Logistics one plan: 6-route tree, unique solution)
+- `logistics.py` — Screen 5 (Logistics many plans: 7-route cycle, infinitely many)
+- `circuit.py` — Screen 6 (Circuit: KCL/KVL symbolic equations, 5 currents, unique solution)
 
 - [x] Module exists and registered in `app.py`
 - [x] OVERVIEW
 - [x] HOWTO rendered as `st.caption` (no expander)
-- [x] Five screens — selector: "1 · The workbench / 2a · Logistics (one plan) / 2b · Logistics (many plans) / 3 · Circuit / 4 · Inverse by elimination"
-- [x] `aug_array_latex` in `engine/widgets.py` — optional `highlight=(row,col)` arg (defaults `None`; existing callers unaffected)
+- [x] Six screens — selector reordered this session: "1 · Augmented Matrix / 2 · Inverse by elimination / 3 · Infinite and No Solutions / 4 · Logistics (one plan) / 5 · Logistics (many plans) / 6 · Circuit"
+- [x] `aug_array_latex` in `engine/widgets.py` — optional `highlight=(row,col)` arg (defaults `None`; existing callers unaffected); **this session:** added optional `highlights={(row,col): hex_color, ...}` dict arg (takes precedence per-cell over `highlight`; existing single-`highlight` callers unaffected)
 
 ### Layout refactor
 - [x] Page-level "How to use this screen" expander removed; HOWTO now `st.caption` under OVERVIEW
@@ -411,8 +412,9 @@ specs/topic4_inverse.md fully updated to match.
 
 ### Shared workbench engine
 - [x] Equations displayed above augmented matrix (both update on every op)
-- [x] Augmented matrix via `aug_array_latex` — with active-pivot highlight (`_active_pivot_tri` in `workbench.py`; highlight advances column by column as elimination proceeds)
+- [x] Augmented matrix via `aug_array_latex` — active pivot highlighted blue `#4dabf7` (`_active_pivot_tri` in `workbench.py`; highlight advances column by column as elimination proceeds); **this session:** completed pivots (nonzero diagonal entry, all zeros below it in-column) ALSO highlighted, in yellow `#ffd43b` (`_completed_pivots`, new helper in `workbench.py`), both passed together via the new `highlights=` dict — applies to every screen that calls `workbench()` (Augmented Matrix, Infinite/No Solutions, both Logistics screens, Circuit)
 - [x] Manual controls: Add multiple / Swap / Scale
+- [x] **This session:** the operation-type picker and every source/target/row selector in the manual controls converted from `st.selectbox` to `st.radio` (`horizontal=True`); same session_state keys throughout, so `_do_apply_cb` and every other callback are unchanged
 - [x] Guided: "Do one step" (one standard forward-elimination op)
 - [x] Guided: "Run to triangular form"
 - [x] "Back-substitute & solve" (enabled once triangular with nonzero pivots)
@@ -432,12 +434,29 @@ specs/topic4_inverse.md fully updated to match.
 - [x] **Bug fix:** `_live_aug_latex` previously looped `range(n_unknowns)`, hiding rows of over-determined systems. Added `n_rows` param; `equation_builder` passes `len(target_aug)`.
 - [x] **Bug fix:** Fill always wrote x-variable numeric strings; symbolic parser could not read them, producing "(couldn't read)" on Circuit. Fixed via `fill_equations` param.
 
-### Screen 1 — The workbench
-- [x] 4 presets (One solution / Needs a row swap / Redundant / Contradiction)
-- [x] Notice
+### Screen 1 — Augmented Matrix (renamed from "The workbench" this session)
+- [x] Intro rewritten (verbatim, two paragraphs): augmented-matrix definition + the 3 allowable operations (swap / scale / add a multiple) + upper-triangular form + back-substitution; second paragraph defines PIVOTS (nonzero diagonal entries required for a completed upper-triangular form) and says to use the swap operation if a zero appears in a pivot position
+- [x] Old `_E1_NOTICE` `st.info` block removed
+- [x] Presets TRIMMED to two: "One solution" / "Needs a row swap" (matrices unchanged) — "Redundant equation (infinite)" and "Contradiction (no solution)" MOVED to the new Screen 3 (Infinite and No Solutions) below
+- [x] Preset picker: `st.selectbox` → `st.radio` (`horizontal=True`), same state key, so the existing preset-load-on-change logic is unchanged
 - [x] Math block always shown (elementary row operations + det = product of pivots + rank preview)
+- [ ] Not yet manually re-verified in the running app after this session's edits (pending your review)
 
-### Screen 2a — Logistics (one plan) — `logistics_one.py`
+### Screen 3 — Infinite and No Solutions — `infinite_nosolution.py` (NEW this session)
+
+**Spec:** `specs/topic5b_infinite_nosolution.md`
+
+Dedicated home for the two non-unique outcomes elimination can reveal: no solution and infinitely many. Reuses the shared `workbench()` engine unchanged — no engine edits were needed for this screen itself.
+
+- [x] `render_infinite_nosolution()` — new module, imported in `__init__.py` (import wrapped in `try/except ImportError` with an `st.info("Coming soon.")` placeholder fallback while the module didn't yet exist; now resolves to the real screen)
+- [x] Two presets, both A=[[1,1,1],[2,2,2],[1,2,3]] (row 2 = 2×row 1): "No solution (0 = 3)" b=(6,15,14); "Infinitely many (0 = 0)" b=(6,12,14)
+- [x] State keys prefixed `t05b_infns_*`, isolated from Screen 1's `t05b_e1_*`
+- [x] Preset load path: `_make_aug` + `_load_aug` (the shared workbench helper, functionally identical to Screen 1's inline load block), gated by a `t05b_infns_last` change-tracker, mirroring Screen 1's pattern
+- [x] Intro / notice / closing copied verbatim from the spec (straight-ASCII-quote pass applied to the report; wording unchanged)
+- [x] No hand-rolled scenario detection — the workbench's existing `_show_scenario` supplies the live no-solution / infinitely-many banner
+- [ ] Not yet manually verified in the running app (built this session; pending your review — confirm "No solution" reduces to `0 0 0 | 3` with the no-solution banner, and "Infinitely many" reduces to `0 0 0 | 0` with the infinitely-many banner)
+
+### Screen 4 — Logistics (one plan) — `logistics_one.py` (moved from Screen 2a this session)
 
 **Teaching role:** Introduces the equation-builder pattern on a simpler tree network where every store has exactly one incoming route. Elimination gives a unique answer — students see the method work cleanly before the harder case.
 
@@ -447,7 +466,7 @@ specs/topic4_inverse.md fully updated to match.
 - [x] **Powered by `equation_builder`** with `key="t05b_e2a"`, `n_unknowns=6`. All state keys prefixed `t05b_e2a_*`, fully isolated from 2b's `t05b_e2_*` keys.
 - [x] **Closing text:** "One definite plan" — every route pinned; explains that adding a second route to B (the next screen) changes this completely.
 
-### Screen 2b — Logistics (many plans) — `logistics.py` (REDESIGNED)
+### Screen 5 — Logistics (many plans) — `logistics.py` (REDESIGNED; moved from Screen 2b this session)
 
 **Teaching role:** Same network as 2a plus one extra route (W2→B = x₅). That single edge creates a cycle and changes the solution from one plan to a whole family. The teaching arc: 2a gives the endpoints (x₄=20,x₅=0) and (x₄=0,x₅=20); 2b's free parameter slides between them.
 
@@ -461,7 +480,7 @@ specs/topic4_inverse.md fully updated to match.
 - [x] **Workbench** (`workbench("t05b_e2", 7, ...)`) — engine detects free-variable outcome correctly.
 - [x] **Closing text:** explains the free variable as the B-delivery split and why a real logistics network needs the math (a family of plans, business picks the cheapest).
 
-### Screen 3 — Circuit (redesigned — complete, no polish pending)
+### Screen 6 — Circuit (redesigned — complete, no polish pending; moved from Screen 3 this session)
 
 **Spec:** `specs/topic5b_circuit_redesign.md`
 
@@ -477,7 +496,7 @@ Student writes the five circuit equations themselves (2 KCL + 3 KVL, symbolic fo
 - [x] **Closing text:** "One definite answer" with solution; Topic 9 AC-circuit forward-link.
 - [x] Powered by `equation_builder` with `parse_fn=parse_circuit_equation`, `equiv_fn=rows_equivalent`, `fill_equations=[...]`, `placeholder="e.g. R1*I1 + R3*I3 = V"`.
 
-### Screen 4 — Inverse [A|I] — `inverse_elim.py` (COMPLETE)
+### Screen 2 — Inverse by elimination [A|I] — `inverse_elim.py` (COMPLETE; moved from Screen 4 to Screen 2 this session)
 
 **Spec:** `specs/topic5b_inverse_elimination.md`
 
@@ -498,7 +517,7 @@ The Topic 4 ↔ 5.5 bridge: augment A with the identity to form [A | I], row-red
   - A·A⁻¹ = I verification rendered as LaTeX (computed with Fraction arithmetic; confirms the inverse is exact).
 - [x] **Active-pivot highlighting:** `_active_pivot(M, n)` finds the first diagonal position not yet fully reduced (pivot ≠ 1 or column not fully cleared); highlighted entry rendered in accent blue bold. No highlight when done or singular.
 - [x] **Wide-math layout** (`st.columns([1, 1.3])`): controls narrow-left, 3×6 matrix wide-right (LaTeX `{ccc|ccc}` divider). Matches workbench column split.
-- [x] **Wired into selector** as "4 · Inverse by elimination" in `__init__.py` radio.
+- [x] **Wired into selector** as "2 · Inverse by elimination" in `__init__.py` radio (selector position 2 this session; was position 4).
 
 ### Future hook (not Topic 5.5 work)
 

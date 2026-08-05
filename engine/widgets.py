@@ -267,12 +267,15 @@ def set_vector_state(state_key: str, v) -> None:
         st.session_state[f"{state_key}__{i}"] = float(v[i])
 
 
-def aug_array_latex(M, n_unknowns: int, highlight=None) -> str:
+def aug_array_latex(M, n_unknowns: int, highlight=None, highlights=None) -> str:
     """LaTeX string for an augmented matrix [A | b].
 
     M is a list of rows, each with n_unknowns + 1 floats (last entry is b).
     Produces \\left[\\begin{array}{cc...|c} ... \\end{array}\\right].
     highlight: optional (row, col) to color/bold that entry in accent blue.
+    highlights: optional dict of (row, col) -> hex color string, to color/bold
+    multiple cells at once. Takes precedence over `highlight` for any cell
+    present in both.
     """
     col_spec = "c" * n_unknowns + "|c"
 
@@ -289,7 +292,9 @@ def aug_array_latex(M, n_unknowns: int, highlight=None) -> str:
         cells = []
         for ci in range(n_unknowns + 1):
             entry = _fmt(M[ri][ci])
-            if highlight is not None and (ri, ci) == highlight:
+            if highlights is not None and (ri, ci) in highlights:
+                entry = r"\textcolor{" + highlights[(ri, ci)] + r"}{\mathbf{" + entry + r"}}"
+            elif highlight is not None and (ri, ci) == highlight:
                 entry = r"\textcolor{#4dabf7}{\mathbf{" + entry + r"}}"
             cells.append(entry)
         row_strs.append(" & ".join(cells))

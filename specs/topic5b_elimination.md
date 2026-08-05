@@ -124,7 +124,17 @@ answer is labeled.
 ## Selector and always-on text
 
 Selector (st.radio, horizontal, key `t05b_example`):
-`["1 · The workbench", "2 · Logistics", "3 · Circuit"]`.
+```
+"1 · Augmented Matrix"
+"2 · Inverse by elimination"
+"3 · Infinite and No Solutions"
+"4 · Logistics (one plan)"
+"5 · Logistics (many plans)"
+"6 · Circuit"
+```
+
+The "Infinite and No Solutions" screen has its own spec:
+`specs/topic5b_infinite_nosolution.md`.
 
 `OVERVIEW`:
 > Topic 5 ended at the edge of what we can draw — three unknowns, three planes.
@@ -146,7 +156,7 @@ Selector (st.radio, horizontal, key `t05b_example`):
 
 ---
 
-## Example 1 — The workbench (math first; learn the moves and the scenarios)
+## Example 1 — Augmented Matrix (math first; learn the moves and the scenarios)
 
 A 3×3 system he reduces by hand or with guidance. Presets produce each scenario.
 
@@ -157,11 +167,12 @@ A 3×3 system he reduces by hand or with guidance. Presets produce each scenario
     (solution x = (2, 3, −1)).
   - **"Needs a row swap"** → A `[[0,2,1],[1,1,1],[2,1,3]]`, b `(5,6,11)` (top-left
     pivot is 0, so a swap is required first; solution (3, 2, 1)).
-  - **"Redundant equation (infinite)"** → A `[[1,1,1],[1,2,3],[2,3,4]]`,
-    b `(6,14,20)` (row 3 = row 1 + row 2 → a zero row appears → infinitely many).
-  - **"Contradiction (no solution)"** → A `[[1,1,1],[1,2,3],[2,3,4]]`,
-    b `(6,14,21)` (a `0 = nonzero` row appears → no solution).
 - Then render `workbench("t05b_e1", 3)`.
+
+**Presets are TRIMMED to these two** ("one solution" and "forced row swap"). The
+"infinitely many" and "no solution" cases have MOVED to the new "Infinite and No
+Solutions" screen (spec: `specs/topic5b_infinite_nosolution.md`, selector
+position 3).
 
 **Notice (always shown):**
 > Try the standard method with **Do one step**, then experiment in manual mode —

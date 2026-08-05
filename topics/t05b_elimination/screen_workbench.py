@@ -20,38 +20,29 @@ _E1_PRESETS = {
         "notice": "The top-left entry is 0 — **Do one step** immediately triggers a swap. "
                   "After that, elimination proceeds normally to x = (3, 2, 1).",
     },
-    "Redundant equation (infinite)": {
-        "A": [[1, 1, 1], [1, 2, 3], [2, 3, 4]],
-        "b": [6, 14, 20],
-        "notice": "Row 3 = Row 1 + Row 2, so it vanishes during elimination — "
-                  "a free variable appears and there are infinitely many solutions.",
-    },
-    "Contradiction (no solution)": {
-        "A": [[1, 1, 1], [1, 2, 3], [2, 3, 4]],
-        "b": [6, 14, 21],
-        "notice": "Same coefficient equations as *Redundant*, but the last constant "
-                  "differs — elimination produces a row \"0 = 1\", which is impossible.",
-    },
 }
-
-_E1_NOTICE = """
-Try the standard method with **Do one step**, then experiment in manual mode —
-you can't break it, because every move keeps the same solution. The four presets
-show the four things that can happen: a clean triangle (one solution), a forced
-swap when a pivot is zero, a row that vanishes (infinitely many), and a row that
-becomes "0 = something" (no solution).
-"""
 
 
 def _example_one():
     st.markdown(
-        "**The workbench.** A 3×3 system — small enough to relate to planes "
-        "and still big enough to show every scenario. Use it to learn the moves, "
-        "then explore each of the four preset outcomes."
+        "This screen works with 3 variables and 3 unknowns. Using the elimination method, you "
+        "will start with an AUGMENTED matrix that contains the coefficients of the functions in "
+        "a system of equations and tack on or augment the answers to the functions. You will "
+        "then use the 3 allowable operations: swap rows, scale a row, add a multiple of one row "
+        "to transform the matrix into its upper triangular form. You then can use back "
+        "substitution to obtain the values of x.\n\n"
+        "The upper triangle form has non-zero values on the long diagonal and zeros below the "
+        "diagonal. The values on the diagonal are called \"PIVOTS\". To get to a completed "
+        "upper triangular form in this exercise, no pivot can be zero. If a zero appears in the "
+        "pivot position, use the swap row operation."
     )
-    st.info(_E1_NOTICE)
 
-    preset = st.selectbox("Preset", list(_E1_PRESETS), key="t05b_e1_preset")
+    preset = st.radio(
+        "Preset",
+        ["One solution", "Needs a row swap"],
+        horizontal=True,
+        key="t05b_e1_preset",
+    )
     p = _E1_PRESETS[preset]
     if st.session_state.get("t05b_e1_last") != preset:
         aug = _make_aug(p["A"], p["b"])
