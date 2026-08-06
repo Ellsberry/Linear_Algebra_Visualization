@@ -442,19 +442,39 @@ specs/topic4_inverse.md fully updated to match.
 - [x] Math block always shown (elementary row operations + det = product of pivots + rank preview)
 - [ ] Not yet manually re-verified in the running app after this session's edits (pending your review)
 
-### Screen 3 — Infinite and No Solutions — `infinite_nosolution.py` (NEW this session)
+### Screen 3 — Infinite and No Solutions — `infinite_nosolution.py` (ENHANCED this session)
 
-**Spec:** `specs/topic5b_infinite_nosolution.md`
+**Spec:** `specs/topic5b_infinite_nosolution.md`; parametric engine per `specs/parametric_solution.md`
 
 Dedicated home for the two non-unique outcomes elimination can reveal: no solution and infinitely many. Reuses the shared `workbench()` engine unchanged — no engine edits were needed for this screen itself.
 
-- [x] `render_infinite_nosolution()` — new module, imported in `__init__.py` (import wrapped in `try/except ImportError` with an `st.info("Coming soon.")` placeholder fallback while the module didn't yet exist; now resolves to the real screen)
+- [x] `render_infinite_nosolution()` — module, imported in `__init__.py` (import wrapped in `try/except ImportError` with an `st.info("Coming soon.")` placeholder fallback while the module didn't yet exist; now resolves to the real screen)
 - [x] Two presets, both A=[[1,1,1],[2,2,2],[1,2,3]] (row 2 = 2×row 1): "No solution (0 = 3)" b=(6,15,14); "Infinitely many (0 = 0)" b=(6,12,14)
 - [x] State keys prefixed `t05b_infns_*`, isolated from Screen 1's `t05b_e1_*`
 - [x] Preset load path: `_make_aug` + `_load_aug` (the shared workbench helper, functionally identical to Screen 1's inline load block), gated by a `t05b_infns_last` change-tracker, mirroring Screen 1's pattern
-- [x] Intro / notice / closing copied verbatim from the spec (straight-ASCII-quote pass applied to the report; wording unchanged)
-- [x] No hand-rolled scenario detection — the workbench's existing `_show_scenario` supplies the live no-solution / infinitely-many banner
-- [ ] Not yet manually verified in the running app (built this session; pending your review — confirm "No solution" reduces to `0 0 0 | 3` with the no-solution banner, and "Infinitely many" reduces to `0 0 0 | 0` with the infinitely-many banner)
+- [x] **This session:** Preset picker changed from `st.selectbox` to `st.radio` (`horizontal=True`), same state key `t05b_infns_preset`, load-on-change logic unchanged
+- [x] **This session:** Intro and notice reworded (verbatim replacement, straight-ASCII-quote, `--` style preserved). Intro now generalizes to n-dimensional systems in plain 14-year-old language (each equation is a "rule" the answer must obey; rules that secretly agree waste one and free an unknown, infinitely many answers; rules that flatly clash give no answer — works the same at 2, 3, or 20 unknowns). Notice explains the second equation is the first times 2 ("the same rule written twice"), so eliminating row 2 against row 1 always leaves a bottom row `0 = something`, and walks through the two outcomes: not zero (here 0 = 3) -> no solution; 0 = 0 -> infinitely many.
+- [x] **This session, BUILT (pending review):** General-solution display added below the workbench, gated behind triangular form (`_is_upper_triangular(M, 3)` — nothing shown until the student's own elimination reaches upper-triangular; a "Reach triangular form to see the general solution." caption shows until then). Reads the CURRENT live matrix (`st.session_state["t05b_infns_M"]`) and calls the new `engine/parametric.py` (`solve_parametric`, `parametric_latex`, `solution_equations_latex`):
+  - no_solution: stacked-vector LaTeX statement + caption explaining the impossible row.
+  - unique: per-variable equations + the particular-vector stacked form.
+  - infinite: per-variable equations (e.g. x1 = x3 - 2, x2 = 8 - 2 x3, x3 = x3) plus the stacked vector form X = particular + sum of free_var * direction, using the real variable index as each free variable's label; caption states the free-variable count.
+  - Wrapped in try/except — falls back to a caption ("Keep eliminating to see the general solution.") rather than crashing.
+- [x] No hand-rolled scenario detection — the workbench's existing `_show_scenario` still supplies the live no-solution / infinitely-many banner, independent of the new general-solution display
+- [ ] Not yet manually verified in the running app (built this session; pending your review — confirm "No solution" reduces to `0 0 0 | 3` with the no-solution banner, and "Infinitely many" reduces to `0 0 0 | 0` with the infinitely-many banner, and that the general-solution block only appears once triangular form is reached)
+
+### Shared parametric-solution engine — `engine/parametric.py` (NEW this session, BUILT pending review)
+
+**Spec:** `specs/parametric_solution.md`
+
+Engine-level helper (no Streamlit import) that takes an augmented matrix + n_unknowns and returns the general solution in parametric form: X = particular + sum over free vars of (free_var * direction_vector). Built to be reused by multiple Topic 5.5 screens, not just Screen 3.
+
+- [x] `solve_parametric(M, n_unknowns, var_name="x") -> dict(status, particular, free_vars, directions, n_free)` — converts the augmented matrix's floats to exact sympy Rationals (`sp.nsimplify(sp.Float(str(v)), rational=True)`, so 1.5 -> 3/2 and 0.3333... -> 1/3 cleanly), computes RREF via sympy, and detects no_solution / unique / infinite for ANY number of free variables (0, 1, 2, 3+).
+- [x] `parametric_latex(result, var_name="x")` — stacked-vector LaTeX: X = particular_column + sum of var_i * direction_column, one bmatrix column per free variable, using the free variable's real 1-based index as its scalar label (not generic t1, t2).
+- [x] `solution_equations_latex(result, var_name="x")` — per-variable equation lines: pivot variables solved in terms of the free variables; free variables read as themselves (e.g. x3 = x3).
+- [x] `sympy>=1.12` added to `requirements.txt`.
+- [x] Verified via inline self-tests (no test file added): a 3-free-variable 5-unknown system and a 1-free-variable 3x3 system both produce correct particular + direction vectors, fractions display exactly (e.g. 3/2), and no_solution / unique are both detected correctly.
+- [x] Reused this session by Screen 3 (Infinite and No Solutions), `var_name="x"`.
+- [ ] Not yet consumed by any other screen — reserved for a planned future 5-ingredient "smoothie" solution-space screen (3 free variables, `var_name="f"`); not built this session.
 
 ### Screen 4 — Logistics (one plan) — `logistics_one.py` (moved from Screen 2a this session)
 
