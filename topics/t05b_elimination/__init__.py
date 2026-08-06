@@ -16,6 +16,11 @@ try:
 except ImportError:
     render_infinite_nosolution = None
 
+try:
+    from .smoothie import render_smoothie
+except ImportError:
+    render_smoothie = None
+
 TITLE = "5.5 · Elimination & Triangular Form"
 SLUG = "elimination"
 
@@ -57,6 +62,7 @@ def render():
             "4 · Logistics (one plan)",
             "5 · Logistics (many plans)",
             "6 · Circuit",
+            "7 · Smoothie",
         ],
         horizontal=True,
         key="t05b_example",
@@ -78,3 +84,8 @@ def render():
         _example_two()
     elif example.startswith("6 "):
         _example_three()
+    elif example.startswith("7 "):
+        if render_smoothie is not None:
+            render_smoothie()
+        else:
+            st.info("Smoothie: coming soon")

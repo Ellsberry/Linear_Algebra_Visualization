@@ -131,10 +131,15 @@ Selector (st.radio, horizontal, key `t05b_example`):
 "4 · Logistics (one plan)"
 "5 · Logistics (many plans)"
 "6 · Circuit"
+"7 · Smoothie"
 ```
 
 The "Infinite and No Solutions" screen has its own spec:
 `specs/topic5b_infinite_nosolution.md`.
+
+The "Smoothie" screen has its own spec: `specs/topic5b_smoothie.md` (a
+homogeneous 5-unknown system with 3 free variables; reuses the workbench and
+the parametric engine).
 
 `OVERVIEW`:
 > Topic 5 ended at the edge of what we can draw — three unknowns, three planes.

@@ -382,7 +382,7 @@ specs/topic4_inverse.md fully updated to match.
 
 ## Topic 5.5 — Elimination & Triangular Form (`topics/t05b_elimination/`)
 
-**Spec:** `specs/topic5b_elimination.md`, `specs/topic5b_logistics_redesign.md`, `specs/topic5b_infinite_nosolution.md`
+**Spec:** `specs/topic5b_elimination.md`, `specs/topic5b_logistics_redesign.md`, `specs/topic5b_infinite_nosolution.md`, `specs/topic5b_smoothie.md`
 
 **File structure:** `t05b_elimination` is now a per-screen package:
 - `__init__.py` — TITLE, SLUG, OVERVIEW, HOWTO (as `st.caption`), render() dispatcher
@@ -397,11 +397,12 @@ specs/topic4_inverse.md fully updated to match.
 - `logistics_one.py` — Screen 4 (Logistics one plan: 6-route tree, unique solution)
 - `logistics.py` — Screen 5 (Logistics many plans: 7-route cycle, infinitely many)
 - `circuit.py` — Screen 6 (Circuit: KCL/KVL symbolic equations, 5 currents, unique solution)
+- `smoothie.py` — Screen 7 (Smoothie: homogeneous 5x5 system, 3 free variables, solution-space payoff; spec: `specs/topic5b_smoothie.md`)
 
 - [x] Module exists and registered in `app.py`
 - [x] OVERVIEW
 - [x] HOWTO rendered as `st.caption` (no expander)
-- [x] Six screens — selector reordered this session: "1 · Augmented Matrix / 2 · Inverse by elimination / 3 · Infinite and No Solutions / 4 · Logistics (one plan) / 5 · Logistics (many plans) / 6 · Circuit"
+- [x] Seven screens — selector: "1 · Augmented Matrix / 2 · Inverse by elimination / 3 · Infinite and No Solutions / 4 · Logistics (one plan) / 5 · Logistics (many plans) / 6 · Circuit / 7 · Smoothie"
 - [x] `aug_array_latex` in `engine/widgets.py` — optional `highlight=(row,col)` arg (defaults `None`; existing callers unaffected); **this session:** added optional `highlights={(row,col): hex_color, ...}` dict arg (takes precedence per-cell over `highlight`; existing single-`highlight` callers unaffected)
 
 ### Layout refactor
@@ -474,7 +475,7 @@ Engine-level helper (no Streamlit import) that takes an augmented matrix + n_unk
 - [x] `sympy>=1.12` added to `requirements.txt`.
 - [x] Verified via inline self-tests (no test file added): a 3-free-variable 5-unknown system and a 1-free-variable 3x3 system both produce correct particular + direction vectors, fractions display exactly (e.g. 3/2), and no_solution / unique are both detected correctly.
 - [x] Reused this session by Screen 3 (Infinite and No Solutions), `var_name="x"`.
-- [ ] Not yet consumed by any other screen — reserved for a planned future 5-ingredient "smoothie" solution-space screen (3 free variables, `var_name="f"`); not built this session.
+- [x] Also reused by Screen 7 (Smoothie), `var_name="f"` — a homogeneous 5-unknown system with 3 free variables (f3, f4, f5), the multi-free-variable payoff case (Screen 3 exercises only 0/1 free variables).
 
 ### Screen 4 — Logistics (one plan) — `logistics_one.py` (moved from Screen 2a this session)
 
@@ -515,6 +516,40 @@ Student writes the five circuit equations themselves (2 KCL + 3 KVL, symbolic fo
 - [x] **Workbench** (`workbench("t05b_e3", 5, ...)`) — reduces to unique solution I = (6, 2, 3, 3, 1) A.
 - [x] **Closing text:** "One definite answer" with solution; Topic 9 AC-circuit forward-link.
 - [x] Powered by `equation_builder` with `parse_fn=parse_circuit_equation`, `equiv_fn=rows_equivalent`, `fill_equations=[...]`, `placeholder="e.g. R1*I1 + R3*I3 = V"`.
+
+### Screen 7 — Smoothie — `smoothie.py` (NEW, BUILT pending review)
+
+**Spec:** `specs/topic5b_smoothie.md`
+
+Multi-free-variable payoff screen: a homogeneous 5x5 system (total volume and total
+sweetness held fixed under an ingredient swap) whose five equations collapse to rank
+2, leaving three free variables — the solution space is 3-dimensional rather than a
+single point or a single free parameter.
+
+- [x] `render_smoothie()` — module, imported in `__init__.py` (import wrapped in
+      `try/except ImportError` with an `st.info("Smoothie: coming soon")` placeholder
+      fallback while the module didn't yet exist; now resolves to the real screen).
+- [x] Ingredients f1..f5 (strawberries, bananas, yogurt, milk, honey) shown as a
+      compact legend above the workbench.
+- [x] Homogeneous system `A=[[1,1,1,1,1],[1,-1,1,-1,2],[2,0,2,0,3],[1,3,1,3,0],
+      [7,-1,7,-1,11]]`, `b=(0,0,0,0,0)` loaded via the shared `_make_aug`/`_load_aug`
+      path (per spec: rank 2, free vars f3/f4/f5, particular = 0).
+- [x] Single preset ("Volume + sweetness locked", one-item radio) — no scenario
+      branching needed since the system is fixed.
+- [x] Reuses `workbench("t05b_smoothie", 5)` unchanged — no engine edits needed.
+- [x] General-solution display gated behind triangular form (same
+      `_is_upper_triangular` gate as Screen 3), calling `solve_parametric(M, 5, "f")`
+      from `engine/parametric.py`: per-variable equations
+      (`solution_equations_latex`) then the stacked vector form
+      (`parametric_latex`) with the three direction vectors ("adjustment
+      patterns"); caption states the free-variable count and the
+      3-dimensional-solution-space framing. Wrapped in try/except — falls back to
+      a "Keep eliminating to see the general solution." caption.
+- [x] Intro / notice / closing text render verbatim from the spec.
+- [ ] Not yet manually verified in the running app (built this session; pending
+      your review — confirm the legend renders, the system loads under
+      `t05b_smoothie_*` keys, eliminating reaches triangular form, and the
+      parametric block shows 3 free variables f3/f4/f5 with particular = 0).
 
 ### Screen 2 — Inverse by elimination [A|I] — `inverse_elim.py` (COMPLETE; moved from Screen 4 to Screen 2 this session)
 
