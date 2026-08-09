@@ -60,7 +60,7 @@ def render_smoothie():
         _load_aug("t05b_smoothie", aug)
         st.session_state["t05b_smoothie_last"] = "loaded"
 
-    workbench("t05b_smoothie", 5)
+    workbench("t05b_smoothie", 5, var_name="f")
 
     M = st.session_state.get("t05b_smoothie_M")
     if M is not None and _is_upper_triangular(M, 5):

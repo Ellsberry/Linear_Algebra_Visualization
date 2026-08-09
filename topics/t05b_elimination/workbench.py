@@ -140,7 +140,48 @@ def _run_to_triangular_cb(key, n_unknowns):
         _commit(key, new_M, desc)
 
 
-def _back_solve_cb(key, n_unknowns):
+def _rref_full(M, n_unknowns, tol=1e-9):
+    """Return M reduced to RREF (pivots = 1, zeros above and below), operating on
+    a deep copy. Pure computation, no session_state."""
+    M = [row[:] for row in M]
+    rows = len(M)
+    ncols = len(M[0])  # includes the b column
+    pivot_row = 0
+    for col in range(n_unknowns):
+        # find a pivot in this column at or below pivot_row
+        sel = None
+        for r in range(pivot_row, rows):
+            if abs(M[r][col]) > tol:
+                sel = r; break
+        if sel is None:
+            continue
+        M[pivot_row], M[sel] = M[sel], M[pivot_row]      # swap up
+        piv = M[pivot_row][col]
+        M[pivot_row] = [v / piv for v in M[pivot_row]]   # normalize pivot to 1
+        for r in range(rows):                            # clear the whole column
+            if r != pivot_row and abs(M[r][col]) > tol:
+                f = M[r][col]
+                M[r] = [a - f * b for a, b in zip(M[r], M[pivot_row])]
+        pivot_row += 1
+        if pivot_row >= rows:
+            break
+    # clean -0.0 / tiny values
+    for r in range(rows):
+        for c in range(ncols):
+            if abs(M[r][c]) < tol:
+                M[r][c] = 0.0
+    return M
+
+
+def _run_to_reduced_cb(key, n_unknowns):
+    M0 = st.session_state[f"{key}_M"]
+    M1 = _rref_full(M0, n_unknowns)
+    if M1 != M0:
+        _push_state(key)
+        _commit(key, M1, "Run to reduced form (RREF)")
+
+
+def _back_solve_cb(key, n_unknowns, var_name="x"):
     M = st.session_state[f"{key}_M"]
     nc = n_unknowns
     x = [0.0] * nc
@@ -153,10 +194,10 @@ def _back_solve_cb(key, n_unknowns):
         tail = sum(M[i][j] * x[j] for j in range(i + 1, nc))
         x[i] = (b_val - tail) / M[i][i]
         if abs(tail) < TOL:
-            steps.append(f"Row {i+1}: x{i+1} = {b_val:.4g} / {M[i][i]:.4g} = **{x[i]:.4g}**")
+            steps.append(f"Row {i+1}: {var_name}{i+1} = {b_val:.4g} / {M[i][i]:.4g} = **{x[i]:.4g}**")
         else:
             steps.append(
-                f"Row {i+1}: x{i+1} = ({b_val:.4g} − {tail:.4g}) / {M[i][i]:.4g} = **{x[i]:.4g}**"
+                f"Row {i+1}: {var_name}{i+1} = ({b_val:.4g} − {tail:.4g}) / {M[i][i]:.4g} = **{x[i]:.4g}**"
             )
     st.session_state[f"{key}_solution"] = (x, steps)
 
@@ -227,13 +268,13 @@ def _show_scenario(M, n_unknowns):
 # Equation display (column-aligned, updates with every op)
 # ---------------------------------------------------------------------------
 
-def _equations_latex(M, n_unknowns):
+def _equations_latex(M, n_unknowns, var_name="x"):
     """LaTeX aligned block -- one equation per row, variable columns aligned.
 
     Places & before each sign so the x1, x2, ... columns line up vertically.
     Zero coefficients produce an empty column, visually showing elimination.
     """
-    var_names = [f"x_{{{i+1}}}" for i in range(n_unknowns)]
+    var_names = [f"{var_name}_{{{i+1}}}" for i in range(n_unknowns)]
     TOL = 1e-10
     lines = []
     for row in M:
@@ -280,7 +321,7 @@ def _load_aug(wb_key, aug):
 # The shared elimination workbench
 # ---------------------------------------------------------------------------
 
-def workbench(key, n_unknowns, solution_labels=None, solution_suffix=""):
+def workbench(key, n_unknowns, solution_labels=None, solution_suffix="", var_name="x"):
     """Elimination workbench for st.session_state[key + '_M'] (list of rows).
 
     solution_labels: optional list of strings to replace x1, x2, ... in the
@@ -301,7 +342,7 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix=""):
 
     # --- Right: equations + matrix (both read from M, update together) ---
     with right:
-        st.latex(_equations_latex(M, n_unknowns))
+        st.latex(_equations_latex(M, n_unknowns, var_name))
         hp = _active_pivot_tri(M, n_unknowns)
         hl = {cell: "#ffd43b" for cell in _completed_pivots(M, n_unknowns)}
         if hp is not None:
@@ -329,7 +370,7 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix=""):
                 )
             else:
                 sol_str = "  ·  ".join(
-                    f"x{i+1} = {xi:.4g}{solution_suffix}" for i, xi in enumerate(x)
+                    f"{var_name}{i+1} = {xi:.4g}{solution_suffix}" for i, xi in enumerate(x)
                 )
             st.success(f"Solution:  {sol_str}")
 
@@ -387,18 +428,21 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix=""):
 
         st.markdown("---")
         st.markdown("**Guided elimination**")
-        g1, g2 = st.columns(2)
+        g1, g2, g3 = st.columns(3)
         with g1:
             st.button("Do one step", key=f"{key}_step_btn",
                       on_click=_do_one_step_cb, args=(key, n_unknowns))
         with g2:
             st.button("Run to triangular form", key=f"{key}_run_btn",
                       on_click=_run_to_triangular_cb, args=(key, n_unknowns))
+        with g3:
+            st.button("Run to reduced form", key=f"{key}_rref_btn",
+                      on_click=_run_to_reduced_cb, args=(key, n_unknowns))
 
         st.button(
             "Back-substitute & solve",
             key=f"{key}_backsolve_btn",
             on_click=_back_solve_cb,
-            args=(key, n_unknowns),
+            args=(key, n_unknowns, var_name),
             disabled=not is_ready,
         )

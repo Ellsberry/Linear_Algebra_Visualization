@@ -3,6 +3,7 @@ import streamlit as st
 
 from engine import plotting as plot
 from .eq_builder import equation_builder
+from .workbench import _is_upper_triangular
 
 
 # ---------------------------------------------------------------------------
@@ -104,3 +105,19 @@ def _example_two_a():
             "opening a second route to store B changes that completely."
         ),
     )
+
+    M = st.session_state.get("t05b_e2a_M")
+    if M is not None and _is_upper_triangular(M, 6):
+        st.markdown(
+            "<div style='background-color:#1a7f37;color:#ffd43b;"
+            "padding:0.75rem 1rem;border-radius:0.5rem;font-weight:600;'>"
+            "You developed 7 equations for 6 unknowns. With more equations than "
+            "unknowns, at least one has to be redundant — it doesn't add any new "
+            "information, because it's already implied by the others. During "
+            "elimination that redundant equation collapses to a harmless 0 = 0 row and "
+            "drops out. What matters is the 6 real pivots — one per unknown — "
+            "so there is exactly one solution. A 0 = 0 zero row is harmless; the "
+            "dangerous one is 0 = (a nonzero number), which would mean no solution."
+            "</div>",
+            unsafe_allow_html=True,
+        )

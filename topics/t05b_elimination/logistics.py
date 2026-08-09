@@ -1,7 +1,10 @@
 import plotly.graph_objects as go
+import streamlit as st
 
 from engine import plotting as plot
+from engine.parametric import solve_parametric, parametric_latex, solution_equations_latex
 from .eq_builder import equation_builder
+from .workbench import _is_upper_triangular
 
 
 # ---------------------------------------------------------------------------
@@ -114,3 +117,27 @@ def _example_two():
             "system too big to picture."
         ),
     )
+
+    M = st.session_state.get("t05b_e2_M")
+    if M is not None and _is_upper_triangular(M, 7):
+        try:
+            res = solve_parametric(M, 7, "x")
+            st.markdown("**General solution:**")
+            if res["status"] == "no_solution":
+                st.latex(parametric_latex(res, "x"))
+            elif res["status"] == "unique":
+                for line in solution_equations_latex(res, "x"):
+                    st.latex(line)
+            else:  # infinite
+                st.markdown("Read each route off the reduced rows:")
+                for line in solution_equations_latex(res, "x"):
+                    st.latex(line)
+                st.markdown("As a single vector equation:")
+                st.latex(parametric_latex(res, "x"))
+                st.caption(
+                    f"{res['n_free']} free variable(s): route x5 (W2->B) can be any "
+                    f"amount, and every other route adjusts to match. Each choice is a "
+                    f"valid shipping plan -- a whole family of answers."
+                )
+        except Exception:
+            st.caption("Reach triangular form to see the general solution.")
