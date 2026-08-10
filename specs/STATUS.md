@@ -396,13 +396,13 @@ specs/topic4_inverse.md fully updated to match.
 - `infinite_nosolution.py` — Screen 3 (Infinite and No Solutions: two presets, reuses `workbench()` unchanged; spec: `specs/topic5b_infinite_nosolution.md`) — NEW this session
 - `logistics_one.py` — Screen 4 (Logistics one plan: 6-route tree, unique solution)
 - `logistics.py` — Screen 5 (Logistics many plans: 7-route cycle, infinitely many)
-- `circuit.py` — Screen 6 (Circuit: KCL/KVL symbolic equations, 5 currents, unique solution)
-- `smoothie.py` — Screen 7 (Smoothie: homogeneous 5x5 system, 3 free variables, solution-space payoff; spec: `specs/topic5b_smoothie.md`)
+- `smoothie.py` — Screen 6 (Smoothie: homogeneous 5x5 system, 3 free variables, solution-space payoff; spec: `specs/topic5b_smoothie.md`)
+- `circuit.py` — Screen 7 (Circuit: KCL/KVL symbolic equations, 5 currents, unique solution)
 
 - [x] Module exists and registered in `app.py`
 - [x] OVERVIEW
 - [x] HOWTO rendered as `st.caption` (no expander)
-- [x] Seven screens — selector: "1 · Augmented Matrix / 2 · Inverse by elimination / 3 · Infinite and No Solutions / 4 · Logistics (one plan) / 5 · Logistics (many plans) / 6 · Circuit / 7 · Smoothie"
+- [x] Seven screens — selector: "1 · Augmented Matrix / 2 · Inverse by elimination / 3 · Infinite and No Solutions / 4 · Logistics (one plan) / 5 · Logistics (many plans) / 6 · Smoothie / 7 · Circuit" — **this session:** Smoothie and Circuit swapped (was 6 · Circuit / 7 · Smoothie); updated in `__init__.py` (labels + dispatch) and `specs/topic5b_elimination.md`
 - [x] `aug_array_latex` in `engine/widgets.py` — optional `highlight=(row,col)` arg (defaults `None`; existing callers unaffected); **this session:** added optional `highlights={(row,col): hex_color, ...}` dict arg (takes precedence per-cell over `highlight`; existing single-`highlight` callers unaffected)
 
 ### Layout refactor
@@ -418,8 +418,10 @@ specs/topic4_inverse.md fully updated to match.
 - [x] **This session:** the operation-type picker and every source/target/row selector in the manual controls converted from `st.selectbox` to `st.radio` (`horizontal=True`); same session_state keys throughout, so `_do_apply_cb` and every other callback are unchanged
 - [x] Guided: "Do one step" (one standard forward-elimination op)
 - [x] Guided: "Run to triangular form"
+- [x] **This session:** new "Run to reduced form" button beside "Run to triangular form" in the Guided elimination row — runs full RREF from any state (forward-eliminate, normalize each pivot to 1, clear above and below) via new `_rref_full` + `_run_to_reduced_cb`; single undo entry
 - [x] "Back-substitute & solve" (enabled once triangular with nonzero pivots)
 - [x] Undo + Reset
+- [x] **This session:** `workbench()` gained an optional `right_extra=None` callback rendered inside its right column (under the matrix + banner + solution box), so callers can place content beside the matrix instead of below the whole workbench row; default `None` means every existing caller is unaffected. `equation_builder()` (`eq_builder.py`) forwards its own optional `right_extra=None` through to its internal `workbench()` call for the same reason
 - [x] Scenario detection: 0 = c (no solution), zero row (infinite), pivot count
 - [x] Pivot count with quiet rank / Topic 6 seed
 - [x] **Bug fix:** `_show_scenario` now checks `n_pivots < n_unknowns` before reporting "infinitely many solutions" on a zero row — previously fired a false positive for over-determined systems (7 equations / 6 unknowns) where a redundant row zeros out after full elimination even though rank = n_unknowns and the solution is unique
@@ -461,6 +463,7 @@ Dedicated home for the two non-unique outcomes elimination can reveal: no soluti
   - infinite: per-variable equations (e.g. x1 = x3 - 2, x2 = 8 - 2 x3, x3 = x3) plus the stacked vector form X = particular + sum of free_var * direction, using the real variable index as each free variable's label; caption states the free-variable count.
   - Wrapped in try/except — falls back to a caption ("Keep eliminating to see the general solution.") rather than crashing.
 - [x] No hand-rolled scenario detection — the workbench's existing `_show_scenario` still supplies the live no-solution / infinitely-many banner, independent of the new general-solution display
+- [x] **This session:** the general-solution block moved into `workbench()`'s right column via `right_extra` (sits under the matrix + banner instead of below the whole workbench row); per-variable equation gaps tightened via `solution_equations_block` (replacing the per-line `st.latex` loop with one combined aligned block)
 - [ ] Not yet manually verified in the running app (built this session; pending your review — confirm "No solution" reduces to `0 0 0 | 3` with the no-solution banner, and "Infinitely many" reduces to `0 0 0 | 0` with the infinitely-many banner, and that the general-solution block only appears once triangular form is reached)
 
 ### Shared parametric-solution engine — `engine/parametric.py` (NEW this session, BUILT pending review)
@@ -472,10 +475,11 @@ Engine-level helper (no Streamlit import) that takes an augmented matrix + n_unk
 - [x] `solve_parametric(M, n_unknowns, var_name="x") -> dict(status, particular, free_vars, directions, n_free)` — converts the augmented matrix's floats to exact sympy Rationals (`sp.nsimplify(sp.Float(str(v)), rational=True)`, so 1.5 -> 3/2 and 0.3333... -> 1/3 cleanly), computes RREF via sympy, and detects no_solution / unique / infinite for ANY number of free variables (0, 1, 2, 3+).
 - [x] `parametric_latex(result, var_name="x")` — stacked-vector LaTeX: X = particular_column + sum of var_i * direction_column, one bmatrix column per free variable, using the free variable's real 1-based index as its scalar label (not generic t1, t2).
 - [x] `solution_equations_latex(result, var_name="x")` — per-variable equation lines: pivot variables solved in terms of the free variables; free variables read as themselves (e.g. x3 = x3).
+- [x] **This session:** `solution_equations_block(result, var_name="x")` — returns one combined LaTeX string with all per-variable equations stacked in an aligned environment (tight, single `st.latex` call), reusing `solution_equations_latex`'s lines internally and aligning on "&="; removes the blank gaps that appeared between per-variable equation lines when each was rendered as its own `st.latex` call. `solution_equations_latex` itself is unchanged (other code may still use the list form).
 - [x] `sympy>=1.12` added to `requirements.txt`.
 - [x] Verified via inline self-tests (no test file added): a 3-free-variable 5-unknown system and a 1-free-variable 3x3 system both produce correct particular + direction vectors, fractions display exactly (e.g. 3/2), and no_solution / unique are both detected correctly.
 - [x] Reused this session by Screen 3 (Infinite and No Solutions), `var_name="x"`.
-- [x] Also reused by Screen 7 (Smoothie), `var_name="f"` — a homogeneous 5-unknown system with 3 free variables (f3, f4, f5), the multi-free-variable payoff case (Screen 3 exercises only 0/1 free variables).
+- [x] Also reused by Screen 6 (Smoothie), `var_name="f"` — a homogeneous 5-unknown system with 3 free variables (f3, f4, f5), the multi-free-variable payoff case (Screen 3 exercises only 0/1 free variables).
 
 ### Screen 4 — Logistics (one plan) — `logistics_one.py` (moved from Screen 2a this session)
 
@@ -486,6 +490,7 @@ Engine-level helper (no Streamlit import) that takes an augmented matrix + n_unk
 - [x] **Diagram** (`_logistics_one_diagram`): B placed under W1's side with a single incoming arrow — visually contrasts with 2b where B has two incoming arrows.
 - [x] **Powered by `equation_builder`** with `key="t05b_e2a"`, `n_unknowns=6`. All state keys prefixed `t05b_e2a_*`, fully isolated from 2b's `t05b_e2_*` keys.
 - [x] **Closing text:** "One definite plan" — every route pinned; explains that adding a second route to B (the next screen) changes this completely.
+- [x] **This session, BUILT (pending review):** screen-specific green-background/yellow-text banner (only this screen), shown after triangular form, explaining 7 equations for 6 unknowns -> one redundant equation -> harmless 0=0 row -> 6 pivots -> one solution; contrasts 0=0 (harmless) vs 0=nonzero (no solution).
 
 ### Screen 5 — Logistics (many plans) — `logistics.py` (REDESIGNED; moved from Screen 2b this session)
 
@@ -500,8 +505,9 @@ Engine-level helper (no Streamlit import) that takes an augmented matrix + n_unk
 - [x] **Check / Fill it in for me** — check distinguishes "couldn't read" from "wrong".
 - [x] **Workbench** (`workbench("t05b_e2", 7, ...)`) — engine detects free-variable outcome correctly.
 - [x] **Closing text:** explains the free variable as the B-delivery split and why a real logistics network needs the math (a family of plans, business picks the cheapest).
+- [x] **This session, BUILT (pending review):** general-solution display wired in via `engine/parametric.py`. After `equation_builder(...)` returns, a full-width block (below the workbench, not inside `right_extra`) reads the current matrix and, once triangular/reduced: for the infinite case, renders a two-column row (`st.columns([1, 1], gap="large")`) — per-variable equations (`solution_equations_block`) on the left, the stacked vector form (`parametric_latex`) on the right, equal height; for the unique case, just the per-variable equations, no columns. Layout iterated across several passes (right_extra-only -> split right_extra/full-width -> this two-column full-width row) before landing here. Verified: 1 free variable (x5); solution x1=50-x5, x2=50+x5, x3=30, x4=20-x5, x5 free, x6=25, x7=25.
 
-### Screen 6 — Circuit (redesigned — complete, no polish pending; moved from Screen 3 this session)
+### Screen 7 — Circuit (redesigned — complete, no polish pending; moved from Screen 3 to Screen 6 in an earlier session, then to Screen 7 this session in the Smoothie/Circuit selector swap)
 
 **Spec:** `specs/topic5b_circuit_redesign.md`
 
@@ -517,7 +523,7 @@ Student writes the five circuit equations themselves (2 KCL + 3 KVL, symbolic fo
 - [x] **Closing text:** "One definite answer" with solution; Topic 9 AC-circuit forward-link.
 - [x] Powered by `equation_builder` with `parse_fn=parse_circuit_equation`, `equiv_fn=rows_equivalent`, `fill_equations=[...]`, `placeholder="e.g. R1*I1 + R3*I3 = V"`.
 
-### Screen 7 — Smoothie — `smoothie.py` (NEW, BUILT pending review)
+### Screen 6 — Smoothie — `smoothie.py` (NEW, BUILT pending review; selector position updated to 6 this session in the Smoothie/Circuit swap, was 7)
 
 **Spec:** `specs/topic5b_smoothie.md`
 
@@ -536,15 +542,22 @@ single point or a single free parameter.
       path (per spec: rank 2, free vars f3/f4/f5, particular = 0).
 - [x] Single preset ("Volume + sweetness locked", one-item radio) — no scenario
       branching needed since the system is fixed.
-- [x] Reuses `workbench("t05b_smoothie", 5)` unchanged — no engine edits needed.
+- [x] **This session:** `var_name="f"` threaded through `workbench()` (new `var_name`
+      param on `workbench()`, defaults to `"x"`, so other screens are unchanged) so
+      the equations/matrix display shows f1..f5 consistently instead of x1..x5.
+      Call is now `workbench("t05b_smoothie", 5, var_name="f", right_extra=...)`
+      (was `workbench("t05b_smoothie", 5)` unchanged, per the original note below).
 - [x] General-solution display gated behind triangular form (same
       `_is_upper_triangular` gate as Screen 3), calling `solve_parametric(M, 5, "f")`
       from `engine/parametric.py`: per-variable equations
-      (`solution_equations_latex`) then the stacked vector form
-      (`parametric_latex`) with the three direction vectors ("adjustment
-      patterns"); caption states the free-variable count and the
-      3-dimensional-solution-space framing. Wrapped in try/except — falls back to
-      a "Keep eliminating to see the general solution." caption.
+      (**this session:** via `solution_equations_block`, one combined aligned
+      LaTeX string instead of a per-line loop — tightens the gaps between rows)
+      then the stacked vector form (`parametric_latex`) with the three direction
+      vectors ("adjustment patterns"); caption states the free-variable count and
+      the 3-dimensional-solution-space framing. Wrapped in try/except — falls back
+      to a "Keep eliminating to see the general solution." caption. **This
+      session:** moved into `workbench()`'s right column via `right_extra` (sits
+      under the matrix + banner instead of below the whole workbench row).
 - [x] Intro / notice / closing text render verbatim from the spec.
 - [ ] Not yet manually verified in the running app (built this session; pending
       your review — confirm the legend renders, the system loads under

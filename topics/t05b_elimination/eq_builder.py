@@ -169,7 +169,7 @@ def _node_balance_builder(key, n, row_labels, parse_fn, intro_md=None, placehold
 def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
                      solution_labels, intro_md, reduce_caption, closing_md=None,
                      builder_intro_md=None, parse_fn=None, equiv_fn=None,
-                     fill_equations=None, placeholder=None):
+                     fill_equations=None, placeholder=None, right_extra=None):
     """Render the full equation-builder flow: diagram + node boxes, live [A|b], Check/Fill, workbench."""
     if parse_fn is None:
         from .eq_parser import parse_equation as parse_fn
@@ -213,6 +213,6 @@ def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
     if st.session_state.get(f"{key}_ready") and st.session_state.get(f"{key}_M"):
         st.markdown("---")
         st.markdown(reduce_caption)
-        workbench(key, n_unknowns, solution_labels=solution_labels)
+        workbench(key, n_unknowns, solution_labels=solution_labels, right_extra=right_extra)
         if closing_md:
             st.info(closing_md)

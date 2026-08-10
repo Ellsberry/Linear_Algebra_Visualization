@@ -1,7 +1,11 @@
 import streamlit as st
 
 from .workbench import workbench, _make_aug, _load_aug, _is_upper_triangular
-from engine.parametric import solve_parametric, parametric_latex, solution_equations_latex
+from engine.parametric import (
+    solve_parametric,
+    parametric_latex,
+    solution_equations_block,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -60,27 +64,27 @@ def render_smoothie():
         _load_aug("t05b_smoothie", aug)
         st.session_state["t05b_smoothie_last"] = "loaded"
 
-    workbench("t05b_smoothie", 5, var_name="f")
+    def _render_solution():
+        M = st.session_state.get("t05b_smoothie_M")
+        if M is not None and _is_upper_triangular(M, 5):
+            try:
+                res = solve_parametric(M, 5, "f")
+                st.markdown("**General solution:**")
+                if res["status"] == "no_solution":
+                    st.latex(parametric_latex(res, "f"))
+                else:
+                    st.markdown("Read each ingredient change off the reduced rows:")
+                    st.latex(solution_equations_block(res, "f"))
+                    st.markdown("As a single vector equation:")
+                    st.latex(parametric_latex(res, "f"))
+                    st.caption(f"{res['n_free']} free variables -> a {res['n_free']}-"
+                               f"dimensional solution space: three independent ways to tweak "
+                               f"the recipe while keeping volume and sweetness fixed.")
+            except Exception:
+                st.caption("Keep eliminating to see the general solution.")
+        else:
+            st.caption("Reach triangular form to see the general solution.")
 
-    M = st.session_state.get("t05b_smoothie_M")
-    if M is not None and _is_upper_triangular(M, 5):
-        try:
-            res = solve_parametric(M, 5, "f")
-            st.markdown("**General solution:**")
-            if res["status"] == "no_solution":
-                st.latex(parametric_latex(res, "f"))
-            else:
-                st.markdown("Read each ingredient change off the reduced rows:")
-                for line in solution_equations_latex(res, "f"):
-                    st.latex(line)
-                st.markdown("As a single vector equation:")
-                st.latex(parametric_latex(res, "f"))
-                st.caption(f"{res['n_free']} free variables -> a {res['n_free']}-"
-                           f"dimensional solution space: three independent ways to tweak "
-                           f"the recipe while keeping volume and sweetness fixed.")
-        except Exception:
-            st.caption("Keep eliminating to see the general solution.")
-    else:
-        st.caption("Reach triangular form to see the general solution.")
+    workbench("t05b_smoothie", 5, var_name="f", right_extra=_render_solution)
 
     st.markdown(_CLOSING)

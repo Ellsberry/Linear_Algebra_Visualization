@@ -321,12 +321,16 @@ def _load_aug(wb_key, aug):
 # The shared elimination workbench
 # ---------------------------------------------------------------------------
 
-def workbench(key, n_unknowns, solution_labels=None, solution_suffix="", var_name="x"):
+def workbench(key, n_unknowns, solution_labels=None, solution_suffix="", var_name="x",
+              right_extra=None):
     """Elimination workbench for st.session_state[key + '_M'] (list of rows).
 
     solution_labels: optional list of strings to replace x1, x2, ... in the
     solution readout (e.g. ["F->W1", "F->W2", ...] for the logistics screen).
     solution_suffix: appended to every value (e.g. " A" for currents).
+    right_extra: optional no-arg callable rendered at the end of the right
+    column (under the matrix + banner + solution box), so a caller's own
+    content can sit beside the controls instead of below the whole workbench.
     """
     M = st.session_state.get(f"{key}_M")
     if M is None:
@@ -373,6 +377,9 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix="", var_nam
                     f"{var_name}{i+1} = {xi:.4g}{solution_suffix}" for i, xi in enumerate(x)
                 )
             st.success(f"Solution:  {sol_str}")
+
+        if right_extra is not None:
+            right_extra()
 
     # --- Left: controls ---
     with left:

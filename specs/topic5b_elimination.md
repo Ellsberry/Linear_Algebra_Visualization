@@ -130,8 +130,8 @@ Selector (st.radio, horizontal, key `t05b_example`):
 "3 · Infinite and No Solutions"
 "4 · Logistics (one plan)"
 "5 · Logistics (many plans)"
-"6 · Circuit"
-"7 · Smoothie"
+"6 · Smoothie"
+"7 · Circuit"
 ```
 
 The "Infinite and No Solutions" screen has its own spec:

@@ -1,7 +1,11 @@
 import streamlit as st
 
 from .workbench import workbench, _make_aug, _load_aug, _is_upper_triangular
-from engine.parametric import solve_parametric, parametric_latex, solution_equations_latex
+from engine.parametric import (
+    solve_parametric,
+    parametric_latex,
+    solution_equations_block,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -68,38 +72,37 @@ def render_infinite_nosolution():
         _load_aug("t05b_infns", aug)
         st.session_state["t05b_infns_last"] = preset
 
-    workbench("t05b_infns", 3)
+    def _render_solution():
+        M = st.session_state.get("t05b_infns_M")
+        if M is not None and _is_upper_triangular(M, 3):
+            try:
+                res = solve_parametric(M, 3, "x")
+                st.markdown("**General solution:**")
+                if res["status"] == "no_solution":
+                    st.latex(parametric_latex(res, "x"))
+                    st.caption(
+                        "The bottom row became 0 = a nonzero number, so no values "
+                        "of x satisfy all three equations."
+                    )
+                elif res["status"] == "unique":
+                    st.latex(solution_equations_block(res, "x"))
+                    st.latex(parametric_latex(res, "x"))
+                    st.caption("Elimination pinned down every unknown -- exactly one solution.")
+                else:  # infinite
+                    st.markdown("Read each variable off the reduced rows:")
+                    st.latex(solution_equations_block(res, "x"))
+                    st.markdown("Written as a single vector equation:")
+                    st.latex(parametric_latex(res, "x"))
+                    st.caption(
+                        f"{res['n_free']} free variable(s): each can be any value, "
+                        f"and the rest are then determined. Every choice gives a "
+                        f"valid solution -- infinitely many."
+                    )
+            except Exception:
+                st.caption("Keep eliminating to see the general solution.")
+        else:
+            st.caption("Reach triangular form to see the general solution.")
 
-    M = st.session_state.get("t05b_infns_M")
-    if M is not None and _is_upper_triangular(M, 3):
-        try:
-            res = solve_parametric(M, 3, "x")
-            st.markdown("**General solution:**")
-            if res["status"] == "no_solution":
-                st.latex(parametric_latex(res, "x"))
-                st.caption(
-                    "The bottom row became 0 = a nonzero number, so no values "
-                    "of x satisfy all three equations."
-                )
-            elif res["status"] == "unique":
-                for line in solution_equations_latex(res, "x"):
-                    st.latex(line)
-                st.latex(parametric_latex(res, "x"))
-                st.caption("Elimination pinned down every unknown -- exactly one solution.")
-            else:  # infinite
-                st.markdown("Read each variable off the reduced rows:")
-                for line in solution_equations_latex(res, "x"):
-                    st.latex(line)
-                st.markdown("Written as a single vector equation:")
-                st.latex(parametric_latex(res, "x"))
-                st.caption(
-                    f"{res['n_free']} free variable(s): each can be any value, "
-                    f"and the rest are then determined. Every choice gives a "
-                    f"valid solution -- infinitely many."
-                )
-        except Exception:
-            st.caption("Keep eliminating to see the general solution.")
-    else:
-        st.caption("Reach triangular form to see the general solution.")
+    workbench("t05b_infns", 3, right_extra=_render_solution)
 
     st.markdown(_CLOSING)

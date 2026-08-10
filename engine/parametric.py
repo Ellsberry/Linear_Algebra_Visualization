@@ -126,3 +126,13 @@ def solution_equations_latex(result, var_name="x"):
         lines.append(f"{var_name}{i} = " + sp.latex(expr))
 
     return lines
+
+
+def solution_equations_block(result, var_name="x"):
+    """Return a SINGLE LaTeX string with all per-variable equations stacked in an
+    aligned environment (tight, one st.latex call)."""
+    lines = solution_equations_latex(result, var_name)
+    if not lines:
+        return ""
+    body = " \\\\ ".join(line.replace(" = ", " &= ", 1) for line in lines)
+    return r"\begin{aligned}" + body + r"\end{aligned}"

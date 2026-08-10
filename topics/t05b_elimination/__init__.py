@@ -61,8 +61,8 @@ def render():
             "3 · Infinite and No Solutions",
             "4 · Logistics (one plan)",
             "5 · Logistics (many plans)",
-            "6 · Circuit",
-            "7 · Smoothie",
+            "6 · Smoothie",
+            "7 · Circuit",
         ],
         horizontal=True,
         key="t05b_example",
@@ -83,9 +83,9 @@ def render():
     elif example.startswith("5 "):
         _example_two()
     elif example.startswith("6 "):
-        _example_three()
-    elif example.startswith("7 "):
         if render_smoothie is not None:
             render_smoothie()
         else:
             st.info("Smoothie: coming soon")
+    elif example.startswith("7 "):
+        _example_three()
