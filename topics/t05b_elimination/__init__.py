@@ -67,6 +67,26 @@ def render():
         horizontal=True,
         key="t05b_example",
     )
+
+    # Clear equation-builder state when entering a screen fresh (so typed boxes
+    # don't persist across visits).
+    _eb_keys = {
+        "4 · Logistics (one plan)":   ("t05b_e2a", 7),
+        "5 · Logistics (many plans)": ("t05b_e2", 7),
+        "7 · Circuit":                ("t05b_e3", 5),
+    }
+    _prev = st.session_state.get("t05b_prev_example")
+    if _prev != example:
+        # entering a (possibly different) screen: clear the one we're entering
+        if example in _eb_keys:
+            k, nrows = _eb_keys[example]
+            for i in range(nrows):
+                st.session_state.pop(f"{k}_eq__{i}", None)
+            for suffix in ("_check_result", "_parse_errors", "_ready", "_M",
+                           "_orig", "_log", "_history", "_solution"):
+                st.session_state.pop(f"{k}{suffix}", None)
+        st.session_state["t05b_prev_example"] = example
+
     st.divider()
 
     if example.startswith("1 "):

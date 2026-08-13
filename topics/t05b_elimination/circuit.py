@@ -23,7 +23,7 @@ def _circuit_diagram():
     """Static plotly schematic of the redesigned DC circuit (V=36, 5 branches, nodes P and Q)."""
     fig = go.Figure()
     fig.update_layout(
-        height=420, margin=dict(l=10, r=10, t=10, b=10),
+        height=520, margin=dict(l=10, r=10, t=10, b=10),
         showlegend=False,
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#e6e6e6"),
@@ -51,43 +51,43 @@ def _circuit_diagram():
     _wire(0.52, bmy + 0.3, 1.48, bmy + 0.3)   # long bar (+, positive)
     _wire(0.72, bmy - 0.3, 1.28, bmy - 0.3)   # short bar (-, negative)
     fig.add_annotation(x=0.25, y=bmy + 0.55, text="<b>+</b>",
-                       showarrow=False, font=dict(size=13, color="crimson"),
+                       showarrow=False, font=dict(size=18, color="crimson"),
                        xanchor="center")
     fig.add_annotation(x=0.25, y=bmy - 0.55, text="<b>-</b>",
-                       showarrow=False, font=dict(size=13, color="royalblue"),
+                       showarrow=False, font=dict(size=18, color="royalblue"),
                        xanchor="center")
     fig.add_annotation(x=0.5, y=bmy + 1.1, text="<b>V = 36 V</b>",
-                       showarrow=False, font=dict(size=9), xanchor="center")
+                       showarrow=False, font=dict(size=14), xanchor="center")
 
     # --- R1 box (top-left rail, centered x=2.25, y=7) ---
     fig.add_shape(type="rect", x0=1.65, y0=6.7, x1=2.85, y1=7.3,
                   line=dict(color="#aaa", width=1.5),
                   fillcolor="rgba(30,33,41,0.95)")
     fig.add_annotation(x=2.25, y=7.46, text="<b>R1 = 2 Ω</b>",
-                       showarrow=False, font=dict(size=10))
+                       showarrow=False, font=dict(size=15))
 
     # --- R2 box (P->Q segment, centered x=5.25, y=7) ---
     fig.add_shape(type="rect", x0=4.5, y0=6.7, x1=6.0, y1=7.3,
                   line=dict(color="#aaa", width=1.5),
                   fillcolor="rgba(30,33,41,0.95)")
     fig.add_annotation(x=5.25, y=6.1, text="<b>R2 = 6 Ω</b>",
-                       showarrow=False, font=dict(size=10))
+                       showarrow=False, font=dict(size=15))
 
     # --- R5 box (raised rail, centered x=5.25, y=8.2) ---
     fig.add_shape(type="rect", x0=4.5, y0=7.9, x1=6.0, y1=8.5,
                   line=dict(color="#aaa", width=1.5),
                   fillcolor="rgba(30,33,41,0.95)")
     fig.add_annotation(x=5.25, y=8.64, text="<b>R5 = 12 Ω</b>",
-                       showarrow=False, font=dict(size=10))
+                       showarrow=False, font=dict(size=15))
 
     # --- Motor (R3) circle centered (3.5, 4), radius 0.5 ---
     fig.add_shape(type="circle", x0=3.0, y0=3.5, x1=4.0, y1=4.5,
                   line=dict(color="#aaa", width=1.5),
                   fillcolor="rgba(30,33,41,0.95)")
     fig.add_annotation(x=3.5, y=4.0, text="<b>M</b>",
-                       showarrow=False, font=dict(size=13, color="#e6e6e6"))
+                       showarrow=False, font=dict(size=18, color="#e6e6e6"))
     fig.add_annotation(x=3.5, y=3.1, text="motor R3=8 Ω",
-                       showarrow=False, font=dict(size=9), xanchor="center",
+                       showarrow=False, font=dict(size=14), xanchor="center",
                        bgcolor="rgba(30,33,41,0.8)", borderpad=1)
 
     # --- Lamp (R4) circle centered (7, 4), radius 0.5 ---
@@ -95,9 +95,9 @@ def _circuit_diagram():
                   line=dict(color="#aaa", width=1.5),
                   fillcolor="rgba(30,33,41,0.95)")
     fig.add_annotation(x=7.0, y=4.0, text="<b>X</b>",
-                       showarrow=False, font=dict(size=13, color="#e6e6e6"))
+                       showarrow=False, font=dict(size=18, color="#e6e6e6"))
     fig.add_annotation(x=7.0, y=3.1, text="lamp R4=4 Ω",
-                       showarrow=False, font=dict(size=9), xanchor="center",
+                       showarrow=False, font=dict(size=14), xanchor="center",
                        bgcolor="rgba(30,33,41,0.8)", borderpad=1)
 
     # --- Nodes P and Q (dots + labels) ---
@@ -105,9 +105,9 @@ def _circuit_diagram():
                              marker=dict(color="#e6e6e6", size=9),
                              showlegend=False, hoverinfo="skip"))
     fig.add_annotation(x=3.28, y=7.4, text="<b>P</b>",
-                       showarrow=False, font=dict(size=12), xanchor="right")
+                       showarrow=False, font=dict(size=17), xanchor="right")
     fig.add_annotation(x=7.18, y=7.4, text="<b>Q</b>",
-                       showarrow=False, font=dict(size=12), xanchor="left")
+                       showarrow=False, font=dict(size=17), xanchor="left")
 
     # --- Current arrows ---
     # I1 upward on left branch (below battery)
@@ -116,7 +116,7 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=1.18, y=2.35, text="<b>I₁↑</b>",
-                       showarrow=False, font=dict(size=16), xanchor="left")
+                       showarrow=False, font=dict(size=20), xanchor="left")
 
     # I2 rightward along R2 (between P and R2 box left edge)
     fig.add_annotation(x=4.4, y=7, ax=3.7, ay=7,
@@ -124,7 +124,7 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=4.05, y=7.42, text="<b>I₂→</b>",
-                       showarrow=False, font=dict(size=16))
+                       showarrow=False, font=dict(size=20))
 
     # I3 downward on motor branch (above motor circle)
     fig.add_annotation(x=3.5, y=5.1, ax=3.5, ay=5.65,
@@ -132,7 +132,7 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=3.65, y=5.32, text="<b>I₃↓</b>",
-                       showarrow=False, font=dict(size=16), xanchor="left")
+                       showarrow=False, font=dict(size=20), xanchor="left")
 
     # I4 downward on lamp branch (above lamp circle)
     fig.add_annotation(x=7, y=5.1, ax=7, ay=5.65,
@@ -140,7 +140,7 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=7.15, y=5.32, text="<b>I₄↓</b>",
-                       showarrow=False, font=dict(size=16), xanchor="left")
+                       showarrow=False, font=dict(size=20), xanchor="left")
 
     # I5 rightward on R5 raised rail (between P corner and R5 box left edge)
     fig.add_annotation(x=4.3, y=8.2, ax=3.7, ay=8.2,
@@ -148,17 +148,17 @@ def _circuit_diagram():
                        showarrow=True, arrowhead=2, arrowsize=1.2,
                        arrowwidth=2, arrowcolor="#e6e6e6", text="")
     fig.add_annotation(x=4.0, y=8.48, text="<b>I₅→</b>",
-                       showarrow=False, font=dict(size=16))
+                       showarrow=False, font=dict(size=20))
 
     # --- Loop indicators ---
     fig.add_annotation(x=2.25, y=1.8, text="Loop 1 ↻",
-                       showarrow=False, font=dict(size=11, color="#6aa3d5"),
+                       showarrow=False, font=dict(size=15, color="#6aa3d5"),
                        bgcolor="rgba(30,33,41,0.75)", borderpad=3)
     fig.add_annotation(x=5.25, y=1.8, text="Loop 2 ↻",
-                       showarrow=False, font=dict(size=11, color="#6aa3d5"),
+                       showarrow=False, font=dict(size=15, color="#6aa3d5"),
                        bgcolor="rgba(30,33,41,0.75)", borderpad=3)
     fig.add_annotation(x=5.25, y=7.62, text="Loop 3 ↻",
-                       showarrow=False, font=dict(size=11, color="#6aa3d5"),
+                       showarrow=False, font=dict(size=15, color="#6aa3d5"),
                        bgcolor="rgba(30,33,41,0.75)", borderpad=3)
 
     return fig
@@ -173,10 +173,27 @@ def _example_three():
         row_labels=_E3_ROW_LABELS,
         diagram_fn=_circuit_diagram,
         solution_labels=_E3_LABELS,
-        intro_md=("You're solving for the five branch currents I1..I5. Read the "
-                  "circuit, then write each node's KCL equation (current in = current "
-                  "out) and each marked loop's KVL equation. Use the resistor and "
-                  "source symbols, e.g. `R1*I1 + R3*I3 = V`."),
+        var_name="I",
+        intro_md=(
+            "**Circuit.** You have an electronic circuit and need to determine if the current "
+            "through your lamps and motors will not burn them out. To do this, find the 5 "
+            "currents I₁…I₅ (the arrows show which way each flows). You'll write 5 "
+            "equations — one for each node (P and Q) and one for each marked loop (1, 2, 3) "
+            "— then elimination solves for the 5 currents.\n\n"
+            "**Node rule (KCL, Kirchhoff's Current Law): what flows in must flow out.** At a "
+            "node, add the currents whose arrows point into the node and subtract the currents "
+            "pointing out. This must equal zero. At node P, I₁ comes in and I₂, "
+            "I₃, I₅ go out, so: `I1 - I2 - I3 - I5 = 0`.\n\n"
+            "**Loop rule (KVL, Kirchhoff's Voltage Law): voltage drops around any closed loop "
+            "sum to zero.** You find the voltage drop across a resistor by multiplying its "
+            "resistance times its current (R×I). The battery has its own voltage drop. "
+            "Follow the marked clockwise loops (↻). In Loop 1, sum the voltage drops across "
+            "the resistors; because you go clockwise you reach the battery's negative side "
+            "first, so you subtract the battery voltage. Add the drops and set the total to "
+            "zero. So Loop 1 is: `R1*I1 + R3*I3 - 36 = 0`. Loop 3 goes through R2 and R5 with "
+            "no battery: `R5*I5 - R2*I2 = 0` (the minus is because you go around clockwise, and "
+            "the diagram shows that clockwise direction is against current I₂)."
+        ),
         reduce_caption="**Reduce it** -- same three moves, five currents.",
         parse_fn=parse_circuit_equation,
         equiv_fn=rows_equivalent,

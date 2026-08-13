@@ -281,11 +281,11 @@ def aug_array_latex(M, n_unknowns: int, highlight=None, highlights=None) -> str:
 
     def _fmt(v: float) -> str:
         v = float(v)
-        if abs(v) < 1e-10:
+        if abs(v) < 1e-4:
             return "0"
         if abs(v - round(v)) < 1e-9:
             return str(int(round(v)))
-        return f"{v:.4g}"
+        return f"{v:.2f}"
 
     row_strs = []
     for ri in range(len(M)):

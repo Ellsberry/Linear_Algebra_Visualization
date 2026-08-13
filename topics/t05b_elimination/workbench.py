@@ -6,6 +6,21 @@ import streamlit as st
 from engine import widgets as w
 
 
+def _parse_factor(s, default=0.0):
+    """Parse a user-entered scale factor: accepts decimals ('0.5', '-2') and
+    simple fractions ('1/11.6', '-3/2'). Returns float, or default on failure."""
+    s = str(s).strip()
+    if not s:
+        return default
+    try:
+        if "/" in s:
+            num, den = s.split("/", 1)
+            return float(num.strip()) / float(den.strip())
+        return float(s)
+    except (ValueError, ZeroDivisionError):
+        return default
+
+
 # ---------------------------------------------------------------------------
 # Augmented-matrix helpers
 # ---------------------------------------------------------------------------
@@ -80,7 +95,7 @@ def _do_apply_cb(key, n_unknowns):
     if op == "Add multiple of a row":
         i = _parse_row(st.session_state.get(f"{key}_add_i", "Row 1"))
         j = _parse_row(st.session_state.get(f"{key}_add_j", "Row 2"))
-        k = float(st.session_state.get(f"{key}_add_k", -1.0))
+        k = _parse_factor(st.session_state.get(f"{key}_add_k", "-1"), -1.0)
         for c in range(nc):
             M[i][c] += k * M[j][c]
         sign = "+" if k >= 0 else "−"
@@ -92,7 +107,7 @@ def _do_apply_cb(key, n_unknowns):
         desc = f"R{i+1} ↔ R{j+1}"
     else:  # Scale a row
         i = _parse_row(st.session_state.get(f"{key}_scale_i", "Row 1"))
-        k = float(st.session_state.get(f"{key}_scale_k", 2.0))
+        k = _parse_factor(st.session_state.get(f"{key}_scale_k", "2"), 2.0)
         for c in range(nc):
             M[i][c] *= k
         desc = f"R{i+1} → {k:.4g}·R{i+1}"
@@ -275,7 +290,7 @@ def _equations_latex(M, n_unknowns, var_name="x"):
     Zero coefficients produce an empty column, visually showing elimination.
     """
     var_names = [f"{var_name}_{{{i+1}}}" for i in range(n_unknowns)]
-    TOL = 1e-10
+    TOL = 1e-4
     lines = []
     for row in M:
         first_nz = next((j for j in range(n_unknowns) if abs(float(row[j])) > TOL), None)
@@ -291,14 +306,19 @@ def _equations_latex(M, n_unknowns, var_name="x"):
             elif abs(c_abs - round(c_abs)) < 1e-9:
                 coeff = str(int(round(c_abs)))
             else:
-                coeff = f"{c_abs:.4g}"
+                coeff = f"{c_abs:.2f}"
             term = coeff + var_names[j]
             if j == first_nz:
                 parts.append(f"-{term}" if c < 0 else term)
             else:
                 parts.append(f"{'-' if c < 0 else '+'}\\,{term}")
         b = float(row[n_unknowns])
-        b_str = str(int(round(b))) if abs(b - round(b)) < 1e-9 else f"{b:.4g}"
+        if abs(b) < 1e-4:
+            b_str = "0"
+        elif abs(b - round(b)) < 1e-9:
+            b_str = str(int(round(b)))
+        else:
+            b_str = f"{b:.2f}"
         parts.append(f"= {b_str}")
         lines.append(" & ".join(parts))
     return r"\begin{aligned}" + r" \\ ".join(lines) + r"\end{aligned}"
@@ -394,14 +414,13 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix="", var_nam
         if op == "Add multiple of a row":
             c1, c2, c3 = st.columns(3)
             with c1:
-                st.number_input("k", value=-1.0, step=0.5, format="%.2f",
-                                key=f"{key}_add_k")
+                st.text_input("k (e.g. -1 or 1/2)", value="-1", key=f"{key}_add_k")
             with c2:
                 st.radio("Source j", row_opts,
                          index=min(1, n - 1), key=f"{key}_add_j", horizontal=True)
             with c3:
                 st.radio("Target i", row_opts, key=f"{key}_add_i", horizontal=True)
-            k_d = st.session_state.get(f"{key}_add_k", -1.0)
+            k_d = _parse_factor(st.session_state.get(f"{key}_add_k", "-1"), -1.0)
             j_d = st.session_state.get(f"{key}_add_j", row_opts[min(1, n - 1)])
             i_d = st.session_state.get(f"{key}_add_i", row_opts[0])
             sign = "+" if k_d >= 0 else "−"
@@ -418,8 +437,7 @@ def workbench(key, n_unknowns, solution_labels=None, solution_suffix="", var_nam
             with c1:
                 st.radio("Row i", row_opts, key=f"{key}_scale_i", horizontal=True)
             with c2:
-                st.number_input("Factor k", value=2.0, step=0.5, format="%.2f",
-                                key=f"{key}_scale_k")
+                st.text_input("Factor k (e.g. 1/11.6)", value="2", key=f"{key}_scale_k")
 
         ba, bu, br = st.columns(3)
         with ba:

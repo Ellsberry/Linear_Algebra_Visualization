@@ -260,4 +260,8 @@ def render_inverse_elim():
             for i in range(_N)
         ]
         st.markdown("**Verify:** A * A^-1 = I")
-        st.latex(r"A \cdot A^{-1} = " + _bmatrix(product))
+        st.latex(
+            r"A \cdot A^{-1} = "
+            + _bmatrix(A_fr) + r" \cdot " + _bmatrix(inv)
+            + r" = " + _bmatrix(product)
+        )

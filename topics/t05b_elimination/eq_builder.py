@@ -4,14 +4,14 @@ from fractions import Fraction
 from .workbench import workbench, _load_aug
 
 
-def _row_to_eq_str(row, n):
+def _row_to_eq_str(row, n, var_name="x"):
     """Convert an augmented row to a plain-text equation string for a text box."""
     parts = []
     for j in range(n):
         c = int(row[j])
         if c == 0:
             continue
-        var = f"x{j + 1}"
+        var = f"{var_name}{j + 1}"
         if not parts:
             parts.append(f"-{var}" if c == -1 else (var if c == 1 else f"{c}{var}"))
         else:
@@ -28,7 +28,7 @@ def _row_to_eq_str(row, n):
     return f"{lhs} = {b}"
 
 
-def _row_to_latex(row, n):
+def _row_to_latex(row, n, var_name="x"):
     """Convert a parsed augmented row to a LaTeX equation string."""
     parts = []
     for j in range(n):
@@ -43,7 +43,7 @@ def _row_to_latex(row, n):
             coeff_str = str(c_abs.numerator)
         else:
             coeff_str = rf"\frac{{{c_abs.numerator}}}{{{c_abs.denominator}}}"
-        var = rf"x_{{{j + 1}}}"
+        var = rf"{var_name}_{{{j + 1}}}"
         term = f"{coeff_str}{var}"
         if not parts:
             parts.append(term if pos else f"-{term}")
@@ -69,11 +69,11 @@ def _live_aug_latex(key, n, parse_fn, n_rows=None):
 
     def _fmt(v):
         v = float(v)
-        if abs(v) < 1e-10:
+        if abs(v) < 1e-4:
             return "0"
         if abs(v - round(v)) < 1e-9:
             return str(int(round(v)))
-        return f"{v:.4g}"
+        return f"{v:.2f}"
 
     dash = r"\color{gray}{-}"
     row_strs = []
@@ -128,20 +128,20 @@ def _check_cb(key, target_aug, row_labels, parse_fn, equiv_fn):
         st.session_state[f"{key}_ready"] = True
 
 
-def _fill_cb(key, target_aug, fill_equations):
+def _fill_cb(key, target_aug, fill_equations, var_name="x"):
     n = len(target_aug[0]) - 1
     for i, row in enumerate(target_aug):
         if fill_equations is not None:
             st.session_state[f"{key}_eq__{i}"] = fill_equations[i]
         else:
-            st.session_state[f"{key}_eq__{i}"] = _row_to_eq_str(row, n)
+            st.session_state[f"{key}_eq__{i}"] = _row_to_eq_str(row, n, var_name)
     st.session_state[f"{key}_check_result"] = []
     st.session_state.pop(f"{key}_parse_errors", None)
     _load_aug(key, target_aug)
     st.session_state[f"{key}_ready"] = True
 
 
-def _node_balance_builder(key, n, row_labels, parse_fn, intro_md=None, placeholder=None):
+def _node_balance_builder(key, n, row_labels, parse_fn, intro_md=None, placeholder=None, var_name="x"):
     """Typed-equation builder: one text box per row, with live LaTeX preview."""
     if intro_md:
         st.markdown(intro_md)
@@ -159,17 +159,35 @@ def _node_balance_builder(key, n, row_labels, parse_fn, intro_md=None, placehold
             if text:
                 try:
                     row = parse_fn(text)
-                    st.latex(_row_to_latex(row, n))
+                    st.latex(_row_to_latex(row, n, var_name))
                 except Exception:
                     st.caption("...")
             else:
                 st.caption("...")
 
+    import streamlit.components.v1 as components
+    components.html(
+        """
+        <script>
+        const inputs = window.parent.document.querySelectorAll('input[type="text"]');
+        inputs.forEach((el) => {
+            el.setAttribute('autocomplete', 'off');
+            el.setAttribute('autocorrect', 'off');
+            el.setAttribute('autocapitalize', 'off');
+            el.setAttribute('spellcheck', 'false');
+            el.setAttribute('name', 'nofill_' + Math.random().toString(36).slice(2));
+        });
+        </script>
+        """,
+        height=0,
+    )
+
 
 def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
                      solution_labels, intro_md, reduce_caption, closing_md=None,
                      builder_intro_md=None, parse_fn=None, equiv_fn=None,
-                     fill_equations=None, placeholder=None, right_extra=None):
+                     fill_equations=None, placeholder=None, right_extra=None,
+                     var_name="x"):
     """Render the full equation-builder flow: diagram + node boxes, live [A|b], Check/Fill, workbench."""
     if parse_fn is None:
         from .eq_parser import parse_equation as parse_fn
@@ -182,7 +200,8 @@ def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
         st.plotly_chart(diagram_fn(), use_container_width=True)
     with builder_col:
         _node_balance_builder(key, n_unknowns, row_labels, parse_fn,
-                              intro_md=builder_intro_md, placeholder=placeholder)
+                              intro_md=builder_intro_md, placeholder=placeholder,
+                              var_name=var_name)
 
     st.markdown("**Your system as an augmented matrix [A | b]**")
     st.caption("Each equation you write becomes a row. Dashes mark rows you haven't written yet.")
@@ -194,7 +213,7 @@ def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
                   args=(key, target_aug, row_labels, parse_fn, equiv_fn))
     with c2:
         st.button("Fill it in for me", key=f"{key}_fill_btn", on_click=_fill_cb,
-                  args=(key, target_aug, fill_equations))
+                  args=(key, target_aug, fill_equations, var_name))
 
     check = st.session_state.get(f"{key}_check_result")
     if check is not None:
@@ -213,6 +232,7 @@ def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
     if st.session_state.get(f"{key}_ready") and st.session_state.get(f"{key}_M"):
         st.markdown("---")
         st.markdown(reduce_caption)
-        workbench(key, n_unknowns, solution_labels=solution_labels, right_extra=right_extra)
+        workbench(key, n_unknowns, solution_labels=solution_labels,
+                  right_extra=right_extra, var_name=var_name)
         if closing_md:
             st.info(closing_md)

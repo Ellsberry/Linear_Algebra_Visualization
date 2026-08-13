@@ -20,7 +20,7 @@ _A = [[1, 1, 1, 1, 1],
 _b = [0, 0, 0, 0, 0]
 
 _INTRO = """
-**Smoothie.** You sell thousands of gallons of smoothies a month, and an ingredient
+**Smoothie.** You sell one thousand gallons of smoothies a month, and an ingredient
 shortage means you have to change a recipe -- but you must keep two things exactly
 the same: the total volume and the total sweetness. The question is how much to
 change each ingredient. Each change is an unknown: f1 = strawberries, f2 = bananas,
@@ -76,7 +76,17 @@ def render_smoothie():
                     st.markdown("Read each ingredient change off the reduced rows:")
                     st.latex(solution_equations_block(res, "f"))
                     st.markdown("As a single vector equation:")
-                    st.latex(parametric_latex(res, "f"))
+                    vc_left, vc_right = st.columns([1, 2], gap="medium")
+                    with vc_left:
+                        st.markdown(
+                            "f1 = strawberries  \n"
+                            "f2 = bananas  \n"
+                            "f3 = yogurt  \n"
+                            "f4 = milk  \n"
+                            "f5 = honey"
+                        )
+                    with vc_right:
+                        st.latex(parametric_latex(res, "f"))
                     st.caption(f"{res['n_free']} free variables -> a {res['n_free']}-"
                                f"dimensional solution space: three independent ways to tweak "
                                f"the recipe while keeping volume and sweetness fixed.")
