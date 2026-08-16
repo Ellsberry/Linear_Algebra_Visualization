@@ -48,42 +48,83 @@
 
 **Intro (verbatim):**
 > A **vector space** is a collection of vectors with a "no escape" rule: add any
-> two vectors in the collection and the answer is still in the collection; stretch
-> or shrink any vector in it (multiply by any number) and the answer is still in
-> it. You cannot get out by combining what is inside.
+> two vectors in the collection and the answer is still in the vector space;
+> stretch or shrink any vector in it (multiply by any number) and the answer is
+> still in it. You cannot get out by combining what is inside.
 >
-> Back in Topic 1, "span" meant everywhere you can reach by mixing some
-> ingredients. Every span automatically passes the no-escape rule — a span is
-> always a vector space.
+> Back in Topic 1, "span" meant everywhere you can reach by mixing vectors — using
+> any amounts, including negative ones and zero. Every span passes the no-escape
+> rule, so a span is always a vector space.
 
-### Block 2 — examples that pass (math left, graph right)
+### Block 2a — the whole x-y plane (math left, graph right)
 
-LEFT (one aligned block + short captions):
-- The whole 2D plane: add any two arrows, still in the plane; stretch any arrow,
-  still in the plane. Passes.
-- A straight line through the origin (use the line along (1, 2)): show
-  (1,2) + (2,4) = (3,6) — still on the line; 3·(1,2) = (3,6) — still on the line.
-  Passes.
+LEFT (verbatim):
+> **The whole x-y plane is a vector space.** Every point on the screen counts. Pick
+> any two arrows — say (3, 1) and (1, 2). Add them tip-to-tail and you get (4, 3).
+> That result is still just a point on the x-y plane. Stretch any arrow longer or
+> shorter and it's still on the plane. There is nowhere off the plane to land, so
+> you can never escape.
 
-RIGHT: `new_figure_2d`, the line through the origin along (1,2) drawn long both
-ways, with the vectors (1,2), (2,4), (3,6) marked on it.
+LEFT also shows the addition as stacked-vector math (st.latex, bmatrix columns):
+  [3;1] + [1;2] = [4;3]
+(placed under the paragraph, before the graph column.)
+
+RIGHT: `new_figure_2d` (rng~6); lightly shade the whole plane (shade_polygon of a
+big square). Draw arrow (3,1) from the origin; draw arrow (1,2) tip-to-tail starting
+at (3,1) so it ends at (4,3); draw the result arrow (0,0)->(4,3). Label the three:
+"(3,1)", "(1,2)", "sum (4,3)". (VERIFIED: (3,1)+(1,2)=(4,3).)
+
+### Block 2b — a straight line through the origin (math left, graph right)
+
+LEFT (verbatim):
+> **A straight line through the origin** — the graph shows the line that runs
+> through (0,0) in the direction of the arrow (1, 2). Watch two things happen right
+> on that line:
+> - **Adding stays on the line.** The point (1, 2) and the point (2, 4) are both on
+>   it. Add them: (1, 2) + (2, 4) = (3, 6) — and (3, 6) is also on the line (it's
+>   just farther out). The dots on the graph are these three points; they all sit on
+>   the same line.
+> - **Stretching stays on the line.** Take (1, 2) and triple it: 3·(1, 2) = (3, 6) —
+>   still on the line.
+>
+> No matter how you add or stretch points on this line, you land back on the line.
+> It passes the no-escape rule, so a line through the origin is a vector space.
+
+LEFT also shows the addition as stacked-vector math (st.latex, bmatrix columns):
+  [1;2] + [2;4] = [3;6]   and   3·[1;2] = [3;6]
+(placed under the paragraph, before the graph column.)
+
+RIGHT: `new_figure_2d` (rng~8), the line through the origin along (1,2) drawn long
+both ways, the origin marked, and the points (1,2), (2,4), (3,6) marked and labeled
+with their coordinates.
 
 ### Block 3 — examples that FAIL, and exactly where (math left, graph right)
 
-LEFT (verbatim captions with the arithmetic):
-> **A line that misses the origin** (the line through (0,3) parallel to (1,0)):
-> multiply the vector (2,3) on it by 0 and you get (0,0) — which is OFF the line.
-> Escaped. FAILS.
+LEFT (verbatim):
+> **A line that misses the origin fails.** Take the specific line through (0, 3)
+> that runs flat (parallel to the x-axis). The point (2, 3) sits on it. A line that
+> misses the origin is not a vector space, because it fails the no-escape rule
+> (multiply a point on it by 0 and you land at the origin, which isn't on the
+> line).
 >
-> **The top-right quarter of the plane only:** multiply (2,1) by −1 and you get
-> (−2,−1) — bottom-left. Escaped. FAILS.
+> **The top-right quarter of the plane fails.** Take just the first quadrant (both
+> coordinates positive). The point (2, 1) is in it. Multiply by −1 and you get
+> (−2, −1) — down in the bottom-left, outside the quarter. Escaped. Fails.
 >
-> Lesson: every vector space must contain the zero vector, because multiplying by
-> zero is always allowed.
+> **The smoothie mix from Topic 1 fails too.** Mixing ingredients only used
+> positive amounts — you can't have negative banana — so it only ever filled that
+> same first-quarter corner. Multiply a mix by −1 and you'd need negative smoothie,
+> which escapes. That's exactly why smoothie-mixing was never a vector space, even
+> though a true span (any amounts allowed) always is.
+>
+> **The rule underneath all three:** every vector space must contain the zero
+> vector, because multiplying by zero is always allowed. Miss the origin, and you
+> fail.
 
-RIGHT: `new_figure_2d`, the off-origin line drawn, (2,3) marked on it, (0,0)
-marked off it with label "escaped — off the line"; the first quadrant lightly
-shaded, (2,1) marked inside, (−2,−1) marked outside with label "escaped".
+RIGHT: `new_figure_2d`, the off-origin flat line y=3 drawn, (2,3) marked on it,
+(0,0) marked off it with label "escaped — off the line"; the first quadrant lightly
+shaded (this same shaded quadrant also stands for the smoothie mix), (2,1) marked
+inside, (−2,−1) marked outside with label "escaped".
 
 ### Block 4 — closing text (verbatim)
 
@@ -122,10 +163,22 @@ directions; then (verbatim, per pose):
   along one line — the column space is just that line, so any target off the line
   is unreachable. You saw this in Topic 4; that line WAS a column space."
 
+LEFT, REACHABLE POSE ONLY — also show two inputs fed through the FULL matrix as
+A·x = b stacked-vector products (st.latex, w.bmatrix; write out the whole 2×2
+matrix, not the letter A):
+  [[1.5, 0.5],[0, 1]] · [3; -3] = [3; -3]
+  [[1.5, 0.5],[0, 1]] · [-2; 3] = [-1.5; 3]
+Then a caption: "Two different inputs, and their outputs land in different
+quadrants — all over the plane. That is why this matrix's column space is the whole
+plane: it can reach anywhere."
+(VERIFIED: A·(3,-3)=(3,-3) in Q4, A·(-2,3)=(-1.5,3) in Q2.)
+
 RIGHT: `new_figure_2d` — the two column arrows; Reachable: light full-plane shade
-+ caption "column space = the whole plane"; Singular: the line along (1,1) drawn
-long both ways, labeled "column space = this line", plus a sample point b = (4, 2)
-marked "unreachable — outside the column space".
++ caption "column space = the whole plane"; ALSO mark the two outputs (3,-3) and
+(-1.5,3) as points labeled "A·(3,-3)" and "A·(-2,3)" so the spread is visible.
+Singular: the line along (1,1) drawn long both ways, labeled
+"column space = this line", plus a sample point b = (4, 2) marked
+"unreachable — outside the column space".
 
 ### Block 3 — NEW worked example (math left, graph right)
 
@@ -138,8 +191,16 @@ LEFT: A read-only compact; both columns written out; (verbatim)
 > target like b = (3, 6) is ON the line — reachable. A target like b = (3, 5) is
 > OFF the line — no solution exists, no matter what x you try.
 
+LEFT also shows two example inputs fed through A, as stacked-vector products
+(st.latex, w.bmatrix), to make "any input lands on the same line" concrete:
+  A·[3;-3] = [-3;-6]   and   A·[-2;3] = [4;8]
+(VERIFIED: both outputs lie on the line along (1,2). Two very different inputs,
+same line.)
+
 RIGHT: `new_figure_2d` — the line along (1,2) long both ways; (3,6) marked
-"reachable"; (3,5) marked "unreachable".
+"reachable"; (3,5) marked "unreachable"; ALSO mark the two computed outputs
+(-3,-6) and (4,8) on the line, labeled "A·(3,-3)" and "A·(-2,3)", showing both
+inputs land on the column space.
 
 ### Block 4 — closing (verbatim)
 
@@ -228,16 +289,59 @@ LEFT+RIGHT single column (verbatim):
 > down — is called the **rank**. You have already met it: it is the pivot count on
 > the workbench banner ("Pivot count = number of genuinely independent equations").
 
-### Block 2 — EMBEDDED RECAP: the redundant row (Logistics one-plan), math left, graph-free
+### Block 2 — EMBEDDED LOGISTICS RECAP: two plans side by side (static, no graph)
 
-Static (verbatim):
-> On the Logistics (one plan) screen you developed 7 equations for 6 unknowns, and
-> one collapsed to the harmless row 0 = 0 — it was already implied by the others.
-> Seven rows, but only six genuinely different rules: the rank is 6, not 7. The
-> row space is built from six rules; the seventh added nothing.
+Static (verbatim intro):
+> On the two Logistics screens you built shipping plans where flow in = flow out at
+> every node. One had a single answer; the other had a free choice. Put them side by
+> side and the difference is a single zero row — the same seven-row count, but the
+> many-plans version leaves one route free.
 
-Show the reduced matrix's shape compactly (6 pivot rows + the one zero row) as a
-single small LaTeX array with the zero row dimmed/labeled "added nothing".
+Then TWO cards side by side (`st.columns(2)`), each with its RULES on the left and
+its REDUCED FORM matrix on the right (a small `st.columns([1,1])` split inside each
+card). Route variables x1..x6 (one plan) / x1..x7 (many plans). Array + vertical
+rule for matrices (never \big| in bmatrix). All VERIFIED — do not change numbers.
+
+- **Logistics (one plan)** — 7 equations, 6 routes, UNIQUE answer. Bold header
+  "One plan: 6 real rules + 0 free = 6 unknowns ✓".
+  RULES (st.latex, aligned block — each route pinned, ONE PER LINE):
+    x_1 = 50
+    x_2 = 50
+    x_3 = 30
+    x_4 = 20
+    x_5 = 25
+    x_6 = 25
+  (note: 1 more row collapsed to 0 = 0)
+  MATRIX (6 pivot rows + 1 dimmed zero row):
+    \left[\begin{array}{cccccc|c}
+    1&0&0&0&0&0&50\\ 0&1&0&0&0&0&50\\ 0&0&1&0&0&0&30\\
+    0&0&0&1&0&0&20\\ 0&0&0&0&1&0&25\\ 0&0&0&0&0&1&25\\
+    \color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0
+    \end{array}\right]
+  Caption: "Six rules, six routes, no freedom — one definite plan."
+
+- **Logistics (many plans)** — 7 equations, 7 routes, INFINITELY many. Bold header
+  "Many plans: 6 real rules + 1 free = 7 unknowns ✓".
+  RULES (st.latex, the 6 surviving rows as one aligned block):
+    x_1 + x_5 = 50
+    x_2 - x_5 = 50
+    x_3 = 30
+    x_4 + x_5 = 20
+    x_6 = 25
+    x_7 = 25
+  (note: 1 more row collapsed to 0 = 0)
+  MATRIX (6 pivot rows + 1 dimmed zero row):
+    \left[\begin{array}{ccccccc|c}
+    1&0&0&0&1&0&0&50\\ 0&1&0&0&-1&0&0&50\\ 0&0&1&0&0&0&0&30\\
+    0&0&0&1&1&0&0&20\\ 0&0&0&0&0&1&0&25\\ 0&0&0&0&0&0&1&25\\
+    \color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0
+    \end{array}\right]
+  PARAMETRIC SOLUTION shown BELOW the matrix (st.latex, stacked vectors):
+    X = [50;50;30;20;0;25;25] + x_5\,[-1;1;0;-1;1;0;0]
+  Caption: "Six rules, seven routes — route x5 is free, giving a whole family of plans."
+
+(This two-card block replaces the single one-plan recap; the paragraph about "rank
+6, not 7" is now shown by the dimmed zero row in BOTH cards.)
 
 ### Block 3 — THE COUNTING RULE (full-width, the screen's centerpiece)
 
@@ -248,11 +352,46 @@ Verbatim:
 > Every unknown is either pinned down by a real rule or left free. No unknown is
 > both; none is neither. That is the whole rule.
 
-Then three "count cards" side by side (`st.columns(3)`), each one compact card:
-- **Smoothie:** 2 real rules + 3 free = 5 unknowns ✓
-- **Logistics (many plans):** 6 real rules + 1 free = 7 unknowns ✓
-- **Circuit:** 5 real rules + 0 free = 5 unknowns ✓ (zero free variables is
-  exactly why the circuit had one definite answer)
+Then two count cards side by side (`st.columns(2)`), each showing the surviving
+RULES on the LEFT and the problem's REDUCED FORM matrix on the RIGHT (use each
+problem's OWN variable letter -- f for Smoothie, I for Circuit currents). Within
+each card use a small 2-column split. Use array + vertical rule for matrices (never
+\big| in bmatrix). All VERIFIED -- do not change numbers. (Logistics is already
+covered by the two-card block above, so it is not repeated here.)
+
+- **Smoothie** (5 ingredients, 5 equations = 0; variables f1..f5). Bold header
+  "Smoothie: 2 real rules + 3 free = 5 unknowns ✓".
+  RULES (st.latex, the 2 surviving rows as one aligned block):
+    f_1 + f_3 + \tfrac{3}{2}f_5 = 0
+    f_2 + f_4 - \tfrac{1}{2}f_5 = 0
+  (note: 3 more rows collapsed to 0 = 0)
+  MATRIX (reduced form, 2 pivot rows + 3 dimmed zero rows):
+    \left[\begin{array}{ccccc|c}
+    1&0&1&0&\tfrac{3}{2}&0\\ 0&1&0&1&-\tfrac{1}{2}&0\\
+    \color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0\\
+    \color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0\\
+    \color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0&\color{gray}0
+    \end{array}\right]
+  Caption: "Two rules survive; three ingredients are free."
+  PARAMETRIC SOLUTION shown BELOW the matrix (st.latex, stacked vectors; homogeneous
+  so the particular part is the all-zeros vector — show it explicitly as the leading
+  term, then the three free-variable directions):
+    X = [0;0;0;0;0] + f_3\,[-1;0;1;0;0] + f_4\,[0;-1;0;1;0] + f_5\,[-\tfrac{3}{2};\tfrac{1}{2};0;0;1]
+
+- **Circuit** (5 currents, 5 equations; variables I1..I5 = currents). Bold header
+  "Circuit: 5 real rules + 0 free = 5 unknowns ✓".
+  RULES (st.latex, the 5 rows as one aligned block -- each pins a current):
+    I_1 = 6
+    I_2 = 2
+    I_3 = 3
+    I_4 = 3
+    I_5 = 1
+  MATRIX (reduced form, 5 pivot rows, no zero row -- b column IS the answer):
+    \left[\begin{array}{ccccc|c}
+    1&0&0&0&0&6\\ 0&1&0&0&0&2\\ 0&0&1&0&0&3\\
+    0&0&0&1&0&3\\ 0&0&0&0&1&1
+    \end{array}\right]
+  Caption: "Every current pinned down -- no free variables, one definite answer."
 
 ### Block 4 — closing (verbatim)
 
@@ -288,7 +427,54 @@ Verbatim, one compact three-row layout (three narrow columns or one aligned list
 > **Row space** — its genuinely different rules: one rule, x1 + 2·x2 (rank 1).
 > Counting rule check: 1 real rule + 1 free variable = 2 unknowns. ✓
 
-### Block 3 — closing bridge (verbatim)
+### Banner — between the 1D and 2D examples
+
+Between the read-off block (all three spaces from the 2×2) and the new 3×3 example,
+show a full-width banner (st.info or a styled markdown divider) with this verbatim
+text:
+> **Now let's go bigger.** The example above lived in 2D, so each space was a line.
+> Next, a 3-by-3 matrix in 3D — the same three spaces, but now they're planes and
+> lines. Watch the ideas scale up one dimension.
+
+### Block 3 — a bigger matrix: spaces become PLANES (2-dimensional example)
+
+Below the 1-dimensional example, add a second worked matrix where the spaces are
+2-dimensional, drawn in 3D. Use A = [[2,1,3],[1,1,2],[3,2,5]] (VERIFIED: row 3 =
+row 1 + row 2, so rank 2; RREF = [[1,0,1],[0,1,1],[0,0,0]]; column space = the plane
+spanned by columns (2,1,3) and (1,1,2), whose equation is -x - y + z = 0; null space
+= the line along (-1,-1,1); row space = a plane, rank 2; counting: rank 2 + 1 free
+= 3 unknowns). Neat fact to mention: the null-space line points along (-1,-1,1),
+which is exactly perpendicular to the column-space plane — the line pokes straight
+through the plane.
+
+LEFT (math): A as compact read-only; note row 3 = row 1 + row 2; show the reduced
+form RREF = [[1,0,1],[0,1,1],[0,0,0]] (array + vertical rule, gray zero row).
+Verbatim caption:
+> This time the matrix is 3 by 3, and row 3 is just row 1 plus row 2 — a redundant
+> rule that collapses to a zero row. Two real rules survive out of three, so the
+> spaces are now two-dimensional: not lines, but whole PLANES.
+
+Then three short labeled lines (verbatim):
+> **Column space** — a plane: everything the matrix can reach is the flat sheet
+> spanned by the two surviving columns (2, 1, 3) and (1, 1, 2). Two independent
+> directions, so a plane, not a line.
+> **Null space** — a line: everything squashed to zero runs along (-1, -1, 1). One
+> free variable, so a single line — and it points straight through the plane.
+> **Counting rule check:** 2 real rules + 1 free variable = 3 unknowns. ✓ The line
+> (1 dimension) and the plane (2 dimensions) add up to all of 3D space.
+
+RIGHT (graph): a 3D figure (`new_figure_3d(rng~6)`) showing:
+- the column-space PLANE via `add_plane_3d(fig, -1, -1, 1, 0, color, "column space
+  (a plane)")` (the plane -x - y + z = 0), translucent;
+- the two spanning column arrows (2,1,3) and (1,1,2) lying in that plane, drawn with
+  `_arrow3d` (or Scatter3d segments) so the student sees the plane is their span;
+- the null-space LINE along (-1,-1,1) drawn long both ways as a Scatter3d segment
+  from (2,2,-2) to (-2,-2,2), labeled "null space (a line)", clearly piercing the
+  plane at the origin.
+Caption: "One matrix, in 3D: the column space is a plane, the null space is a line
+through it. Rotate to see the line pierce the plane."
+
+### Block 4 — closing bridge (verbatim)
 
 > Two more words make this vocabulary complete. The **dimension** of a space is
 > how many independent directions it has — a line has dimension 1, a plane 2, the
