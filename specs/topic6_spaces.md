@@ -136,8 +136,59 @@ inside, (−2,−1) marked outside with label "escaped".
 
 ## Screen 2 — Column space: every place the matrix can send you
 
+### Block 0 — how to compute a column space, step by step (math, no graph)
+
+A worked recipe at the TOP of the screen, before the intro. Uses the SAME made-up
+4×4 matrix as the Screen 3 null-space recipe:
+A = [[1,2,1,1],[1,3,2,4],[2,5,3,5],[0,1,1,3]] (VERIFIED: rank 2; RREF =
+[[1,0,-1,-5],[0,1,1,3],[0,0,0,0],[0,0,0,0]]; pivots in columns 1,2; column space =
+span of the ORIGINAL columns (1,1,2,0) and (2,3,5,1); dimension 2). NO graph (lives
+in 4D). Every matrix a real bracketed LaTeX matrix — never comma text. This mirrors
+the null-space recipe so the student sees ONE matrix yield BOTH spaces.
+
+Heading (verbatim): **How to compute the column space of a matrix, step by step.**
+
+**Step 1 — Write the matrix and look at its columns.** (verbatim) "The column space
+is every output A can produce, which is every combination of its columns. So start
+with the columns themselves." Then st.latex: A as a 4×4 bmatrix, and note its four
+columns c1, c2, c3, c4.
+
+**Step 2 — Row-reduce to find the pivot columns.** (verbatim) "Row-reduce to the
+reduced form (Reduced Row Echelon Form) and see which columns get a pivot (a leading
+1)." Then st.latex the reduced form as a 4×4 bmatrix (NOT augmented — no b column
+here) with the two pivot leading-1s color-coded yellow (`\color{#ffd43b}{1}` at
+(1,1) and (2,2)).
+
+**Step 3 — The pivot columns of the ORIGINAL matrix are the answer.** (verbatim)
+"Columns 1 and 2 hold the pivots, so they are the independent ones — columns 3 and 4
+are just combinations of them and add nothing new. IMPORTANT: take these columns
+from the ORIGINAL matrix A, not from the reduced form. The reduced form only tells
+you WHICH columns to pick." Then st.latex the two original pivot columns side by
+side as bmatrix columns: (1,1,2,0) and (2,3,5,1).
+
+**Step 4 — Write the column space in parametric form.** (verbatim) "Every vector in
+the column space is some amount of the first pivot column plus some amount of the
+second. Call those amounts c1 and c2." Then st.latex the parametric form using
+\underbrace + color, MIRRORING the null-space Step 5 style but GREEN for the column
+space (`\color{#37b24d}`), with the \color OUTSIDE the whole group so the c1, c2
+scalars are green too:
+  \text{any output} = \underbrace{\color{#37b24d}{c_1\begin{bmatrix}1\\1\\2\\0\end{bmatrix}
+  + c_2\begin{bmatrix}2\\3\\5\\1\end{bmatrix}}}_{\text{column space}}
+Caption (verbatim): "Two pivot columns, so the column space is 2-dimensional — its
+dimension is the rank, 2. Those two columns are a basis for it. (This is the SAME
+matrix whose null space you compute on the next screen — one matrix, two spaces.)"
+
+---
+
 ### Block 1 — the idea (text only, verbatim)
 
+> The **column space** is all possible outputs of the matrix, and its **dimension**
+> is the **rank** — which determines solvability, uniqueness of solutions, and how
+> much information the matrix preserves. It determines whether a system A·x = b has
+> a solution, because a vector b is solvable only if it lies in the column space of
+> A. If b is in the column space of A then at least one solution exists; if b is not
+> in the column space of A then no solution exists.
+>
 > Take a matrix A. Feed it every possible input x and collect every output A·x.
 > That collection of all possible outputs is called the **column space**. It gets
 > that name because every output is a mix of A's columns — so the collection of
@@ -211,6 +262,69 @@ inputs land on the column space.
 
 ## Screen 3 — Null space: every input the matrix squashes to zero
 
+### Block 0 — how to compute a null space, step by step (math, no graph)
+
+A worked recipe at the TOP of the screen, before the intro. Made-up 4×4 matrix
+A = [[1,2,1,1],[1,3,2,4],[2,5,3,5],[0,1,1,3]] (VERIFIED: rows 3,4 are combinations
+of rows 1,2; rank 2; RREF = [[1,0,-1,-5],[0,1,1,3],[0,0,0,0],[0,0,0,0]]; 2 free
+variables x3,x4; null-space basis (1,-1,1,0) and (5,-3,0,1)). NO graph (4D can't be
+drawn). Every matrix rendered as a real bracketed matrix (LaTeX bmatrix / array with
+vertical rule for augmented) — never comma-delimited text.
+
+Heading (verbatim): **How to compute the null space of a matrix, step by step.**
+
+**Step 1 — Set up A·x = 0.** (verbatim) "The null space is every input x the matrix
+sends to zero. So we solve A·x = 0." Then a SINGLE st.latex (do NOT show a standalone
+copy of A first): the equation `A x =` with A the 4×4 bmatrix times the x column,
+equal to a 4×1 zero column — i.e. A\,x = [A bmatrix][x1;x2;x3;x4] = [0;0;0;0].
+
+**Step 2 — Form the augmented matrix [A | 0] and row-reduce.** (verbatim) "Attach a
+column of zeros and row-reduce to the reduced form (Reduced Row Echelon Form)." Then
+st.latex TWO augmented matrices (array with vertical rule `{cccc|c}`): first [A | 0],
+then `\;\to\;` to the reduced form
+  [[1,0,-1,-5|0],[0,1,1,3|0],[0,0,0,0|0],[0,0,0,0|0]].
+
+**Step 3 — Identify pivot and free variables.** (verbatim) "The reduced form has
+pivots (leading 1s) in columns 1 and 2, so x1 and x2 are the pivot variables.
+Columns 3 and 4 have no pivot, so x3 and x4 are free — you may choose them to be
+anything." Then RE-SHOW the reduced form (array {cccc|c}) with the two PIVOT entries
+(the leading 1s at positions (1,1) and (2,2)) color-coded yellow via
+`\color{#ffd43b}{1}` (same yellow as the workbench pivot highlight), so the pivots
+are visually picked out.
+
+**Step 4 — Solve the pivot variables in terms of the free variables.** (verbatim)
+"First read each pivot row straight off the reduced form, then move the free
+variables to the right side." Show BOTH forms as st.latex.
+  BEFORE (raw pivot rows, as read from RREF), one aligned block:
+    x_1 - x_3 - 5x_4 = 0
+    x_2 + x_3 + 3x_4 = 0
+  AFTER (free variables moved right), one aligned block:
+    x_1 = x_3 + 5x_4
+    x_2 = -x_3 - 3x_4
+    x_3 = x_3\ (\text{free})
+    x_4 = x_4\ (\text{free})
+
+**Step 5 — Write the null space in parametric form.** (verbatim) "To turn those
+equations into vectors, do what you learned earlier: set one free variable to 1 and
+the rest to 0, and read off the column. Setting (x3, x4) = (1, 0) gives the first
+direction; (0, 1) gives the second." Then st.latex the COMPLETE parametric equation
+using \underbrace labels AND color: the all-zeros particular vector kept white/
+default and underbraced "particular"; the ENTIRE null-space part — both the free-
+variable scalars x3, x4 AND the two direction vectors — colored blue
+(`\color{#4dabf7}`) and underbraced "null space". Put the \color OUTSIDE the whole
+group so the x3, x4 coefficients are blue too (Claude Code's first attempt left the
+scalars default-colored). Exact LaTeX shape:
+  x = \underbrace{\begin{bmatrix}0\\0\\0\\0\end{bmatrix}}_{\text{particular}}
+      + \underbrace{\color{#4dabf7}{x_3\begin{bmatrix}1\\-1\\1\\0\end{bmatrix}
+      + x_4\begin{bmatrix}5\\-3\\0\\1\end{bmatrix}}}_{\text{null space}}
+(the \color wraps the entire x3·d1 + x4·d2 expression, so scalars and vectors are all
+blue; the + between the particular and null-space groups stays default). Caption
+(verbatim): "Because the system equals zero, the particular part is zero — so the
+ENTIRE answer is the null space (the blue part). Two free variables, so it is
+2-dimensional; those two vectors are a basis for it."
+
+---
+
 ### Block 1 — the idea (text only, verbatim)
 
 > Some inputs x get sent by the matrix to the zero vector: A·x = (0, 0, ..., 0).
@@ -277,6 +391,52 @@ LEFT+RIGHT single column (verbatim):
 ---
 
 ## Screen 4 — Row space and the big counting rule
+
+### Block 0 — how to compute a row space, step by step (math, no graph)
+
+A worked recipe at the TOP of the screen, before the intro. Uses the SAME made-up
+4×4 matrix as the column-space (Screen 2) and null-space (Screen 3) recipes:
+A = [[1,2,1,1],[1,3,2,4],[2,5,3,5],[0,1,1,3]] (VERIFIED: rank 2; RREF =
+[[1,0,-1,-5],[0,1,1,3],[0,0,0,0],[0,0,0,0]]; row space = span of the two NONZERO
+REDUCED rows (1,0,-1,-5) and (0,1,1,3); dimension 2). NO graph (lives in 4D). Every
+matrix a real bracketed LaTeX matrix — never comma text. Third recipe on the same
+matrix, so the student now sees ONE matrix yield ALL THREE spaces.
+
+Heading (verbatim): **How to compute the row space of a matrix, step by step.**
+
+**Step 1 — Write the matrix and look at its rows.** (verbatim) "The row space is
+every rule you can build by mixing the rows. So start with the rows themselves."
+Then st.latex: A as a 4×4 bmatrix, noting its four rows.
+
+**Step 2 — Row-reduce to the reduced form.** (verbatim) "Row operations never change
+the row space — mixing rows just rewrites the same rules — so row-reduce to the
+reduced form (Reduced Row Echelon Form), which gives the cleanest version of those
+rules." Then st.latex the reduced form as a 4×4 bmatrix, with the two NONZERO rows
+color-coded purple (`\color{#9775fa}`) and the two zero rows in gray
+(`\color{gray}`).
+
+**Step 3 — The nonzero rows of the REDUCED form are the answer.** (verbatim)
+"Keep the rows that are not all zeros — those are the genuinely different rules. The
+two zero rows were redundant and drop out. IMPORTANT: unlike the column space (where
+you took columns from the ORIGINAL matrix), for the row space you take the rows from
+the REDUCED form — because row operations don't change the row space, the reduced
+rows are the tidiest basis." Then st.latex the two nonzero reduced rows as row
+vectors: (1, 0, -1, -5) and (0, 1, 1, 3).
+
+**Step 4 — Write the row space in parametric form.** (verbatim) "Every vector in the
+row space is some amount of the first reduced row plus some amount of the second.
+Call those amounts r1 and r2." Then st.latex the parametric form using \underbrace +
+color, MIRRORING the other two recipes but PURPLE for the row space
+(`\color{#9775fa}`), \color OUTSIDE the whole group so the r1, r2 scalars are purple
+too (write the basis as row vectors inside the combination):
+  \text{any rule} = \underbrace{\color{#9775fa}{r_1\begin{bmatrix}1&0&-1&-5\end{bmatrix}
+  + r_2\begin{bmatrix}0&1&1&3\end{bmatrix}}}_{\text{row space}}
+Caption (verbatim): "Two nonzero rows, so the row space is 2-dimensional — its
+dimension is the rank, 2, the SAME rank as the column space. Those two rows are a
+basis for it. (Same matrix as the column-space and null-space recipes — one matrix,
+all three spaces.)"
+
+---
 
 ### Block 1 — the idea (text only, verbatim)
 

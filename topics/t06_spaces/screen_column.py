@@ -5,7 +5,70 @@ import streamlit as st
 from engine import plotting as plot
 from engine import widgets as w
 
+_HOWTO_STEP1_TEXT = """
+**Step 1 -- Write the matrix and look at its columns.** The column space
+is every output A can produce, which is every combination of its columns. So start
+with the columns themselves.
+"""
+
+_HOWTO_STEP1_LATEX = r"""
+A = \begin{bmatrix} 1 & 2 & 1 & 1 \\ 1 & 3 & 2 & 4 \\ 2 & 5 & 3 & 5 \\ 0 & 1 & 1 & 3 \end{bmatrix}
+"""
+
+_HOWTO_STEP2_TEXT = """
+**Step 2 -- Row-reduce to find the pivot columns.** Row-reduce to the
+reduced form (Reduced Row Echelon Form) and see which columns get a pivot (a leading
+1).
+"""
+
+_HOWTO_STEP2_LATEX = r"""
+\begin{bmatrix}
+\color{#ffd43b}{1} & 0 & -1 & -5 \\
+0 & \color{#ffd43b}{1} & 1 & 3 \\
+0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0
+\end{bmatrix}
+"""
+
+_HOWTO_STEP3_TEXT = """
+**Step 3 -- The pivot columns of the ORIGINAL matrix are the answer.**
+Columns 1 and 2 hold the pivots, so they are the independent ones -- columns 3 and 4
+are just combinations of them and add nothing new. IMPORTANT: take these columns
+from the ORIGINAL matrix A, not from the reduced form. The reduced form only tells
+you WHICH columns to pick.
+"""
+
+_HOWTO_STEP3_LATEX = r"""
+\begin{bmatrix} 1 \\ 1 \\ 2 \\ 0 \end{bmatrix}
+\qquad
+\begin{bmatrix} 2 \\ 3 \\ 5 \\ 1 \end{bmatrix}
+"""
+
+_HOWTO_STEP4_TEXT = """
+**Step 4 -- Write the column space in parametric form.** Every vector in
+the column space is some amount of the first pivot column plus some amount of the
+second. Call those amounts c1 and c2.
+"""
+
+_HOWTO_STEP4_LATEX = r"""
+\text{any output} = \underbrace{\color{#37b24d}{c_1\begin{bmatrix} 1 \\ 1 \\ 2 \\ 0 \end{bmatrix}
++ c_2\begin{bmatrix} 2 \\ 3 \\ 5 \\ 1 \end{bmatrix}}}_{\text{column space}}
+"""
+
+_HOWTO_CAPTION = """
+Two pivot columns, so the column space is 2-dimensional -- its
+dimension is the rank, 2. Those two columns are a basis for it. (This is the SAME
+matrix whose null space you compute on the next screen -- one matrix, two spaces.)
+"""
+
 _INTRO = """
+The **column space** is all possible outputs of the matrix, and its **dimension**
+is the **rank** -- which determines solvability, uniqueness of solutions, and how
+much information the matrix preserves. It determines whether a system A·x = b has
+a solution, because a vector b is solvable only if it lies in the column space of
+A. If b is in the column space of A then at least one solution exists; if b is not
+in the column space of A then no solution exists.
+
 Take a matrix A. Feed it every possible input x and collect every output A·x.
 That collection of all possible outputs is called the **column space**. It gets
 that name because every output is a mix of A's columns — so the collection of
@@ -52,6 +115,19 @@ question: what does the matrix squash to nothing?
 
 
 def render_column():
+    # Block 0 -- how to compute a column space, step by step (math, no graph)
+    st.markdown("**How to compute the column space of a matrix, step by step.**")
+    st.markdown(_HOWTO_STEP1_TEXT)
+    st.latex(_HOWTO_STEP1_LATEX)
+    st.markdown(_HOWTO_STEP2_TEXT)
+    st.latex(_HOWTO_STEP2_LATEX)
+    st.markdown(_HOWTO_STEP3_TEXT)
+    st.latex(_HOWTO_STEP3_LATEX)
+    st.markdown(_HOWTO_STEP4_TEXT)
+    st.latex(_HOWTO_STEP4_LATEX)
+    st.markdown(_HOWTO_CAPTION)
+    st.markdown("---")
+
     # Block 1 -- the idea (text only)
     st.markdown(_INTRO)
 

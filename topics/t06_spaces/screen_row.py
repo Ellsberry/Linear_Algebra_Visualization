@@ -1,6 +1,64 @@
 """Screen 4 -- Row space and the big counting rule."""
 import streamlit as st
 
+_HOWTO_STEP1_TEXT = """
+**Step 1 -- Write the matrix and look at its rows.** The row space is
+every rule you can build by mixing the rows. So start with the rows themselves.
+"""
+
+_HOWTO_STEP1_LATEX = r"""
+A = \begin{bmatrix} 1 & 2 & 1 & 1 \\ 1 & 3 & 2 & 4 \\ 2 & 5 & 3 & 5 \\ 0 & 1 & 1 & 3 \end{bmatrix}
+"""
+
+_HOWTO_STEP2_TEXT = """
+**Step 2 -- Row-reduce to the reduced form.** Row operations never change
+the row space -- mixing rows just rewrites the same rules -- so row-reduce to the
+reduced form (Reduced Row Echelon Form), which gives the cleanest version of those
+rules.
+"""
+
+_HOWTO_STEP2_LATEX = r"""
+\begin{bmatrix}
+\color{#9775fa}{1} & \color{#9775fa}{0} & \color{#9775fa}{-1} & \color{#9775fa}{-5} \\
+\color{#9775fa}{0} & \color{#9775fa}{1} & \color{#9775fa}{1} & \color{#9775fa}{3} \\
+\color{gray}{0} & \color{gray}{0} & \color{gray}{0} & \color{gray}{0} \\
+\color{gray}{0} & \color{gray}{0} & \color{gray}{0} & \color{gray}{0}
+\end{bmatrix}
+"""
+
+_HOWTO_STEP3_TEXT = """
+**Step 3 -- The nonzero rows of the REDUCED form are the answer.**
+Keep the rows that are not all zeros -- those are the genuinely different rules. The
+two zero rows were redundant and drop out. IMPORTANT: unlike the column space (where
+you took columns from the ORIGINAL matrix), for the row space you take the rows from
+the REDUCED form -- because row operations don't change the row space, the reduced
+rows are the tidiest basis.
+"""
+
+_HOWTO_STEP3_LATEX = r"""
+\begin{bmatrix} 1 & 0 & -1 & -5 \end{bmatrix}
+\qquad
+\begin{bmatrix} 0 & 1 & 1 & 3 \end{bmatrix}
+"""
+
+_HOWTO_STEP4_TEXT = """
+**Step 4 -- Write the row space in parametric form.** Every vector in the
+row space is some amount of the first reduced row plus some amount of the second.
+Call those amounts r1 and r2.
+"""
+
+_HOWTO_STEP4_LATEX = r"""
+\text{any rule} = \underbrace{\color{#9775fa}{r_1\begin{bmatrix} 1 & 0 & -1 & -5 \end{bmatrix}
++ r_2\begin{bmatrix} 0 & 1 & 1 & 3 \end{bmatrix}}}_{\text{row space}}
+"""
+
+_HOWTO_CAPTION = """
+Two nonzero rows, so the row space is 2-dimensional -- its
+dimension is the rank, 2, the SAME rank as the column space. Those two rows are a
+basis for it. (Same matrix as the column-space and null-space recipes -- one matrix,
+all three spaces.)
+"""
+
 _INTRO = """
 Each row of a matrix is one equation -- one rule the answer must obey. The **row
 space** is the collection of every rule you can build by mixing the rows. If one
@@ -140,6 +198,19 @@ def _rule_card(header, rules_latex, matrix_latex, caption, extra_latex=None):
 
 
 def render_row():
+    # Block 0 -- how to compute a row space, step by step (math, no graph)
+    st.markdown("**How to compute the row space of a matrix, step by step.**")
+    st.markdown(_HOWTO_STEP1_TEXT)
+    st.latex(_HOWTO_STEP1_LATEX)
+    st.markdown(_HOWTO_STEP2_TEXT)
+    st.latex(_HOWTO_STEP2_LATEX)
+    st.markdown(_HOWTO_STEP3_TEXT)
+    st.latex(_HOWTO_STEP3_LATEX)
+    st.markdown(_HOWTO_STEP4_TEXT)
+    st.latex(_HOWTO_STEP4_LATEX)
+    st.markdown(_HOWTO_CAPTION)
+    st.markdown("---")
+
     # Block 1 -- the idea (text only)
     st.markdown(_INTRO)
 

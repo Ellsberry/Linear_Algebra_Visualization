@@ -605,15 +605,133 @@ Cross-cutting refinements applied after the screens above were built:
 
 ---
 
+## Topic 6 — Vector Spaces (`topics/t06_spaces/`) — BUILT this session, pending review
+
+**Spec:** `specs/topic6_spaces.md`
+
+Names the three spaces hiding inside every matrix — column space, null space, row
+space — plus the counting rule (rank + free variables = unknowns). Design principle:
+each screen is a vertical stack of self-contained **viewport blocks** (math LEFT /
+graph RIGHT, everything for one example visible without scrolling inside the block);
+embedded compact recaps of Robotics/Smoothie/Logistics/Circuit so the student never
+jumps topics; plain words before symbols; no C(A)/N(A) notation. No workbench, no new
+engine code (recaps are result-only). Registered in `app.py` after `t05b_elimination`.
+`TITLE = "6 · Vector Spaces"`, `SLUG = "spaces"`.
+
+**File structure:** per-screen package — `__init__.py` (TITLE, SLUG, OVERVIEW,
+selector key `t06_screen`, dispatch) + `screen_what.py`, `screen_column.py`,
+`screen_null.py`, `screen_row.py`, `screen_together.py`.
+
+### Screen 1 — What a vector space is (`screen_what.py`)
+- [x] Block 1 intro (the "no escape" rule; span-as-vector-space, any amounts incl.
+      negative/zero).
+- [x] Block 2a — whole x-y plane: arrows (3,1)+(1,2)=(4,3) tip-to-tail, shaded plane,
+      stacked-vector math beside the graph.
+- [x] Block 2b — line through the origin along (1,2): points (1,2),(2,4),(3,6),
+      stacked-vector math (add + triple).
+- [x] Block 3 — FAIL examples: off-origin line y=3 ("not a vector space, because it
+      fails the no-escape rule"), first-quadrant fail, smoothie-mix-fails contrast
+      (positive amounts only), and the must-contain-the-zero-vector rule.
+- [x] Block 4 closing.
+
+### Screen 2 — Column space (`screen_column.py`)
+- [x] Block 0 — NEW step-by-step "how to compute a column space" recipe at the top
+      (before the intro), math only, no graph. Shared made-up 4x4
+      A=[[1,2,1,1],[1,3,2,4],[2,5,3,5],[0,1,1,3]] (rank 2). 4 steps: write matrix +
+      columns; row-reduce to find pivot columns (RREF pivots yellow); take the
+      ORIGINAL matrix's pivot columns (1,1,2,0) and (2,3,5,1) — explicit "from the
+      ORIGINAL, not the reduced form"; parametric span form with GREEN highlight +
+      \underbrace "column space" label (c1, c2 scalars green too). Same matrix as the
+      null-space and row-space recipes.
+- [x] Block 1 intro — expanded: opens with a paragraph defining column space = all
+      possible outputs, its dimension = rank, and the solvability rule (b solvable iff
+      b in the column space), before the original "Take a matrix A" paragraph.
+- [x] Block 2 — Robotics recap, the ONE allowed pose toggle (Reachable
+      [[1.5,0.5],[0,1]] / Singular [[1,1],[1,1]]); reachable pose shows the full
+      matrix times x for x=(3,-3)->(3,-3) and x=(-2,3)->(-1.5,3), outputs spread
+      across the plane -> whole-plane column space; singular shows the line + an
+      unreachable point.
+- [x] Block 3 — A=[[1,2],[2,4]]: full-matrix A·(3,-3)=(-3,-6) and A·(-2,3)=(4,8),
+      both landing on the line along (1,2); (3,6) reachable vs (3,5) unreachable.
+- [x] Block 4 closing.
+
+### Screen 3 — Null space (`screen_null.py`)
+- [x] Block 0 — NEW step-by-step "how to compute a null space" recipe at the top
+      (before the intro), math only, no graph. Same shared 4x4 A. 5 steps: set up
+      A·x=0 (A times x column = zero column, no standalone A); form [A|0] and
+      row-reduce (array+vertical-rule, "reduced form (Reduced Row Echelon Form)");
+      identify pivot/free variables (RREF re-shown with pivots yellow); solve pivots
+      in terms of free variables shown BOTH before (raw rows =0) and after (free vars
+      moved right); write the null space in parametric form with the all-zeros
+      particular vector (\underbrace "particular", white) plus the BLUE null-space part
+      (x3,x4 scalars + direction vectors, \underbrace "null space"). Basis (1,-1,1,0)
+      and (5,-3,0,1), 2 free variables. VERIFIED.
+- [x] Block 1 intro (null space = the freedom; particular + null space = every answer).
+- [x] Block 2 — A=[[1,2],[2,4]] null-space line along (-2,1), drawn WITH the
+      column-space line along (1,2) fainter on the same graph (same matrix, two lines).
+- [x] Block 3 — Smoothie recap: the three direction vectors as the visual (5D can't
+      be plotted), ingredient legend.
+- [x] Block 4 — Logistics many-plans recap: direction (-1,1,0,-1,1,0,0) lives in the
+      null space (VERIFIED A·direction = 0).
+- [x] Block 5 closing.
+
+### Screen 4 — Row space and the counting rule (`screen_row.py`)
+- [x] Block 0 — NEW step-by-step "how to compute a row space" recipe at the top
+      (before the intro), math only, no graph. Same shared 4x4 A. 4 steps: write
+      matrix + rows; row-reduce ("row operations never change the row space"), RREF
+      with nonzero rows PURPLE and zero rows gray; take the NONZERO rows of the
+      REDUCED form (1,0,-1,-5) and (0,1,1,3) — explicit contrast with the column-space
+      rule ("columns from ORIGINAL, rows from REDUCED"); parametric span form with
+      PURPLE highlight + \underbrace "row space" label (r1, r2 scalars purple too).
+      Consistent color code across the three recipes: GREEN column / BLUE null /
+      PURPLE row, all on the SAME matrix (one matrix, all three spaces). VERIFIED.
+- [x] Block 1 intro (row space; rank = pivot count).
+- [x] Block 2 — TWO Logistics cards side by side (one-plan and many-plans), each with
+      its surviving RULES (route variable x, one per line) on the left and its reduced
+      form (array+vertical-rule LaTeX, dimmed zero row) on the right; the many-plans
+      card also shows its parametric solution X = [50;50;30;20;0;25;25] +
+      x5·[-1;1;0;-1;1;0;0] below its matrix.
+- [x] Block 3 — the counting rule centerpiece + two count cards (Smoothie, Circuit;
+      Logistics is covered by Block 2). Each card: RULES left (correct letter — f for
+      Smoothie, I for Circuit) / reduced matrix right. Smoothie card shows the
+      all-zeros particular vector explicitly plus its three free-variable directions
+      X = [0;0;0;0;0] + f3·[...] + f4·[...] + f5·[...]; Circuit card's b column IS the
+      answer I=(6,2,3,3,1), no free variables.
+- [x] Block 4 closing.
+- Note: all reduced forms VERIFIED (Smoothie rank 2 / 3 free; Logistics one-plan
+      rank 6 / 0 free, unique (50,50,30,20,25,25); Logistics many-plans rank 6 / 1
+      free; Circuit rank 5 / 0 free). Matrices use array + vertical rule (NEVER
+      bmatrix with `\big|`, which fails to render — that was the initial bug).
+
+### Screen 5 — One matrix, all three spaces (`screen_together.py`)
+- [x] Block 1 — 1-dimensional example: eliminate A=[[1,2],[2,4]] once; both the
+      column-space line (1,2) and null-space line (-2,1) on one 2D graph.
+- [x] Block 2 — read all three spaces off the reduced form (column space line,
+      null space line, row space rule x1+2x2 rank 1; counting 1+1=2).
+- [x] Banner — "Now let's go bigger" bridge between the 1D and 2D examples.
+- [x] Block 3 — 2-dimensional example (3D graph): A=[[2,1,3],[1,1,2],[3,2,5]]
+      (row3=row1+row2, rank 2; RREF [[1,0,1],[0,1,1],[0,0,0]]). Column space = the
+      PLANE -x-y+z=0 spanned by (2,1,3) and (1,1,2); null space = the LINE along
+      (-1,-1,1) — which is perpendicular to the plane, poking straight through it;
+      counting 2+1=3. 3D plot via `new_figure_3d` + `add_plane_3d` + `_arrow3d` +
+      a Scatter3d line segment; rotatable. All VERIFIED.
+- [x] Block 4 — closing bridge (dimension, basis; Topic 7 preview: closest point
+      when b is outside the column space -> least-squares / GPS / camera apps).
+
+- [ ] Not yet manually verified in the running app (built this session; pending your
+      review — confirm every block fits one viewport with math + graph together, the
+      3D plane/line renders and rotates, and all embedded recaps render verbatim).
+
+---
+
 ## Core curriculum status
 
-**Topics 0, 1–5, and 5.5 are FULLY COMPLETE** — all refactored to the dark-mode layout, all screens built and verified, all engines shared and tested. The core curriculum (matrix operations → vectors → transformations → determinant → inverse → linear systems → elimination & inversion) is done.
+**Topics 0, 1–5, and 5.5 are FULLY COMPLETE** — all refactored to the dark-mode layout, all screens built and verified, all engines shared and tested. The core curriculum (matrix operations → vectors → transformations → determinant → inverse → linear systems → elimination & inversion) is done. **Topic 6 (Vector Spaces) is BUILT this session, pending in-app review.**
 
 ---
 
 ## Topics not yet started
 
-- [ ] 6 — Subspaces, Basis, Dimension
 - [ ] 7 — Projection & Least Squares
 - [ ] 8 — Eigenvalues & Eigenvectors
 - [ ] 9 — Complex Numbers in LA (AC-circuit screen reuses Topic 5.5 Circuit topology + `circuit_parser` with complex impedances)
