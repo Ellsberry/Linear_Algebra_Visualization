@@ -15,7 +15,7 @@ from .screen_rows import render_rows
 from .screen_cols import render_cols
 from .screen_outer import render_outer
 
-TITLE = "0 · Matrix multiplication"
+TITLE = "0 · Matrix math"
 SLUG = "matmul"
 
 OVERVIEW = """
