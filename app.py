@@ -10,7 +10,7 @@ and appending it to TOPICS below — nothing else changes.
 """
 import streamlit as st
 
-from topics import t00_matmul, t01_vectors, t02_transformations, t03_determinant, t04_inverse, t05_systems, t05b_elimination, t06_spaces
+from topics import t00_matmul, t01_vectors, t02_transformations, t03_determinant, t04_inverse, t05_systems, t05b_elimination, t06_spaces, t07_projection
 
 st.set_page_config(page_title="Linear Algebra", layout="wide")
 
@@ -24,6 +24,7 @@ TOPICS = [
     (t05_systems.TITLE, t05_systems),
     (t05b_elimination.TITLE, t05b_elimination),
     (t06_spaces.TITLE, t06_spaces),
+    (t07_projection.TITLE, t07_projection),
 ]
 
 labels = [label for label, _ in TOPICS]
