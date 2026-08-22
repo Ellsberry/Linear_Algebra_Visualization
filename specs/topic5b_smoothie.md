@@ -87,6 +87,69 @@ Closing (after the parametric solution):
 > space means: three independent dials you can turn, each keeping every constraint
 > satisfied.
 
+## Interactive "Try it yourself" block (bottom of screen, below the parametric solution)
+
+An interactive compensation explorer: the student fixes THREE ingredient changes and
+the app computes the other TWO so volume and sweetness stay locked at zero. Reuses no
+engine code -- inline numpy/python. Placed at the very bottom of render_smoothie(),
+after the closing text.
+
+Heading: **Try it yourself: fix any three, the recipe fills in the rest.**
+Intro (verbatim):
+> The recipe has three free choices and two forced ones. Pick any THREE ingredients to
+> set yourself (check their boxes and type a change: positive = add, negative =
+> remove). The other two are then computed for you so that the total volume and total
+> sweetness both stay at zero. For example, set strawberries to -10 (short by 10) and
+> watch the recipe work out how to compensate.
+
+UI (per ingredient, five rows or a compact grid):
+  - a checkbox "set this one" (keys t05b_smoothie_fix_f1 .. _f5)
+  - a text_input for the value (decimals; keys t05b_smoothie_val_f1 .. _f5), only
+    used when that ingredient's box is checked. Default: check f1, f2, f3; values
+    f1 = -10, f2 = 0, f3 = 0 (a strawberry-shortage starting example).
+  Ingredient labels: f1 strawberries, f2 bananas, f3 yogurt, f4 milk, f5 honey.
+
+Constraint rows (both must end at 0):
+  volume    = f1 + f2 + f3 + f4 + f5
+  sweetness = f1 - f2 + f3 - f4 + 2*f5
+Matrix of the two constraints C = [[1,1,1,1,1],[1,-1,1,-1,2]].
+
+Logic (inline):
+  - Let `fixed` = the indices whose box is checked, with their typed values; `dep` =
+    the other two indices (the ones to compute).
+  - If exactly 3 are NOT checked as fixed (i.e. checked count != 3): st.warning(
+    "Pick exactly 3 ingredients to set -- the other 2 are forced.") and stop.
+  - Else build Cdep = C[:, dep] (2x2). If abs(det(Cdep)) < 1e-9: st.warning(
+    "Those three don't pin down a unique fix -- try setting a different combination "
+    "(for example, swap one for another ingredient).") and stop. (VERIFIED: only the
+    trios {f1,f3,f5} and {f2,f4,f5} are singular; all other 8 trios solve.)
+  - Else solve Cdep @ x_dep = -Cfix @ x_fix (numpy.linalg.solve) for the two computed
+    values. Assemble the full 5-vector x.
+
+Display:
+  - Show the full resulting swap as a labeled list or one bmatrix: the 5 ingredient
+    changes (fixed ones as typed, computed ones highlighted as "computed for you").
+  - THEN show the parametric formula EVALUATED with the resulting free-variable values.
+    After solving, every variable has a definite value, including the formula's three
+    free vars f3, f4, f5. Substitute those into the parametric equation and show it
+    filled in and evaluated (st.latex), e.g. with heading
+    "**The parametric formula with your numbers:**":
+      X = <f3val>\,[-1;0;1;0;0] + <f4val>\,[0;-1;0;1;0]
+          + <f5val>\,[-\tfrac{3}{2};\tfrac{1}{2};0;0;1] = [f1;f2;f3;f4;f5]
+    (bmatrix columns; the three scalars are the computed f3, f4, f5; the right-hand
+    side is the full resulting swap vector). This ties the interactive back to the
+    parametric solution shown above -- no matter which three ingredients the student
+    fixed, the formula fed with the resulting f3, f4, f5 reproduces the same swap.
+    (VERIFIED: fix f1=-10,f2=0,f3=0 -> f3=0,f4=10/3,f5=20/3 -> formula gives
+    (-10,0,0,10/3,20/3), matching.)
+  - Show Total volume and Total sweetness live (both snap to 0), labeled, NEXT TO the
+    evaluated formula.
+  - st.success("Valid swap -- the two free ingredients were adjusted to keep volume "
+    "and sweetness locked.")
+
+(VERIFIED: fixing f1=-10, f2=0, f3=0 -> computes f4=10/3, f5=20/3; volume 0,
+sweetness 0. 8 of 10 trios solvable; {f1,f3,f5} and {f2,f4,f5} singular.)
+
 ## Reuse / new
 - REUSE: workbench(), _make_aug, _load_aug, _is_upper_triangular (workbench.py);
   solve_parametric, parametric_latex, solution_equations_latex (engine/parametric.py).

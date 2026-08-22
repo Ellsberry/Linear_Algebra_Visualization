@@ -1,3 +1,4 @@
+import numpy as np
 import streamlit as st
 
 from .workbench import workbench, _make_aug, _load_aug, _is_upper_triangular
@@ -50,6 +51,20 @@ satisfied.
 
 _LEGEND = "f1 = strawberries · f2 = bananas · f3 = yogurt · f4 = milk · f5 = honey"
 
+_DIR_F3 = r"\begin{bmatrix}-1\\0\\1\\0\\0\end{bmatrix}"
+_DIR_F4 = r"\begin{bmatrix}0\\-1\\0\\1\\0\end{bmatrix}"
+_DIR_F5 = r"\begin{bmatrix}-\tfrac{3}{2}\\\tfrac{1}{2}\\0\\0\\1\end{bmatrix}"
+
+
+def _fmt_scalar(v):
+    if abs(v) < 1e-9:
+        v = 0.0
+    return f"{v:.2f}"
+
+
+def _col_latex(vals):
+    return r"\begin{bmatrix}" + r"\\".join(_fmt_scalar(v) for v in vals) + r"\end{bmatrix}"
+
 
 def render_smoothie():
     st.markdown(_INTRO)
@@ -98,3 +113,100 @@ def render_smoothie():
     workbench("t05b_smoothie", 5, var_name="f", right_extra=_render_solution)
 
     st.markdown(_CLOSING)
+
+    st.markdown("**Try it yourself: fix any three, the recipe fills in the rest.**")
+    st.markdown(
+        "The recipe has three free choices and two forced ones. Pick any THREE "
+        "ingredients to set yourself (check their boxes and type a change: positive = "
+        "add, negative = remove). The other two are then computed for you so that the "
+        "total volume and total sweetness both stay at zero. For example, set "
+        "strawberries to -10 (short by 10) and watch the recipe work out how to "
+        "compensate."
+    )
+
+    def _parse_val(raw):
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return 0.0
+
+    _fix_labels = ["f1 strawberries", "f2 bananas", "f3 yogurt", "f4 milk", "f5 honey"]
+    _fix_default_checked = [True, True, True, False, False]
+    _fix_default_values = ["-10", "0", "0", "0", "0"]
+
+    C = np.array([[1, 1, 1, 1, 1], [1, -1, 1, -1, 2]], float)
+
+    fixed = []
+    fix_cols = st.columns(5)
+    for i, col in enumerate(fix_cols):
+        with col:
+            checked = st.checkbox(
+                "set this one",
+                value=_fix_default_checked[i],
+                key=f"t05b_smoothie_fix_f{i + 1}",
+            )
+            raw = st.text_input(
+                _fix_labels[i],
+                value=_fix_default_values[i],
+                key=f"t05b_smoothie_val_f{i + 1}",
+            )
+        if checked:
+            fixed.append((i, _parse_val(raw)))
+
+    if len(fixed) != 3:
+        st.warning("Pick exactly 3 ingredients to set -- the other 2 are forced.")
+    else:
+        fix_idx = [i for i, _ in fixed]
+        fix_vals = np.array([v for _, v in fixed], float)
+        dep_idx = [i for i in range(5) if i not in fix_idx]
+
+        Cdep = C[:, dep_idx]
+        Cfix = C[:, fix_idx]
+        if abs(np.linalg.det(Cdep)) < 1e-9:
+            st.warning(
+                "Those three don't pin down a unique fix -- try setting a different "
+                "combination (for example, swap one for another ingredient)."
+            )
+        else:
+            dep_vals = np.linalg.solve(Cdep, -Cfix @ fix_vals)
+
+            x = [0.0] * 5
+            for i, v in fixed:
+                x[i] = v
+            for i, v in zip(dep_idx, dep_vals):
+                x[i] = v
+
+            result_cols = st.columns(5)
+            for i, col in enumerate(result_cols):
+                with col:
+                    tag = " (computed for you)" if i in dep_idx else ""
+                    st.markdown(f"{_fix_labels[i]}{tag}")
+                    st.markdown(f"{x[i]:g}")
+
+            st.markdown("**The parametric formula with your numbers:**")
+            f3v, f4v, f5v = x[2], x[3], x[4]
+            formula = (
+                "X = " + _fmt_scalar(f3v) + r"\," + _DIR_F3
+                + " + " + _fmt_scalar(f4v) + r"\," + _DIR_F4
+                + " + " + _fmt_scalar(f5v) + r"\," + _DIR_F5
+                + " = " + _col_latex(x)
+            )
+            st.latex(formula)
+
+            volume = sum(x)
+            sweetness = x[0] - x[1] + x[2] - x[3] + 2 * x[4]
+            if abs(volume) < 1e-9:
+                volume = 0.0
+            if abs(sweetness) < 1e-9:
+                sweetness = 0.0
+
+            m_left, m_right = st.columns(2)
+            with m_left:
+                st.metric("Total volume", f"{volume:g}")
+            with m_right:
+                st.metric("Total sweetness", f"{sweetness:g}")
+
+            st.success(
+                "Valid swap -- the two free ingredients were adjusted to keep volume "
+                "and sweetness locked."
+            )
