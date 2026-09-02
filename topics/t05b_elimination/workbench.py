@@ -115,11 +115,21 @@ def _do_apply_cb(key, n_unknowns):
 
 
 def _compute_one_step(M_in, n_unknowns):
-    """One standard forward-elimination op. Returns (new_M, desc) or (None, None)."""
+    """One elimination op toward reduced row echelon form. Returns (new_M, desc)
+    or (None, None) when fully reduced.
+
+    PHASE 1: forward elimination (swap up a zero pivot, or clear the first
+    nonzero below a pivot).
+    PHASE 2: once forward elimination is exhausted, normalize the first
+    non-unit pivot to 1.
+    PHASE 3: once a pivot is 1, clear the first nonzero above it.
+    """
     M = [row[:] for row in M_in]
     n = len(M)
     nc = n_unknowns + 1
     TOL = 1e-9
+
+    # PHASE 1: forward elimination.
     for p in range(min(n, n_unknowns)):
         if abs(M[p][p]) < TOL:
             r = next((r for r in range(p + 1, n) if abs(M[r][p]) > TOL), None)
@@ -135,6 +145,27 @@ def _compute_one_step(M_in, n_unknowns):
             sign = "+" if factor < 0 else "−"
             desc = f"R{i+1} → R{i+1} {sign} {abs(factor):.4g}·R{p+1}"
             return M, desc
+
+    # PHASE 2: normalize the first non-unit pivot to 1.
+    for p in range(min(n, n_unknowns)):
+        if abs(M[p][p]) > TOL and abs(M[p][p] - 1) > TOL:
+            k = 1.0 / M[p][p]
+            for c in range(nc):
+                M[p][c] *= k
+            return M, f"R{p+1} → {k:.4g}·R{p+1}"
+
+    # PHASE 3: clear above the first unit pivot that still has a nonzero above it.
+    for p in range(min(n, n_unknowns)):
+        if abs(M[p][p] - 1) < TOL:
+            i = next((r for r in range(p) if abs(M[r][p]) > TOL), None)
+            if i is not None:
+                factor = M[i][p]
+                for c in range(nc):
+                    M[i][c] -= factor * M[p][c]
+                sign = "+" if factor < 0 else "−"
+                desc = f"R{i+1} → R{i+1} {sign} {abs(factor):.4g}·R{p+1}"
+                return M, desc
+
     return None, None
 
 
@@ -148,6 +179,8 @@ def _do_one_step_cb(key, n_unknowns):
 def _run_to_triangular_cb(key, n_unknowns):
     n = len(st.session_state[f"{key}_M"])
     for _ in range(max(50, 10 * n * n)):
+        if _is_upper_triangular(st.session_state[f"{key}_M"], n_unknowns):
+            break
         new_M, desc = _compute_one_step(st.session_state[f"{key}_M"], n_unknowns)
         if new_M is None:
             break

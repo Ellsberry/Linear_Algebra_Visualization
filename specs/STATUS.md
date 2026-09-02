@@ -724,16 +724,92 @@ selector key `t06_screen`, dispatch) + `screen_what.py`, `screen_column.py`,
 
 ---
 
+## Topic 5.5 — additions this session (BUILT, pending in-app review)
+
+- [x] **NEW Screen 3 — Determinant Calculation** (`determinant.py`, spec
+      `specs/topic5b_determinant_calc.md`). Inserted at selector position 3; the
+      former screens 3–7 renumbered to 4–8 (Infinite/No Solutions=4, Logistics one=5,
+      Logistics many=6, Smoothie=7, Circuit=8). `_eb_keys` labels updated to the new
+      numbers (session keys t05b_e2a/t05b_e2/t05b_e3 unchanged). Content: repeats the
+      2×2 (ad−bc) and 3×3 cofactor formulas from Topic 3; explains cofactor expansion
+      and the operation-count explosion (20×20 = 2.4 quintillion steps ≈ 77 years vs
+      ~2,600 by elimination); states the three determinant rules (add-multiple = no
+      change, swap = flip sign, scale by k = divide by k). The op-count table uses a
+      MARKDOWN table (NOT st.table — st.table pulled in pandas and crashed on the
+      env's NumPy 1.x/2.x mismatch).
+- [x] **Dedicated determinant workbench** (`det_workbench.py`): a self-contained
+      INTERACTIVE workbench for a SQUARE matrix (no b-column, no equations, no
+      scenario banner, no back-substitution), mirroring the shared workbench's
+      controls (op-type radio, row selectors, k text input, Apply/Undo/Reset, Do one
+      step / Run to triangular). Tracks a running sign (×−1 per swap) and scale divisor
+      (×k per scale); at triangular form shows det = sign × (diagonal product) ÷
+      divisor. Screen 3 Block 5 loads the VERIFIED 4×4 A=[[0,1,1,2],[1,2,3,1],
+      [2,1,1,0],[1,1,2,3]] (needs a swap; diagonal 1,1,−2,4; det = 8) for the student
+      to eliminate. Browser autofill suppressed on its k field (same injection as
+      eq_builder). NOTE: an earlier attempt bolted determinant tracking onto the SHARED
+      workbench via a show_determinant flag + a dummy zero b-column — that was reverted
+      (wrong architecture: a determinant is a property of a square matrix, not an
+      augmented system).
+- [x] **"Do one step" now continues past triangular into reduced form** on the shared
+      workbench: `_compute_one_step` extended with two phases (normalize each pivot to
+      1, then clear above pivots), one operation per click, so stepping walks all the
+      way to RREF. `_run_to_triangular_cb` changed to STOP at triangular (so the two
+      "Run to" buttons keep distinct stopping points). Stateless/self-correcting:
+      whatever path the student takes (extra swaps/scales), it converges to correct
+      RREF. No per-screen changes needed (screens gate on `_is_upper_triangular`, which
+      is True for reduced form too).
+- [x] **Smoothie (Screen 7) — interactive "Try it yourself" compensation explorer**
+      at the bottom: student checks any THREE ingredients to set and types values; the
+      app computes the other TWO so volume (sum) and sweetness (f1−f2+f3−f4+2f5) both
+      stay 0. Warns if ≠3 checked, or if the trio is singular (only {f1,f3,f5} and
+      {f2,f4,f5} are singular; other 8 solvable). Shows the parametric formula
+      EVALUATED with the resulting f3,f4,f5 → full swap vector, with volume/sweetness
+      beside it. Default fixes f1=−10 (strawberry shortage) → computes f4=10/3,f5=20/3.
+      Also added earlier: a plain-language note that the parametric directions are
+      "substitution recipes."
+
+---
+
+## Topic 7 — Projection & Least Squares (`topics/t07_projection/`) — BUILT this session, pending review
+
+**Spec:** `specs/topic7_projection.md`. 6 screens (0 perpendicularity primer →
+1 line projection → 2 plane projection → 3 normal equations → 4 line of best fit →
+5 real world). Registered after t06_spaces. Through-line: when b is outside the column
+space there's no exact answer, so find the CLOSEST (the perpendicular shadow /
+projection / least squares). Screen 0 teaches perpendicular ⟺ dot product zero (light
+interactive angle slider). Screen 1 full scalar projection derivation c=(a·b)/(a·a).
+Screen 2 plane projection in 3D (residual ⟂ both spanning vectors, VERIFIED). Screen 3
+full 6-step normal-equations derivation to AᵀAx̂=Aᵀb. Screen 4 line of best fit,
+temperature-vs-time data t=[0,2,4,6,8,10], temp=[6,8,13,17,20,26] → temp=5+2t
+(VERIFIED, residuals [+1,−1,0,0,−1,+1], predict t=12→29). Screen 5 GPS + cameras +
+Topic 8 eigenvector bridge. NOT yet verified in-app.
+
+---
+
+## Topic 8 — Eigenvalues & Eigenvectors (`topics/t08_eigen/`) — BUILT this session, pending review
+
+**Spec:** `specs/topic8_eigen.md`. 6 screens (0 special-directions interactive →
+1 defined → 2 finding eigenvalues → 3 finding eigenvectors → 4 what eigenvalues tell
+you → 5 Markov). Registered after t07_projection. Anchor: "does A·v stay on v's line?"
+Selective 3×3 on Screens 2,3 (worked math + 3D eigenvector-line plots) and Screen 5
+(3×3 Markov). VERIFIED matrices: 2×2 [[2,1],[1,2]] (λ=3,1; eigenvectors (1,1),(1,−1));
+3×3 [[2,1,0],[1,2,0],[0,0,4]] (λ=1,3,4; extends the 2×2 block); gallery [[2,0],[0,0.5]]
+stretch/shrink, [[−1,0],[0,1]] flip, [[0,−1],[1,0]] rotation (no real eigenvectors,
+Topic 9 hook, no computation); weather Markov [[0.7,0.2,0.2],[0.2,0.6,0.2],
+[0.1,0.2,0.6]] converging to (0.4,0.333,0.267) as the dominant eigenvector (λ=1).
+Screen 2 reuses Topic 3 (determinant), Screen 3 reuses Topic 6 (null space). NOT yet
+verified in-app.
+
+---
+
 ## Core curriculum status
 
-**Topics 0, 1–5, and 5.5 are FULLY COMPLETE** — all refactored to the dark-mode layout, all screens built and verified, all engines shared and tested. The core curriculum (matrix operations → vectors → transformations → determinant → inverse → linear systems → elimination & inversion) is done. **Topic 6 (Vector Spaces) is BUILT this session, pending in-app review.**
+**Topics 0, 1–5, and 5.5 are FULLY COMPLETE** — all refactored to the dark-mode layout, all screens built and verified, all engines shared and tested. The core curriculum (matrix operations → vectors → transformations → determinant → inverse → linear systems → elimination & inversion) is done. **Topics 6 (Vector Spaces), 7 (Projection & Least Squares), and 8 (Eigenvalues & Eigenvectors) are BUILT, pending in-app review.** Topic selector is now a **5-column** grid (was 3); Topic 0 renamed "0 · Matrix math".
 
 ---
 
 ## Topics not yet started
 
-- [ ] 7 — Projection & Least Squares
-- [ ] 8 — Eigenvalues & Eigenvectors
-- [ ] 9 — Complex Numbers in LA (AC-circuit screen reuses Topic 5.5 Circuit topology + `circuit_parser` with complex impedances)
+- [ ] 9 — Complex Numbers in LA (AC-circuit screen reuses Topic 5.5 Circuit topology + `circuit_parser` with complex impedances; Topic 8's rotation matrix is the hook)
 - [ ] 10 — Fourier Matrices (DFT)
 - [ ] 11 — Linear Algebra in AI/ML (PCA & SVD)

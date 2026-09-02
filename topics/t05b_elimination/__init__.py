@@ -6,6 +6,7 @@ Pattern: MULTI-EXAMPLE (3 screens).
 import streamlit as st
 
 from .circuit import _example_three
+from .determinant import render_determinant
 from .inverse_elim import render_inverse_elim
 from .logistics import _example_two
 from .logistics_one import _example_two_a
@@ -58,11 +59,12 @@ def render():
         [
             "1 · Augmented Matrix",
             "2 · Inverse by elimination",
-            "3 · Infinite and No Solutions",
-            "4 · Logistics (one plan)",
-            "5 · Logistics (many plans)",
-            "6 · Smoothie",
-            "7 · Circuit",
+            "3 · Determinant Calculation",
+            "4 · Infinite and No Solutions",
+            "5 · Logistics (one plan)",
+            "6 · Logistics (many plans)",
+            "7 · Smoothie",
+            "8 · Circuit",
         ],
         horizontal=True,
         key="t05b_example",
@@ -71,9 +73,9 @@ def render():
     # Clear equation-builder state when entering a screen fresh (so typed boxes
     # don't persist across visits).
     _eb_keys = {
-        "4 · Logistics (one plan)":   ("t05b_e2a", 7),
-        "5 · Logistics (many plans)": ("t05b_e2", 7),
-        "7 · Circuit":                ("t05b_e3", 5),
+        "5 · Logistics (one plan)":   ("t05b_e2a", 7),
+        "6 · Logistics (many plans)": ("t05b_e2", 7),
+        "8 · Circuit":                ("t05b_e3", 5),
     }
     _prev = st.session_state.get("t05b_prev_example")
     if _prev != example:
@@ -94,18 +96,20 @@ def render():
     elif example.startswith("2 "):
         render_inverse_elim()
     elif example.startswith("3 "):
+        render_determinant()
+    elif example.startswith("4 "):
         if render_infinite_nosolution is not None:
             render_infinite_nosolution()
         else:
             st.info("Coming soon.")
-    elif example.startswith("4 "):
-        _example_two_a()
     elif example.startswith("5 "):
-        _example_two()
+        _example_two_a()
     elif example.startswith("6 "):
+        _example_two()
+    elif example.startswith("7 "):
         if render_smoothie is not None:
             render_smoothie()
         else:
             st.info("Smoothie: coming soon")
-    elif example.startswith("7 "):
+    elif example.startswith("8 "):
         _example_three()
