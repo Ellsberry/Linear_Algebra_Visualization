@@ -72,6 +72,15 @@ def _worked_example() -> None:
         "later -- it's how PCA and SVD break a matrix into a stack of "
         "simple layers."
     )
+    st.markdown(
+        "**PCA** (Principal Component Analysis) finds the few most important "
+        "directions in a big pile of data, so you can describe it with far "
+        "fewer numbers. **SVD** (Singular Value Decomposition) breaks any "
+        "matrix into a sum of simple layers -- exactly the outer-product "
+        "pieces on this screen -- ordered from most to least important. Both "
+        "are built on this \"sum of simple pieces\" idea, and both are "
+        "covered in Topic 11 (Linear Algebra in AI/ML)."
+    )
     st.caption(
         "A is m×n, B is n×p, so C = AB is m×p -- the shared "
         "inner dimension n is what gets summed over. Here A is 2×3, B "
@@ -80,6 +89,14 @@ def _worked_example() -> None:
     st.caption(
         "The number of terms equals the shared dimension n -- one "
         "term per column of A paired with the matching row of B."
+    )
+
+    st.caption(
+        "Use the buttons below to build C one piece at a time: Term 1 "
+        "multiplies column 1 of A by row 1 of B, Term 2 does column 2 by "
+        "row 2, Term 3 column 3 by row 3, and Sum = C adds all three pieces "
+        "to give the full product. Each piece is a full matrix the same "
+        "size as C."
     )
 
     sel = st.radio("Building:", ["Term 1", "Term 2", "Term 3", "Sum = C"],
@@ -105,7 +122,7 @@ def _worked_example() -> None:
 
 def _term_check_and_solve(ans_key: str, target: np.ndarray, m: int, p: int,
                           answer: np.ndarray) -> None:
-    check_col, solve_col = st.columns(2)
+    check_col, solve_col, clear_col = st.columns(3)
     if check_col.button("Check", key=f"{ans_key}_check"):
         wrong = [
             (i + 1, j + 1)
@@ -121,6 +138,10 @@ def _term_check_and_solve(ans_key: str, target: np.ndarray, m: int, p: int,
 
     if solve_col.button("Show solution", key=f"{ans_key}_solve"):
         st.session_state[f"{ans_key}_reveal"] = True
+        st.rerun()
+
+    if clear_col.button("Clear", key=f"{ans_key}_clearbtn"):
+        st.session_state[f"{ans_key}_clear"] = True
         st.rerun()
 
 
@@ -156,23 +177,22 @@ def _practice_block(idx: int, A: np.ndarray, B: np.ndarray, C: np.ndarray,
             set_matrix_state(ans_key, term)
             st.session_state[reveal_key] = False
 
+        if st.session_state.get(f"{ans_key}_clear"):
+            set_matrix_state(ans_key, np.zeros((m, p)))
+            st.session_state[f"{ans_key}_clear"] = False
+
         for i in range(m):
             for j in range(p):
                 wkey = f"{ans_key}__{i}__{j}"
                 if wkey not in st.session_state:
                     st.session_state[wkey] = 0.0
 
-        if aided:
-            col_str = ", ".join(f"{v:.0f}" for v in A[:, k])
-            row_str = ", ".join(f"{v:.0f}" for v in B[k, :])
-            rc, ac = st.columns([2, 1])
-            with rc:
-                st.markdown(f"Term {k + 1} = ({col_str})ᵀ · ({row_str}) = ___")
-            with ac:
-                answer = editable_matrix(ans_key, label=f"Term {k + 1}",
-                                          editable=True, compact=True,
-                                          rows=m, cols=p, hide_steppers=True)
-        else:
+        col_str = ", ".join(f"{v:.0f}" for v in A[:, k])
+        row_str = ", ".join(f"{v:.0f}" for v in B[k, :])
+        rc, ac = st.columns([2, 1])
+        with rc:
+            st.markdown(f"Term {k + 1} = ({col_str})ᵀ · ({row_str}) = ___")
+        with ac:
             answer = editable_matrix(ans_key, label=f"Term {k + 1}",
                                       editable=True, compact=True,
                                       rows=m, cols=p, hide_steppers=True)
@@ -186,6 +206,10 @@ def _practice_block(idx: int, A: np.ndarray, B: np.ndarray, C: np.ndarray,
     if st.session_state.get(sum_reveal_key):
         set_matrix_state(sum_key, C)
         st.session_state[sum_reveal_key] = False
+
+    if st.session_state.get(f"{sum_key}_clear"):
+        set_matrix_state(sum_key, np.zeros((m, p)))
+        st.session_state[f"{sum_key}_clear"] = False
 
     for i in range(m):
         for j in range(p):

@@ -263,21 +263,26 @@ def render_ops():
     # 6. Inverse -- description only
     _op_header(
         "6. Inverse", "Undo a Transformation",
-        "A^-1 with A . A^-1 = I; exists iff det != 0.",
+        "A⁻¹ with A . A⁻¹ = I; exists iff det != 0.",
         "Solves Ax = b and undoes a transformation.",
         [
-            "Solve Ax = b as x = A^-1 b",
+            "Solve Ax = b as x = A⁻¹ b",
             "Undo a rotation or scaling",
             "Convert coordinates between bases",
         ],
     )
-    st.caption("Described only -- see Topics 4 and 5.5.")
+    st.caption("This procedure will be shown in Topic 4 - Inverse Transformations")
     st.divider()
 
     # 7. Division -- description only
     _op_header(
         "7. Division (via inverse)", "Solve Relationships",
-        "No direct division; A / B = A . B^-1.",
+        "Matrix algebra does not have a direct way to do division, but we can accomplish "
+        "division by using the inverse of a matrix.  \n"
+        "When we normally would divide by a matrix, we can instead multiply by that matrix "
+        "inverse.  \n"
+        "We can solve for x in the equation Ax=b by multiplying both sides by A⁻¹.  \n"
+        "A⁻¹Ax = A⁻¹b gives us x = A⁻¹b because AA⁻¹ = the identity matrix.",
         "Solve relationships between systems.",
         [
             "Solve for unknowns in engineering systems",
@@ -285,4 +290,4 @@ def render_ops():
             "Compute ratios of linear effects",
         ],
     )
-    st.caption("Described only.")
+    st.caption("This procedure will be shown in Topic 4 - Inverse Transformations")
