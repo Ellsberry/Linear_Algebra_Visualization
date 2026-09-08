@@ -30,9 +30,16 @@ These are two views of the same thing: **every corner of a shape is described by
 a vector**, and that's exactly why a matrix can transform a shape — it multiplies
 the vector of each corner, and the corners move.
 
-The columns of A tell you where the basis vectors (î, ĵ) land. Pick a preset
-below (or choose Custom to set the four entries yourself) and watch the
-parallelogram transform.
+The two vectors that build every other vector are the x-direction vector (one step
+right, written (1, 0)) and the y-direction vector (one step up, written (0, 1)).
+Every point on the grid is just some amount of the x-direction vector plus some
+amount of the y-direction vector -- so if you know where those two land after a
+transformation, you know where everything lands. And the columns of A tell you
+exactly that: the first column is where the x-direction vector lands, the second
+column is where the y-direction vector lands. For example, Scale x2 sends the
+x-direction vector to (2, 0) and the y-direction vector to (0, 2), so the whole
+shape doubles in size. Pick a preset below (or choose Custom to set the four
+entries yourself) and watch the parallelogram transform.
 """
 
 from .screen_2d import _render_2d

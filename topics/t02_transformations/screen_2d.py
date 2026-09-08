@@ -49,7 +49,8 @@ _PRESET_MATRICES = {
 }
 
 # An asymmetric parallelogram, one corner in each quadrant, no 0s or 1s so no
-# corner is mistakable for a basis vector. Columns are the four corners.
+# corner is mistakable for the x-direction or y-direction vector. Columns are
+# the four corners.
 CORNERS = np.array([
     [-3.0, 4.0, 3.0, -4.0],
     [-2.0, -1.0, 4.0, 3.0],
@@ -124,9 +125,9 @@ def _render_2d():
 
     with band_left:
         st.latex(r"A = " + w.bmatrix(A))
-        st.caption("Columns = where î and ĵ land.")
-        st.markdown("The basis vectors land on the **columns** of A:")
-        st.latex(r"\hat{i} \to " + w.bmatrix(A[:, 0]) + r" \quad \hat{j} \to " + w.bmatrix(A[:, 1]))
+        st.caption("Columns = where the x-direction and y-direction vectors land.")
+        st.markdown("Where the two starting directions land (the **columns** of A):")
+        st.latex(r"\text{x-direction} \to " + w.bmatrix(A[:, 0]) + r" \quad \text{y-direction} \to " + w.bmatrix(A[:, 1]))
 
     # --- two-column row: corner math/determinant/meaning/notice left, graph right ---
     left, right = st.columns([0.5, 0.5], gap="large")
