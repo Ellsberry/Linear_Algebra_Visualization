@@ -168,7 +168,7 @@ def render_column():
             plot.add_line_2d(fig, 1, -1, 0, "#20c997", "column space = this line")
             plot.add_point_2d(fig, (4, 2), "#ff6b6b",
                               "b = (4, 2) -- unreachable, outside the column space")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     # Block 3 -- new worked example A = [[1, 2], [2, 4]]
     A2 = np.array([[1, 2], [2, 4]])
@@ -191,7 +191,7 @@ def render_column():
         plot.add_point_2d(fig2, (3, 5), "#ff6b6b", "b = (3, 5) -- unreachable")
         plot.add_point_2d(fig2, (-3, -6), "#ffa94d", "A·(3, -3)")
         plot.add_point_2d(fig2, (4, 8), "#ffa94d", "A·(-2, 3)")
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
 
     # Block 4 -- closing text
     st.markdown(_CLOSING)

@@ -66,7 +66,7 @@ def _example_robotics():
             if not on_line:
                 plot.add_point_2d(fig, b, "#ff6b6b", "unreachable — off the line")
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         _inv_meter(A)
 
     with left:

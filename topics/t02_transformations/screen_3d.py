@@ -119,7 +119,7 @@ def _render_3d():
             btn_cols = st.columns(3)
             for btn_col, name in zip(btn_cols, row):
                 with btn_col:
-                    if st.button(name, key=f"t02_3d_btn_{name}", use_container_width=True):
+                    if st.button(name, key=f"t02_3d_btn_{name}", width="stretch"):
                         st.session_state["t02_3d_preset"] = name
         preset = st.session_state["t02_3d_preset"]
 
@@ -156,4 +156,4 @@ def _render_3d():
         fig = plot.new_figure_3d(rng=VIEW_3D)
         _add_solid_faces(fig, A @ VERTICES)
         _add_wireframe(fig, VERTICES)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")

@@ -82,7 +82,7 @@ def render_plane():
             x=[b[0], p[0]], y=[b[1], p[1]], z=[b[2], p[2]], mode="lines",
             line=dict(color="#ffa94d", width=5, dash="dash"), name="residual (dashed)",
         ))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption(_GRAPH_CAPTION)
 
     # Block 3 -- closing text

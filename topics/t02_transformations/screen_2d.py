@@ -98,7 +98,7 @@ def _render_2d():
             btn_cols = st.columns(3)
             for btn_col, name in zip(btn_cols, row):
                 with btn_col:
-                    if st.button(name, key=f"t02_btn_{name}", use_container_width=True):
+                    if st.button(name, key=f"t02_btn_{name}", width="stretch"):
                         st.session_state["t02_preset"] = name
         preset = st.session_state["t02_preset"]
 
@@ -162,4 +162,4 @@ def _render_2d():
                            line_color="rgba(190,190,190,0.55)", line_width=1.5)
         plot.shade_polygon(fig, after_pts, "rgba(255,140,0,0.35)", "after (A applied)",
                            line_color="#ff8c00", line_width=3)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")

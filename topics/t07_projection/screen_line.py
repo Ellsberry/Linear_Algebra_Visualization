@@ -88,7 +88,7 @@ def render_line():
                            arrow=False, showlegend=False)
         plot.add_vector_2d(fig, p + s * r_unit, corner, "#e6e6e6", "right angle",
                            arrow=False, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption(_GRAPH_CAPTION)
 
     # Block 3 -- derive the projection formula (math left, no graph)

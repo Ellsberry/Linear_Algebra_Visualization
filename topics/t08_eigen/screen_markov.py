@@ -92,7 +92,7 @@ def render_markov():
             f"{s_pct:.0f}% sunny, {c_pct:.0f}% cloudy, {r_pct:.0f}% rainy."
         )
     with right2:
-        st.plotly_chart(_bar_fig(x), use_container_width=True)
+        st.plotly_chart(_bar_fig(x), width="stretch")
         st.caption(_B2_CAPTION)
 
     # Block 3 -- the steady state is the dominant eigenvector (math left, bar chart right)
@@ -107,7 +107,7 @@ def render_markov():
         st.latex(r"P \cdot s = s, \qquad s = " + w.bmatrix(s.reshape(-1, 1))
                  + r", \qquad \lambda = 1")
     with right3:
-        st.plotly_chart(_bar_fig(s), use_container_width=True)
+        st.plotly_chart(_bar_fig(s), width="stretch")
         st.caption(_B3_CAPTION)
 
     # Block 4 -- the big picture (text only)

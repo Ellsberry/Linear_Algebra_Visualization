@@ -181,7 +181,7 @@ def render_null():
         plot.add_point_2d(fig, (2, -1), "#ffa94d", "(2, −1)")
         plot.add_line_2d(fig, 2, -1, 0, "rgba(160,160,160,0.6)",
                          "column space (from the last screen)")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     # Block 3 -- embedded smoothie recap (static, no toggle)
     left2, right2 = st.columns([0.5, 0.5], gap="large")

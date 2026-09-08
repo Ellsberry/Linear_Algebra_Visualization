@@ -72,7 +72,7 @@ def _example_biology():
             )
 
     with right:
-        st.plotly_chart(plot.figure_3d(A), use_container_width=True)
+        st.plotly_chart(plot.figure_3d(A), width="stretch")
         _det_meter(volume, kind="volume", extra={"surface": surface, "ratio": ratio})
 
     st.info(

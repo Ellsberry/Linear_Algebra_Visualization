@@ -51,7 +51,7 @@ def _example_four():
             plot_bgcolor="rgba(0,0,0,0)",
             font=dict(color="#e6e6e6"),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         if both_ok:
             st.success("✓ Balanced!")

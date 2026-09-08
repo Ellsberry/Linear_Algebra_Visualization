@@ -75,7 +75,7 @@ def render_eigenvalues():
         plot.add_line_2d(fig, 1, 1, 0, "rgba(160,160,160,0.5)", "line through (1, −1)", rng=7)
         plot.add_vector_2d(fig, (0, 0), (1, 1), "#4dabf7", "(1, 1), λ = 3")
         plot.add_vector_2d(fig, (0, 0), (1, -1), "#ffa94d", "(1, −1), λ = 1")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     # Block 3 -- worked 3x3 (math left, 3D graph right)
     left3, right3 = st.columns([0.5, 0.5], gap="large")
@@ -96,7 +96,7 @@ def render_eigenvalues():
             x=[0, 0], y=[0, 0], z=[-4, 4], mode="lines",
             line=dict(color="#51cf66", width=7), name="(0, 0, 1), λ = 4",
         ))
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig3, width="stretch")
         st.caption(_B3_CAPTION)
 
     # Block 4 -- closing (text only)

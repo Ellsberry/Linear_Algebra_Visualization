@@ -29,7 +29,7 @@ def _example_one():
         if kind == "unique":
             plot.add_point_2d(fig_r, x, "seagreen",
                               f"solution ({x[0]:.2g}, {x[1]:.2g})", size=14)
-        st.plotly_chart(fig_r, use_container_width=True)
+        st.plotly_chart(fig_r, width="stretch")
 
     with col_col:
         st.markdown("**Column picture** — what mix of columns reaches b?")
@@ -44,7 +44,7 @@ def _example_one():
                                "x₁·col1", dash="dash")
             plot.add_vector_2d(fig_c, mid, b, "seagreen",
                                "x₂·col2 → b", dash="dash")
-        st.plotly_chart(fig_c, use_container_width=True)
+        st.plotly_chart(fig_c, width="stretch")
 
     _render_outcome(kind, x, det_val)
 

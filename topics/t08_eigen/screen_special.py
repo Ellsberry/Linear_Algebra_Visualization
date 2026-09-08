@@ -78,7 +78,7 @@ def render_special():
         plot.add_line_2d(fig, 1, 1, 0, neg_color, "reference line (1, −1)", rng=7)
         plot.add_vector_2d(fig, (0, 0), (v[0], v[1]), "#4dabf7", "v")
         plot.add_vector_2d(fig, (0, 0), (Av[0], Av[1]), "#ffa94d", "A·v")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption(_CAPTION)
 
     # Block 3 -- the reveal (text only)

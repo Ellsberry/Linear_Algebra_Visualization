@@ -95,7 +95,7 @@ def render_together():
         fig = plot.new_figure_2d(rng=8)
         plot.add_line_2d(fig, 2, -1, 0, "#4dabf7", "column space: line along (1, 2)")
         plot.add_line_2d(fig, 1, 2, 0, "#ffa94d", "null space: line along (−2, 1)")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption("one matrix, two different lines")
 
     # Block 2 -- read all three spaces off the reduced form
@@ -122,7 +122,7 @@ def render_together():
             x=[2, -2], y=[2, -2], z=[-2, 2], mode="lines",
             line=dict(color="#ffa94d", width=7), name="null space (a line)",
         ))
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
         st.caption(_PLANE_CAPTION)
 
     # Block 4 -- closing bridge (text only)

@@ -42,7 +42,7 @@ def _example_five():
                 name=f"solution ({x[0]:.2g}, {x[1]:.2g}, {x[2]:.2g})",
             ))
         st.caption("drag to rotate · scroll to zoom — the solution is where all three planes cross.")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         if kind == "unique":
             st.success(

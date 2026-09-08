@@ -81,7 +81,7 @@ def _example_medical():
             st.warning("Singular — the scan lost information in one direction. Reconstruction impossible.")
         plot.add_point_2d(fig, _P1, "#ffa94d", "bone edge (p1)")
         plot.add_point_2d(fig, _P2, "#ff6b6b", "marrow edge (p2)")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         _inv_meter(A)
 
     with left:

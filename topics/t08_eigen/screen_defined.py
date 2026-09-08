@@ -51,7 +51,7 @@ def render_defined():
         plot.add_vector_2d(fig, (0, 0), (1, -1), "#ffa94d", "v = (1, −1)")
         plot.add_vector_2d(fig, (0, 0), (1, -1), "#e6e6e6", "A·v = (1, −1), λ = 1",
                            width=2, dash="dot")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption(_CAPTION)
 
     # Block 3 -- closing (text only)

@@ -96,7 +96,7 @@ def render_perp():
                                "#e6e6e6", "right angle", arrow=False, showlegend=False)
             plot.add_vector_2d(fig, (s * v_dir[0], s * v_dir[1]), corner,
                                "#e6e6e6", "right angle", arrow=False, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption(_CAPTION)
 
     # Block 3 -- three quick checks (math left, no graph)

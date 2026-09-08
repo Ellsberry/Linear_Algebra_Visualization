@@ -51,7 +51,7 @@ def render_reading():
         plot.add_vector_2d(fig2, (0, 0), (2, 0), "#51cf66", "(2, 0), λ = 2", dash="dot")
         plot.add_vector_2d(fig2, (0, 0), (0, 1), "#ffa94d", "(0, 1)")
         plot.add_vector_2d(fig2, (0, 0), (0, 0.5), "#e6e6e6", "(0, 0.5), λ = 0.5", dash="dot")
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
 
     # Block 3 -- flip (math left, graph right)
     left3, right3 = st.columns([0.5, 0.5], gap="large")
@@ -63,7 +63,7 @@ def render_reading():
         plot.add_vector_2d(fig3, (0, 0), (-1, 0), "#51cf66", "(−1, 0), λ = −1")
         plot.add_vector_2d(fig3, (0, 0), (0, 1), "#ffa94d", "(0, 1)")
         plot.add_vector_2d(fig3, (0, 0), (0, 1), "#e6e6e6", "(0, 1), λ = 1", dash="dot")
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig3, width="stretch")
 
     # Block 4 -- the honest exception: no real eigenvectors (math left, graph right)
     left4, right4 = st.columns([0.5, 0.5], gap="large")
@@ -75,7 +75,7 @@ def render_reading():
         plot.add_vector_2d(fig4, (0, 0), (-0.4, 1), "#51cf66", "A·v1")
         plot.add_vector_2d(fig4, (0, 0), (-0.8, 0.6), "#ffa94d", "v2")
         plot.add_vector_2d(fig4, (0, 0), (-0.6, -0.8), "#e6e6e6", "A·v2")
-        st.plotly_chart(fig4, use_container_width=True)
+        st.plotly_chart(fig4, width="stretch")
         st.caption(_B4_CAPTION)
 
     # Block 5 -- closing (text only)

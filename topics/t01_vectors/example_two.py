@@ -42,7 +42,7 @@ def _example_two():
             plot.add_vector_2d(fig, v, s, "rgba(0,0,0,0.25)", "", arrow=False,
                                dash="dot", showlegend=False)
         plot.add_vector_2d(fig, [0, 0], s, "crimson", "resultant", width=5)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with left:
         st.latex(rf"{c1:g} \cdot " + w.bmatrix(BANANA.reshape(-1, 1))

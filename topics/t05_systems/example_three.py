@@ -49,7 +49,7 @@ def _example_three():
                                f"x₁ × alloy 1", dash="dash")
             plot.add_vector_2d(fig, mid, b, "seagreen",
                                f"x₂ × alloy 2", dash="dash")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         if kind == "unique":
             st.success(f"Blend: **{x[0]:.3g} units of alloy 1** + **{x[1]:.3g} units of alloy 2**")

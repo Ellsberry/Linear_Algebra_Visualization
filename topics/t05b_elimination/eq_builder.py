@@ -197,7 +197,7 @@ def equation_builder(key, n_unknowns, target_aug, row_labels, diagram_fn,
 
     diagram_col, builder_col = st.columns([0.5, 0.5], gap="large")
     with diagram_col:
-        st.plotly_chart(diagram_fn(), use_container_width=True)
+        st.plotly_chart(diagram_fn(), width="stretch")
     with builder_col:
         _node_balance_builder(key, n_unknowns, row_labels, parse_fn,
                               intro_md=builder_intro_md, placeholder=placeholder,

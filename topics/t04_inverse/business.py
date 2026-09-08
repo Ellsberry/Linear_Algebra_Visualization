@@ -49,7 +49,7 @@ def _example_business():
             Ainv = np.linalg.inv(A)
             x_back = Ainv @ r
             plot.add_point_2d(fig, x_back, "crimson", "round-trip", size=10, symbol="x")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         _inv_meter(A)
 
     with left:

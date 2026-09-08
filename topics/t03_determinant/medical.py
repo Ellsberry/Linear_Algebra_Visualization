@@ -135,7 +135,7 @@ def _example_medical():
         # orientation mark on both positions so a rotation is unmistakable:
         plot.add_point_2d(fig, MARK, "#adb5bd", "orientation mark (before)")
         plot.add_point_2d(fig, At @ MARK, "#ff6b6b", "orientation mark (after)")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         from . import _det_meter
         _det_meter(det, kind="area_sq")

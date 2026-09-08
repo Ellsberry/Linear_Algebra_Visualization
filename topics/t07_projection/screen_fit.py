@@ -88,7 +88,7 @@ def render_fit():
             marker=dict(color="#ff6b6b", size=11, line=dict(color="#e6e6e6", width=1)),
             name="measured temperature",
         ))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption(_GRAPH_CAPTION)
 
     # Block 3 -- how the fit is computed (math left, no graph)

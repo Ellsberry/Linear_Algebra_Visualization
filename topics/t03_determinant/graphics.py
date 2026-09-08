@@ -88,7 +88,7 @@ def _example_graphics():
         st.markdown("Every other vertex transforms the same way.")
 
     with right:
-        st.plotly_chart(plot.figure_2d(At, obj="rocket"), use_container_width=True)
+        st.plotly_chart(plot.figure_2d(At, obj="rocket"), width="stretch")
         _det_meter(det, kind="area_sq")
 
     st.info(

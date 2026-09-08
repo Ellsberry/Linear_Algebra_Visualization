@@ -34,16 +34,17 @@ All six topics are now refactored. Summary of what the refactor applied to each:
 **Spec:** `specs/topic00_matrix_multiplication.md`
 
 **Status:** NEW standalone topic, built BEFORE Topic 1 in the learnable order.
-All 5 screens built and working.
+All **8** screens built and working (0 Operations, 1 Multiply 2x2, 2 Multiply 3x3,
+3 Rectangular, 4 Special matrices, 5 Row picture, 6 Column picture, 7 Outer products).
 
-- [x] Registered **first** in `app.py`'s `TOPICS` list (imports as `topics.t00_matmul`, `TITLE = "0 · Matrix multiplication"`)
-- [x] Module structure: `__init__.py` (OVERVIEW + screen dispatch, screen order "0 · Operations", "1 · Multiply 2x2", "2 · Multiply 3x3", "3 · Rectangular", "4 · Special matrices"), `screen_ops.py` (Screen 0), `screen_2x2.py` (Screen 1), `screen_3x3.py` (Screen 2), `screen_rect.py` (Screen 3), `screen_special.py` (Screen 4)
+- [x] Registered **first** in `app.py`'s `TOPICS` list (imports as `topics.t00_matmul`, `TITLE = "0 · Matrix math"` — renamed this session from "0 · Matrix multiplication")
+- [x] Module structure: `__init__.py` (OVERVIEW + 8-screen selector/dispatch) + `screen_ops.py` (0), `screen_2x2.py` (1), `screen_3x3.py` (2), `screen_rect.py` (3), `screen_special.py` (4), `screen_rows.py` (5), `screen_cols.py` (6), `screen_outer.py` (7)
 
 ### Screen 0 — Operations Overview (COMPLETE)
 - [x] All 7 operations described (Addition, Subtraction, Scalar Multiplication, Matrix Multiplication, Transpose, Inverse, Division), each with What it is / Why it matters / real-world example bullets (expanded to short explanatory clauses, not bare labels)
 - [x] Inline PRACTICE for Addition, Subtraction, Scalar Multiplication — 3 verified 2×2 examples each, shown 3-across, `compact=True` read-only operands + editable answer, per-cell Check + Show solution (shared `_check_and_solve` helper)
 - [x] Inline PRACTICE for Transpose — single verified 4×4 example (`A` read-only, `A^T` editable answer), confirming `editable_matrix`'s compact path is dim-generic (works identically at dim=4, not just dim=2)
-- [x] Matrix Multiplication, Inverse, Division are description-only (per spec), each with a pointer caption to where they're covered ("Practiced on Screens 1-3." / "see Topics 4 and 5.5." / "Described only.")
+- [x] Matrix Multiplication, Inverse, Division are description-only (per spec), each with a pointer caption to where they're covered. **This session:** Inverse (item 6) and Division (item 7) pointer captions changed to "This procedure will be shown in Topic 4 - Inverse Transformations" (was "see Topics 4 and 5.5." / "Described only."). Division's "What it is:" rewritten to a full plain-language explanation (matrix algebra has no direct division; multiply by the inverse instead; solving Ax=b by multiplying both sides by A⁻¹, since AA⁻¹ = I), broken onto four lines, with the −1 rendered as a proper superscript (A⁻¹) throughout item 6 and 7.
 
 ### Screen 1 — Rules + four 2×2 · 2×2 (COMPLETE)
 - [x] Rule text (row·column rule) + shape rule (2×2 · 2×2 → 2×2) at top
@@ -94,8 +95,15 @@ only; does not modify Screens 0-4).
       side, per-column Check / Show solution.
 - [~] Screen 7 -- Outer products (`screen_outer.py`): AB = sum of (col of A)(row of B).
       Worked example (Term 1/2/3/Sum selector) + 3 practice examples building each
-      term then the sum -- BUILT and registered, but practice layout NOT yet
-      redesigned to match Screens 5/6 (still original stacked layout); pending review.
+      term then the sum. **This session:** (1) added PCA & SVD plain-language
+      definitions + pointer to Topic 11 (AI/ML) in the worked example; (2) added a
+      caption explaining how to read the Term 1/2/3/Sum picker (each term = one column
+      of A times the matching row of B, a full-size matrix; Sum adds them to C);
+      (3) added a Clear button per answer box (term + sum) that resets it to blank
+      (reveal-flag pattern, like Show solution); (4) the (column of A)ᵀ · (row of B)
+      building-block hint now shows for ALL practice terms, not just the aided first
+      one. Practice layout still the original stacked layout (not redesigned to match
+      Screens 5/6); pending review.
 - [x] Selector in `__init__.py`: "5 · Row picture", "6 · Column picture",
       "7 · Outer products" after "4 · Special matrices".
 - [x] Shared worked example A(2x3)*B(3x2) = C(2x2) = [[13,16],[7,11]] on all three;

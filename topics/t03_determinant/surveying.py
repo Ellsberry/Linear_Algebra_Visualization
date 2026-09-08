@@ -82,7 +82,7 @@ def _example_surveying():
         plot.add_point_2d(fig, P, "black", "P")
         plot.add_point_2d(fig, Q, "black", "Q")
         plot.add_point_2d(fig, R, "black", "R")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         from . import _det_meter
         _det_meter(det, kind="area_tri")

@@ -95,7 +95,7 @@ def render_what():
         add_vector_2d(fig_a, (0, 0), (3, 1), "#ff6b6b", "(3, 1)")
         add_vector_2d(fig_a, (3, 1), (4, 3), "#4dabf7", "(1, 2)")
         add_vector_2d(fig_a, (0, 0), (4, 3), "#51cf66", "sum (4, 3)", dash="dash")
-        st.plotly_chart(fig_a, use_container_width=True)
+        st.plotly_chart(fig_a, width="stretch")
 
     # Block 2b -- a straight line through the origin (math left, graph right)
     left_b, right_b = st.columns([0.5, 0.5], gap="large")
@@ -119,7 +119,7 @@ def render_what():
         add_point_2d(fig_b, (1, 2), "#ffa94d", "(1, 2)")
         add_point_2d(fig_b, (2, 4), "#ffa94d", "(2, 4)")
         add_point_2d(fig_b, (3, 6), "#51cf66", "(3, 6)")
-        st.plotly_chart(fig_b, use_container_width=True)
+        st.plotly_chart(fig_b, width="stretch")
 
     # Block 3 -- examples that FAIL, and exactly where (math left, graph right)
     left_c, right_c = st.columns([0.5, 0.5], gap="large")
@@ -134,7 +134,7 @@ def render_what():
         add_point_2d(fig_c, (0, 0), "#e6e6e6", "(0, 0) -- escaped, off the line")
         add_point_2d(fig_c, (2, 1), "#51cf66", "(2, 1) -- inside")
         add_point_2d(fig_c, (-2, -1), "#e6e6e6", "(−2, −1) -- escaped")
-        st.plotly_chart(fig_c, use_container_width=True)
+        st.plotly_chart(fig_c, width="stretch")
 
     # Block 4 -- closing text
     st.markdown(_CLOSING)

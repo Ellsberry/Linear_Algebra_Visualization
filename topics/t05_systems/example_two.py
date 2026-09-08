@@ -35,11 +35,11 @@ def _example_two():
             if 0 <= q_star <= rng_x * 1.5:
                 plot.add_point_2d(fig, [q_star, y_star], "seagreen",
                                   f"break-even  q* = {q_star:.1f}", size=14)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
             st.success(f"Break-even at **q* = {q_star:.1f} units** "
                        f"(revenue = cost = ${y_star:.2f}).")
         else:
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
             st.warning("No break-even — each unit loses money (price ≤ variable cost): "
                        "the lines are parallel-ish and never cross.")
 

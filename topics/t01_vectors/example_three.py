@@ -62,7 +62,7 @@ def _example_three():
         plot.add_point_2d(fig, TARGET, "gold", "target (14, 11)", size=15,
                           symbol="star")
         plot.add_point_2d(fig, result, "navy", "your smoothie", size=13)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         if dist < 0.3:
             st.success("You hit the target smoothie!")
 

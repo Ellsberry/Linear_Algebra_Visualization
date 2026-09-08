@@ -60,7 +60,7 @@ def _example_one():
                                "protein part", dash="dash", arrow=False)
             plot.add_vector_2d(fig, [end[0], 0], end, "royalblue",
                                "sugar part", dash="dash", arrow=False)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with left:
         st.latex(rf"{c:g} \cdot " + w.bmatrix(vec.reshape(-1, 1))

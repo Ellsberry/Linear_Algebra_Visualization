@@ -41,7 +41,7 @@ for start in range(0, len(labels), NCOLS):
             label,
             key=f"topicbtn_{label}",
             type="primary" if is_active else "secondary",
-            use_container_width=True,
+            width="stretch",
         ):
             st.session_state["topic_selector"] = label
             st.rerun()
