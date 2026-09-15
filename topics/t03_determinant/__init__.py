@@ -17,8 +17,6 @@ transformation acts on space, **by what factor does area (in 2D) or volume (in
 turns out to matter to surveyors, radiologists, biologists, and game
 programmers. We'll meet it in all four fields, and each time you'll see the
 determinant *is* an area or a volume — not just a formula.
-
-Here's the formula in letters (the examples fill in real numbers):
 """
 
 HOWTO = """
@@ -71,6 +69,12 @@ from .graphics import _example_graphics
 
 def render():
     st.markdown(OVERVIEW)
+    st.markdown(
+        "<p style='font-size:1.25rem;font-weight:700;'>Determinants can only be "
+        "calculated for square matrices.</p>",
+        unsafe_allow_html=True,
+    )
+    st.markdown("Here's the formula in letters (the examples fill in real numbers):")
     st.latex(
         r"\det \begin{bmatrix} a & b \\ c & d \end{bmatrix} = ad - bc"
         r"\qquad \text{(2D)}"
@@ -86,7 +90,6 @@ def render():
         "times. And when the matrix is simple, like the diagonal one in biology, almost "
         "everything is zero and it collapses to just the diagonal multiplied together."
     )
-    st.markdown("Determinants can only be calculated for square matrices.")
 
     st.caption(
         "The left panel sets the numbers and shows the math; the right panel "

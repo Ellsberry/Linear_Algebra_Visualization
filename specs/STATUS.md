@@ -202,7 +202,7 @@ only; does not modify Screens 0-4).
 
 - [x] Module exists and registered in `app.py` (imports as `topics.t03_determinant`)
 - [x] OVERVIEW with 2D and 3D formulas in LaTeX + "each 3D term is the 2D formula" framing
-- [x] OVERVIEW notes determinants are only defined for square matrices
+- [x] OVERVIEW notes determinants are only defined for square matrices. **This session:** the sentence "Determinants can only be calculated for square matrices." moved to appear BEFORE the "Here's the formula in letters..." line and rendered in a larger bold font (HTML span via `unsafe_allow_html`)
 - [x] HOWTO folded into a caption under the overview (no separate expander)
 - [x] Four examples in correct order (Surveying, Medical, Biology, Graphics)
 - [x] `_det_meter` shared helper on every screen
@@ -272,9 +272,13 @@ only; does not modify Screens 0-4).
 - `business.py` — Example 4 (includes `_E4_PRESETS`)
 
 **Topic 4 — naming + intro:** A/A⁻¹ used throughout (intro, inverse meter, all
-screens) EXCEPT Cryptography's Hill-cipher key, which stays M by design. OVERVIEW
-ends with "ONLY SQUARE MATRICES HAVE AN INVERSE. How to calculate an inverse will be
-shown in lesson 5.5." HOWTO reworded (not every screen is there-and-back). Spec file
+screens) EXCEPT Cryptography's Hill-cipher key, which stays M by design. **This
+session:** the OVERVIEW now shows a larger, bright-green sentence "ONLY SQUARE
+MATRICES HAVE AN INVERSE and ONLY IF THE DETERMINANT IS NOT = 0." ABOVE the Note
+(HTML span via `unsafe_allow_html`, color #37b24d/#40c057), and the Note itself was
+trimmed to just "How to calculate an inverse will be shown in lesson 5.5." (the
+"ONLY SQUARE MATRICES HAVE AN INVERSE." clause removed from the Note since it's now
+the green line). HOWTO reworded (not every screen is there-and-back). Spec file
 specs/topic4_inverse.md fully updated to match.
 
 - [x] Module exists and registered in `app.py` (imports as `topics.t04_inverse`)
@@ -314,10 +318,21 @@ specs/topic4_inverse.md fully updated to match.
       5 algebra steps each led by a plain sentence; step 3 explains the 2×2 adjugate
       in words; round trip returns the batch; singular = "cookie is a double cake";
       presets renamed "Two different recipes" / "Recipes in the same ratio (singular)".
+      **This session:** (1) all displayed formulas renamed from r to b (b = Ax, not
+      r = Ax) so the result vector reads b throughout the algebra steps; (2) the "Two
+      different recipes" preset changed from the identity to A = [[4,3],[2,7]] (cake
+      column (4,2), cookie column (3,7); VERIFIED det = 22, invertible); (3) the
+      "Solve for a resource target" display now shows the actual A⁻¹ and b matrices in
+      the product — x = A⁻¹b = [A⁻¹][b] = [solution] — computed live in code, instead
+      of jumping straight to the solution vector.
 - [x] Shared _inv_meter renders A⁻¹; all matrix inputs compact/narrow (no screen-wide
       matrices).
 
 ## Topic 5 — Linear Systems (`topics/t05_systems/`)
+
+> **Pending fix (flagged this session):** Topic 5 discusses the equation as Ax=r in
+> places; should be Ax=b for consistency with the rest of the course. User will fix
+> soon.
 
 **File structure:** `t05_systems` is now a per-screen package:
 - `__init__.py` — TITLE, SLUG, OVERVIEW, HOWTO, preset dicts (`_E1_PRESETS`, `_E3_PRESETS`, `_E5_PRESETS`), `_PLANE_COLORS`, shared helpers (`_classify`, `_render_outcome`), render() dispatcher

@@ -28,9 +28,6 @@ reverses it — apply A, then apply A⁻¹, and every point lands exactly back w
 it started. It exists only when det ≠ 0, and it scales area by 1/det. We'll meet
 "undoing" as the central question in four fields: robotics, secret codes,
 medical scans, and business planning.
-
-Note: ONLY SQUARE MATRICES HAVE AN INVERSE. How to calculate an inverse will
-be shown in lesson 5.5.
 """
 
 HOWTO = """
@@ -92,6 +89,13 @@ from .business import _example_business
 
 def render():
     st.markdown(OVERVIEW)
+    st.markdown(
+        "<p style='font-size:1.3rem;font-weight:700;color:#40c057;'>ONLY "
+        "SQUARE MATRICES HAVE AN INVERSE and ONLY IF THE DETERMINANT IS "
+        "NOT = 0.</p>",
+        unsafe_allow_html=True,
+    )
+    st.markdown("Note: How to calculate an inverse will be shown in lesson 5.5.")
     with st.expander("How to use this screen"):
         st.markdown(HOWTO)
 

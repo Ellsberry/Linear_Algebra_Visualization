@@ -8,7 +8,7 @@ from engine import widgets as w
 from . import _inv_meter
 
 _E4_PRESETS = {
-    "Two different recipes":                np.array([[2.0, 1.0], [1.0, 3.0]]),
+    "Two different recipes":                np.array([[4.0, 3.0], [2.0, 7.0]]),
     "Recipes in the same ratio (singular)": np.array([[2.0, 4.0], [1.0, 2.0]]),
 }
 
@@ -36,18 +36,18 @@ def _example_business():
               label="How many you bake (cakes, cookies)")
     det = float(np.linalg.det(A))
     invertible = abs(det) > 1e-9
-    r = A @ x
+    b = A @ x
 
     left, right = st.columns([0.6, 0.4], gap="large")
 
     with right:
         fig = plot.new_figure_2d(rng=14, x_title="flour used", y_title="sugar used")
-        plot.add_vector_2d(fig, [0, 0], r, "seagreen",
-                           f"resources ({r[0]:.1f} flour, {r[1]:.1f} sugar)")
-        plot.add_point_2d(fig, r, "seagreen", "resources used", size=14)
+        plot.add_vector_2d(fig, [0, 0], b, "seagreen",
+                           f"resources ({b[0]:.1f} flour, {b[1]:.1f} sugar)")
+        plot.add_point_2d(fig, b, "seagreen", "resources used", size=14)
         if invertible:
             Ainv = np.linalg.inv(A)
-            x_back = Ainv @ r
+            x_back = Ainv @ b
             plot.add_point_2d(fig, x_back, "crimson", "round-trip", size=10, symbol="x")
         st.plotly_chart(fig, width="stretch")
         _inv_meter(A)
@@ -57,15 +57,15 @@ def _example_business():
 
         st.markdown("**1. How the resources add up (in general).** Each product uses some "
                     "flour and some sugar; the total used is A times how many you bake.")
-        st.latex(r"{\small r = Ax = "
+        st.latex(r"{\small b = Ax = "
                  r"\begin{bmatrix}a_{11}&a_{12}\\a_{21}&a_{22}\end{bmatrix}"
                  r"\begin{bmatrix}x_1\\x_2\end{bmatrix}"
                  r"= \begin{bmatrix}a_{11}x_1+a_{12}x_2\\a_{21}x_1+a_{22}x_2\end{bmatrix}}")
 
         st.markdown("**2. With your recipes and batch.**")
-        st.latex(r"{\small r = " + w.bmatrix(A) + w.bmatrix(x.reshape(-1, 1))
-                 + " = " + w.bmatrix(r.reshape(-1, 1)) + r"}")
-        st.markdown(f"So this batch uses **{r[0]:.1f} flour** and **{r[1]:.1f} sugar**.")
+        st.latex(r"{\small b = " + w.bmatrix(A) + w.bmatrix(x.reshape(-1, 1))
+                 + " = " + w.bmatrix(b.reshape(-1, 1)) + r"}")
+        st.markdown(f"So this batch uses **{b[0]:.1f} flour** and **{b[1]:.1f} sugar**.")
 
         st.markdown("**3. To work backward, we need A⁻¹.**")
         if invertible:
@@ -93,22 +93,25 @@ def _example_business():
 
         if invertible:
             Ainv = np.linalg.inv(A)
-            x_back = Ainv @ r
+            x_back = Ainv @ b
 
             st.markdown("**4. Your A⁻¹ (with numbers).**")
             st.latex(r"{\small A^{-1} = " + w.bmatrix(Ainv) + r"}")
 
             st.markdown("**5. How many of each product the resources make.**")
-            st.latex(r"{\small x = A^{-1}r = " + w.bmatrix(Ainv)
-                     + w.bmatrix(r.reshape(-1, 1)) + " = "
+            st.latex(r"{\small x = A^{-1}b = " + w.bmatrix(Ainv)
+                     + w.bmatrix(b.reshape(-1, 1)) + " = "
                      + w.bmatrix(x_back.reshape(-1, 1)) + r"}")
             st.success(f"Round trip returns {x_back[0]:.1f} cakes and {x_back[1]:.1f} cookies ✓")
 
     with st.expander("Solve for a resource target"):
         rt = w.vector_editor("t04e4_rt", 2, (8.0, 6.0), label="Flour and sugar on hand")
         if invertible:
-            xt = np.linalg.inv(A) @ rt
-            st.latex(r"x = A^{-1}r = " + w.bmatrix(xt.reshape(-1, 1)))
+            Ainv_t = np.linalg.inv(A)
+            Ainv_t = np.where(np.abs(Ainv_t) < 1e-9, 0.0, Ainv_t)
+            xt = Ainv_t @ rt
+            st.latex(r"x = A^{-1}b = " + w.bmatrix(Ainv_t) + w.bmatrix(rt.reshape(-1, 1))
+                     + " = " + w.bmatrix(xt.reshape(-1, 1)))
             if any(xt < 0):
                 st.info(
                     "The algebra returns a negative number of cakes or cookies — "
@@ -121,6 +124,6 @@ def _example_business():
     st.info(
         "Run the recipe matrix forward and it tells you the resources a batch uses; run it "
         "backward (the inverse) and it tells you how much to bake to use exactly the flour "
-        "and sugar you have. This \"solve A x = r for x\" is the exact question of the next "
+        "and sugar you have. This \"solve A x = b for x\" is the exact question of the next "
         "topic — linear systems."
     )
