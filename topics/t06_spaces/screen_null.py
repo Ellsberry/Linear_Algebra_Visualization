@@ -2,84 +2,8 @@
 import streamlit as st
 
 from engine import plotting as plot
-from engine import widgets as w
 
-_HOWTO_STEP1_TEXT = """
-**Step 1 -- Set up A·x = 0.** The null space is every input x the matrix
-sends to zero. So we solve A·x = 0.
-"""
-
-_HOWTO_STEP1_LATEX = r"""
-A\,x = \begin{bmatrix} 1 & 2 & 1 & 1 \\ 1 & 3 & 2 & 4 \\ 2 & 5 & 3 & 5 \\ 0 & 1 & 1 & 3 \end{bmatrix}
-\begin{bmatrix} x_1 \\ x_2 \\ x_3 \\ x_4 \end{bmatrix}
-= \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}
-"""
-
-_HOWTO_STEP2_TEXT = """
-**Step 2 -- Form the augmented matrix [A | 0] and row-reduce.** Attach a
-column of zeros and row-reduce to the reduced form (Reduced Row Echelon
-Form).
-"""
-
-_HOWTO_AUG = [[1, 2, 1, 1, 0], [1, 3, 2, 4, 0], [2, 5, 3, 5, 0], [0, 1, 1, 3, 0]]
-_HOWTO_RREF = [[1, 0, -1, -5, 0], [0, 1, 1, 3, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
-
-_HOWTO_STEP3_TEXT = """
-**Step 3 -- Identify pivot and free variables.** The reduced form has
-pivots (leading 1s) in columns 1 and 2, so x1 and x2 are the pivot
-variables. Columns 3 and 4 have no pivot, so x3 and x4 are free -- you may
-choose them to be anything.
-"""
-
-_HOWTO_STEP3_LATEX = r"""
-\left[\begin{array}{cccc|c}
-\color{#ffd43b}{1} & 0 & -1 & -5 & 0 \\
-0 & \color{#ffd43b}{1} & 1 & 3 & 0 \\
-0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0
-\end{array}\right]
-"""
-
-_HOWTO_STEP4_TEXT = """
-**Step 4 -- Solve the pivot variables in terms of the free variables.**
-First read each pivot row straight off the reduced form, then move the
-free variables to the right side.
-"""
-
-_HOWTO_STEP4_BEFORE_LATEX = r"""
-\begin{aligned}
-x_1 - x_3 - 5x_4 &= 0 \\
-x_2 + x_3 + 3x_4 &= 0
-\end{aligned}
-"""
-
-_HOWTO_STEP4_AFTER_LATEX = r"""
-\begin{aligned}
-x_1 &= x_3 + 5x_4 \\
-x_2 &= -x_3 - 3x_4 \\
-x_3 &= x_3\ (\text{free}) \\
-x_4 &= x_4\ (\text{free})
-\end{aligned}
-"""
-
-_HOWTO_STEP5_TEXT = """
-**Step 5 -- Write the null space in parametric form.** To turn those
-equations into vectors, do what you learned earlier: set one free
-variable to 1 and the rest to 0, and read off the column. Setting
-(x3, x4) = (1, 0) gives the first direction; (0, 1) gives the second.
-"""
-
-_HOWTO_STEP5_LATEX = r"""
-x = \underbrace{\begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}}_{\text{particular}}
-+ \underbrace{\color{#4dabf7}{x_3\begin{bmatrix} 1 \\ -1 \\ 1 \\ 0 \end{bmatrix}
-+ x_4\begin{bmatrix} 5 \\ -3 \\ 0 \\ 1 \end{bmatrix}}}_{\text{null space}}
-"""
-
-_HOWTO_CAPTION = """
-Because the system equals zero, the particular part is zero -- so the
-ENTIRE answer is the null space (the blue part). Two free variables, so
-it is 2-dimensional; those two vectors are a basis for it.
-"""
+from .space_workbench import space_workbench, space_load
 
 _INTRO = """
 Some inputs x get sent by the matrix to the zero vector: A·x = (0, 0, ..., 0).
@@ -147,20 +71,52 @@ One more space to name, and then a counting rule connects all three.
 
 
 def render_null():
-    # Block 0 -- how to compute a null space, step by step (math, no graph)
-    st.markdown("**How to compute the null space of a matrix, step by step.**")
-    st.markdown(_HOWTO_STEP1_TEXT)
-    st.latex(_HOWTO_STEP1_LATEX)
-    st.markdown(_HOWTO_STEP2_TEXT)
-    st.latex(w.aug_array_latex(_HOWTO_AUG, 4) + r"\;\to\;" + w.aug_array_latex(_HOWTO_RREF, 4))
-    st.markdown(_HOWTO_STEP3_TEXT)
-    st.latex(_HOWTO_STEP3_LATEX)
-    st.markdown(_HOWTO_STEP4_TEXT)
-    st.latex(_HOWTO_STEP4_BEFORE_LATEX)
-    st.latex(_HOWTO_STEP4_AFTER_LATEX)
-    st.markdown(_HOWTO_STEP5_TEXT)
-    st.latex(_HOWTO_STEP5_LATEX)
-    st.markdown(_HOWTO_CAPTION)
+    # Block 0 -- interactive: reduce it yourself, then read off the answer
+    st.markdown("**Reduce it yourself: find the null space.**")
+    st.markdown(
+        "The null space is every input x with A x = 0. Because the right-hand side is "
+        "all zeros, you only need to row-reduce A itself. Reduce A below to reduced "
+        "form, note which columns have pivots (the pivot variables) and which don't "
+        "(the free variables), then read the null space underneath."
+    )
+    _NULL_A = [[1, 2, 1, 1], [1, 3, 2, 4], [2, 5, 3, 5], [0, 1, 1, 3]]
+    if st.session_state.get("t06_null_wb_last") is None:
+        space_load("t06_null_wb", _NULL_A)
+        st.session_state["t06_null_wb_last"] = "loaded"
+    space_workbench("t06_null_wb", 4, matrix_label="A")
+
+    st.markdown("**Now read the null space off your reduced form.**")
+    # color-coded RREF: pivot cols 1,2 yellow; free cols 3,4 blue
+    st.latex(
+        r"\begin{bmatrix}"
+        r"\color{#ffd43b}{1} & \color{#ffd43b}{0} & \color{#4dabf7}{-1} & \color{#4dabf7}{-5} \\"
+        r"\color{#ffd43b}{0} & \color{#ffd43b}{1} & \color{#4dabf7}{1} & \color{#4dabf7}{3} \\"
+        r"\color{#ffd43b}{0} & \color{#ffd43b}{0} & \color{#4dabf7}{0} & \color{#4dabf7}{0} \\"
+        r"\color{#ffd43b}{0} & \color{#ffd43b}{0} & \color{#4dabf7}{0} & \color{#4dabf7}{0}"
+        r"\end{bmatrix}"
+    )
+    st.caption(
+        "Yellow = pivot columns (x1, x2, the pivot variables). Blue = free columns "
+        "(x3, x4) -- these become the blue direction vectors in the null space below."
+    )
+    st.markdown(
+        "Reading each pivot row and moving the free variables across gives "
+        "x1 = x3 + 5 x4 and x2 = -x3 - 3 x4."
+    )
+    st.latex(
+        r"\begin{aligned} x_1 &= x_3 + 5x_4 \\ x_2 &= -x_3 - 3x_4 \\"
+        r" x_3 &= x_3\ (\text{free}) \\ x_4 &= x_4\ (\text{free}) \end{aligned}"
+    )
+    st.latex(
+        r"x = \underbrace{\begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}}_{\text{particular}}"
+        r" + \underbrace{\color{#4dabf7}{x_3\begin{bmatrix} 1 \\ -1 \\ 1 \\ 0 \end{bmatrix}"
+        r" + x_4\begin{bmatrix} 5 \\ -3 \\ 0 \\ 1 \end{bmatrix}}}_{\text{null space}}"
+    )
+    st.caption(
+        "Two free variables, so the null space is 2-dimensional. Because the system "
+        "equals zero, the particular part is zero -- the entire answer is the null "
+        "space (the blue part)."
+    )
     st.markdown("---")
 
     # Block 1 -- the idea (text only)

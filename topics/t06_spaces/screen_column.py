@@ -5,60 +5,46 @@ import streamlit as st
 from engine import plotting as plot
 from engine import widgets as w
 
-_HOWTO_STEP1_TEXT = """
-**Step 1 -- Write the matrix and look at its columns.** The column space
-is every output A can produce, which is every combination of its columns. So start
-with the columns themselves.
+from .space_workbench import space_workbench, space_load
+
+_WB_A = [[1, 2, 1, 1], [1, 3, 2, 4], [2, 5, 3, 5], [0, 1, 1, 3]]
+
+_WB_INTRO = """
+To find the column space, row-reduce the matrix to see which columns hold pivots
+-- then take those columns from the ORIGINAL matrix. Reduce A below to reduced
+form (use Run to reduced form, or step through it), watch which columns get the
+pivots, and read the answer underneath.
 """
 
-_HOWTO_STEP1_LATEX = r"""
-A = \begin{bmatrix} 1 & 2 & 1 & 1 \\ 1 & 3 & 2 & 4 \\ 2 & 5 & 3 & 5 \\ 0 & 1 & 1 & 3 \end{bmatrix}
+_READ_ANSWER_TEXT = """
+The pivots land in columns 1 and 2. So the column space is spanned by columns 1
+and 2 of the ORIGINAL matrix A -- NOT the reduced one. The reduced form only tells
+you WHICH columns to pick; the actual basis vectors come from A itself.
 """
 
-_HOWTO_STEP2_TEXT = """
-**Step 2 -- Row-reduce to find the pivot columns.** Row-reduce to the
-reduced form (Reduced Row Echelon Form) and see which columns get a pivot (a leading
-1).
-"""
-
-_HOWTO_STEP2_LATEX = r"""
-\begin{bmatrix}
-\color{#ffd43b}{1} & 0 & -1 & -5 \\
-0 & \color{#ffd43b}{1} & 1 & 3 \\
-0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0
+_READ_ANSWER_A_LATEX = r"""
+A = \begin{bmatrix}
+\color{#37b24d}{1} & \color{#37b24d}{2} & 1 & 1 \\
+\color{#37b24d}{1} & \color{#37b24d}{3} & 2 & 4 \\
+\color{#37b24d}{2} & \color{#37b24d}{5} & 3 & 5 \\
+\color{#37b24d}{0} & \color{#37b24d}{1} & 1 & 3
 \end{bmatrix}
 """
 
-_HOWTO_STEP3_TEXT = """
-**Step 3 -- The pivot columns of the ORIGINAL matrix are the answer.**
-Columns 1 and 2 hold the pivots, so they are the independent ones -- columns 3 and 4
-are just combinations of them and add nothing new. IMPORTANT: take these columns
-from the ORIGINAL matrix A, not from the reduced form. The reduced form only tells
-you WHICH columns to pick.
-"""
-
-_HOWTO_STEP3_LATEX = r"""
+_READ_ANSWER_LATEX = r"""
 \begin{bmatrix} 1 \\ 1 \\ 2 \\ 0 \end{bmatrix}
 \qquad
 \begin{bmatrix} 2 \\ 3 \\ 5 \\ 1 \end{bmatrix}
 """
 
-_HOWTO_STEP4_TEXT = """
-**Step 4 -- Write the column space in parametric form.** Every vector in
-the column space is some amount of the first pivot column plus some amount of the
-second. Call those amounts c1 and c2.
-"""
-
-_HOWTO_STEP4_LATEX = r"""
+_READ_ANSWER_PARAMETRIC_LATEX = r"""
 \text{any output} = \underbrace{\color{#37b24d}{c_1\begin{bmatrix} 1 \\ 1 \\ 2 \\ 0 \end{bmatrix}
 + c_2\begin{bmatrix} 2 \\ 3 \\ 5 \\ 1 \end{bmatrix}}}_{\text{column space}}
 """
 
-_HOWTO_CAPTION = """
+_READ_ANSWER_CAPTION = """
 Two pivot columns, so the column space is 2-dimensional -- its
-dimension is the rank, 2. Those two columns are a basis for it. (This is the SAME
-matrix whose null space you compute on the next screen -- one matrix, two spaces.)
+dimension is the rank, 2. Those two columns are a basis for it.
 """
 
 _INTRO = """
@@ -115,17 +101,24 @@ question: what does the matrix squash to nothing?
 
 
 def render_column():
-    # Block 0 -- how to compute a column space, step by step (math, no graph)
-    st.markdown("**How to compute the column space of a matrix, step by step.**")
-    st.markdown(_HOWTO_STEP1_TEXT)
-    st.latex(_HOWTO_STEP1_LATEX)
-    st.markdown(_HOWTO_STEP2_TEXT)
-    st.latex(_HOWTO_STEP2_LATEX)
-    st.markdown(_HOWTO_STEP3_TEXT)
-    st.latex(_HOWTO_STEP3_LATEX)
-    st.markdown(_HOWTO_STEP4_TEXT)
-    st.latex(_HOWTO_STEP4_LATEX)
-    st.markdown(_HOWTO_CAPTION)
+    # Block 0 -- interactive: reduce it yourself, then read off the answer
+    st.markdown("**Reduce it yourself: find the column space.**")
+    st.markdown(_WB_INTRO)
+    if st.session_state.get("t06_col_wb_last") is None:
+        space_load("t06_col_wb", _WB_A)
+        st.session_state["t06_col_wb_last"] = "loaded"
+    space_workbench("t06_col_wb", 4, matrix_label="A")
+
+    st.markdown("**Now read the column space off your result.**")
+    st.markdown(_READ_ANSWER_TEXT)
+    ans_left, ans_right = st.columns([1, 1.4], gap="large")
+    with ans_left:
+        st.markdown("Original A (pivot columns highlighted):")
+        st.latex(_READ_ANSWER_A_LATEX)
+    with ans_right:
+        st.latex(_READ_ANSWER_LATEX)
+        st.latex(_READ_ANSWER_PARAMETRIC_LATEX)
+        st.markdown(_READ_ANSWER_CAPTION)
     st.markdown("---")
 
     # Block 1 -- the idea (text only)

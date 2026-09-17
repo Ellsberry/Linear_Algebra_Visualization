@@ -632,18 +632,55 @@ Cross-cutting refinements applied after the screens above were built:
 
 **Spec:** `specs/topic6_spaces.md`
 
-Names the three spaces hiding inside every matrix — column space, null space, row
-space — plus the counting rule (rank + free variables = unknowns). Design principle:
-each screen is a vertical stack of self-contained **viewport blocks** (math LEFT /
-graph RIGHT, everything for one example visible without scrolling inside the block);
-embedded compact recaps of Robotics/Smoothie/Logistics/Circuit so the student never
-jumps topics; plain words before symbols; no C(A)/N(A) notation. No workbench, no new
-engine code (recaps are result-only). Registered in `app.py` after `t05b_elimination`.
-`TITLE = "6 · Vector Spaces"`, `SLUG = "spaces"`.
+Names the **four** fundamental spaces of a matrix — column space, null space, row
+space, and **left null space** — plus the counting rule and **orthogonality**
+(orthogonal = perpendicular, generalized; the four spaces pair up: row ⟂ null,
+column ⟂ left-null). Each screen is a stack of viewport blocks (math LEFT / graph
+RIGHT). Registered in `app.py` after `t05b_elimination`.
+`TITLE = "6 · Vector Spaces"`, `SLUG = "spaces"`. **NOW 8 SCREENS** (was 5).
 
-**File structure:** per-screen package — `__init__.py` (TITLE, SLUG, OVERVIEW,
-selector key `t06_screen`, dispatch) + `screen_what.py`, `screen_column.py`,
-`screen_null.py`, `screen_row.py`, `screen_together.py`.
+**OVERVIEW rewritten this session:** names all four collections + an orthogonal block
+(orthogonal = perpendicular; sin(x)/cos(x) are orthogonal though undrawable; the four
+spaces come in orthogonal pairs).
+
+**NEW shared tool — `space_workbench.py` (this session):** a general square-matrix
+row-reduction workbench (NO determinant tracker, NO b-column, NO scenario banner) that
+goes all the way to RREF — manual ops + Do one step (to RREF) + Run to triangular +
+Run to reduced + Undo/Reset; pivots detected by leading entry (rank-deficient-safe).
+Screens 2–5's static "how to compute" recipes were REPLACED this session with this
+interactive workbench (student reduces the matrix, then a read-off block explains the
+space). Colors: column green #37b24d, null blue #4dabf7, row purple #9775fa, left-null
+orange #f76707. LaTeX color must be per-entry inside bmatrix (wrapping the whole
+bmatrix fails to render — fixed this session).
+
+**File structure:** `__init__.py` (8-screen selector `t06_screen`) + `screen_what.py`
+(1), `screen_column.py` (2), `screen_null.py` (3), `screen_row.py` (4),
+`screen_leftnull.py` (5, NEW), `screen_together.py` (6), `screen_bigmatrix.py`
+(7, NEW), `screen_transforms.py` (8, NEW), plus `space_workbench.py`.
+
+**Screens 5–8 (NEW/expanded this session):**
+- **5 Left null space (NEW, `screen_leftnull.py`)** — the fourth collection. Reduce Aᵀ
+  in space_workbench; color-coded reduced Aᵀ (free cols orange) + orange parametric
+  (basis (-1,-1,1,0),(1,-1,0,1)); yᵀA=0 check; four-subspaces / orthogonal-pairs
+  block. VERIFIED (left null = null of Aᵀ, dim 2 = rows-rank).
+- **6 One matrix, all FOUR spaces (`screen_together.py`)** — expanded from three;
+  reads all four off [[1,2],[2,4]] (2D) and [[2,1,3],[1,1,2],[3,2,5]] (3D). TRANSPOSE +
+  SYMMETRY blocks added: both matrices symmetric (Aᵀ=A → left null = null), shown as a
+  bolded orange callout making symmetry the teaching point.
+- **7 Work it yourself: all four spaces of a big matrix (NEW, `screen_bigmatrix.py`)**
+  — capstone: the 7×7 Logistics flow matrix (NON-symmetric). Two space_workbench
+  instances (reduce A, then Aᵀ); original shown statically above each. Column space =
+  6 green pivot cols (6-vec parametric); null = blue line (-1,1,0,-1,1,0,0); row =
+  purple 6 reduced rows; left null = orange line (1,1,1,1,1,1,1) = "add all balance
+  equations = conservation law". Counting 6+1=7. VERIFIED.
+- **8 The four spaces of a transformation (NEW, `screen_transforms.py`)** — bridges
+  Topic 2→Topic 6: the four spaces reveal whether a transformation loses information.
+  Invertible four (identity, rotation, shear, scale: column space = whole plane, null =
+  origin, nothing lost) vs collapse [[1,2],[2,4]] (column = line, null = line, info
+  lost → no inverse). Lesson: invertible ⟺ nothing lost ⟺ det ≠ 0. STATIC. VERIFIED.
+
+Screens 2–4 below have their Block-0 recipes now INTERACTIVE (space_workbench + read-off
+with color-coded RREF); the descriptions below predate that change.
 
 ### Screen 1 — What a vector space is (`screen_what.py`)
 - [x] Block 1 intro (the "no escape" rule; span-as-vector-space, any amounts incl.

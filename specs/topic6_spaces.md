@@ -30,15 +30,38 @@
 
 `st.radio` horizontal, key `t06_screen`:
 ["1 · What a vector space is", "2 · Column space", "3 · Null space",
- "4 · Row space and the counting rule", "5 · One matrix, all three spaces"]
+ "4 · Row space and the counting rule", "5 · Left null space",
+ "6 · One matrix, all four spaces",
+ "7 · Work it yourself: all four spaces of a big matrix"]
 
 ## OVERVIEW (pinned, verbatim)
 
-> Every matrix hides three collections of vectors inside it — one that describes
-> everywhere it can send you, one that describes everything it squashes to zero,
-> and one that describes its genuinely different rules. This topic names those
-> three collections, shows that you have already met each of them, and ends with
-> one simple counting rule that ties the whole course so far together.
+> Every matrix hides four collections of vectors inside it — one that describes
+> everywhere it can send you (the **column space**), one that describes everything
+> it crushes to zero (the **null space**), one that captures its genuinely different
+> rules (the **row space**), and one that reveals all the ways those rules can
+> cancel out (the **left null space**). This topic names those four collections,
+> shows that you have already met the first three, and ends with the counting rule
+> and the fourth space that tie the whole picture together.
+>
+> **Orthogonal: the math word for perpendicular.** You already know
+> **perpendicular** — two arrows meeting at a right angle. **Orthogonal** is just
+> the mathematician's word for the same thing, and it means exactly perpendicular
+> when you're talking about two arrows in 2D or 3D: they're orthogonal when they
+> meet at 90 degrees, which is exactly when their dot product is zero.
+>
+> So why have a second word? Because "orthogonal" keeps working in places where
+> "perpendicular" stops making sense. You can picture two arrows at a right angle,
+> but what about two functions, like sin(x) and cos(x)? You can't draw them meeting
+> at 90 degrees — yet there's a version of the dot product for functions, and by
+> that measure sin(x) and cos(x) come out to zero, so we say they are
+> **orthogonal**. Same idea — "their product cancels to zero" — stretched to things
+> you can't draw as arrows.
+>
+> This matters here because the four collections inside a matrix come in
+> **orthogonal pairs**: the row space is orthogonal to the null space, and the
+> column space is orthogonal to the left null space. Orthogonality is the thread
+> that ties the four spaces together.
 
 ---
 
@@ -561,10 +584,77 @@ covered by the two-card block above, so it is not repeated here.)
 
 ---
 
-## Screen 5 — One matrix, all three spaces
+## Screen 5 — Left null space: the ways the rules cancel out
+
+The fourth collection. Uses the SAME shared 4×4 matrix as the Screen 2/3/4 recipes:
+A = [[1,2,1,1],[1,3,2,4],[2,5,3,5],[0,1,1,3]] (VERIFIED: rank 2; left null space =
+null space of Aᵀ, basis (-1,-1,1,0) and (1,-1,0,1), dimension 2 = rows - rank =
+4 - 2; each basis vector y satisfies yᵀA = 0). NO graph (lives in 4D). Fourth color
+for this space: ORANGE (`\color{#f76707}`), distinct from green (column) / blue
+(null) / purple (row). All matrices as real bracketed LaTeX.
+
+### Block 1 — the idea (text only, verbatim)
+
+> You have met three collections so far: the column space (what the matrix can
+> reach), the null space (what it squashes to zero), and the row space (its
+> genuinely different rules). There is a fourth. Remember how, during elimination,
+> some rows collapsed to "0 = 0"? Those redundant rows didn't vanish by accident —
+> they happened because certain combinations of the rows themselves add up to
+> nothing. The collection of all those row-combinations that cancel to zero is the
+> **left null space**. It measures the redundancy among the rows — exactly the
+> "0 = 0" leftovers, now given a name.
+
+### Block 2 — how to compute it (math, no graph)
+
+Verbatim lead-in:
+> To find it, flip the matrix on its side — swap its rows and columns to get
+> **A-transpose** (written Aᵀ) — and then find the null space of Aᵀ using the same
+> recipe from the null-space screen. The vectors you get are the row-combinations
+> that cancel A to zero.
+
+Then the worked steps as st.latex (all VERIFIED):
+- Show A (4×4 bmatrix).
+- Show Aᵀ = [[1,1,2,0],[2,3,5,1],[1,2,3,1],[1,4,5,3]] (4×4 bmatrix — A with rows and
+  columns swapped).
+- Show the RREF of Aᵀ: [[1,0,1,-1],[0,1,1,1],[0,0,0,0],[0,0,0,0]] (2 pivots, 2 free)
+  as a bmatrix.
+- Parametric left-null-space answer, ORANGE, \underbrace "left null space" (\color
+  OUTSIDE the whole group so the y1,y2 scalars are orange too):
+    y = \underbrace{\color{#f76707}{y_1\begin{bmatrix}-1\\-1\\1\\0\end{bmatrix}
+        + y_2\begin{bmatrix}1\\-1\\0\\1\end{bmatrix}}}_{\text{left null space}}
+- Verification line (verbatim caption + st.latex): "Check: each of these
+  row-combinations really cancels A to zero." Show yᵀA = 0 for the first basis
+  vector y=(-1,-1,1,0): (-1)·row1 + (-1)·row2 + 1·row3 + 0·row4 = (0,0,0,0).
+  (VERIFIED: yᵀA = 0 for both basis vectors.)
+Caption (verbatim): "Two free variables, so the left null space is 2-dimensional —
+its dimension is rows minus rank, 4 - 2 = 2. Same matrix as the other three recipes
+— now all four spaces come from one matrix."
+
+### Block 3 — the four-subspaces picture (text only, verbatim)
+
+> Now all four collections are named, and they pair up by orthogonality — the idea
+> from the top of this topic. The **row space** and the **null space** are
+> orthogonal: one holds the rules, the other holds what those rules leave free, and
+> they meet at right angles. The **column space** and the **left null space** are
+> orthogonal in the same way. Four spaces, two orthogonal pairs — the complete
+> anatomy of a matrix.
+
+### Block 4 — closing (verbatim)
+
+> That completes the set. The next screen takes one matrix and lays all four of
+> these spaces out together.
+
+---
+
+## Screen 6 — One matrix, all four spaces
 
 One worked matrix taken all the way. Use A = [[1, 2], [2, 4]], b-free (the spaces
-belong to A alone) — the same matrix from Screens 2 and 3, now unified.
+belong to A alone) — the same matrix from Screens 2 and 3, now unified. All FOUR
+spaces are read off it (VERIFIED for this 2×2: column space = line along (1,2); null
+space = line along (-2,1); row space = the rule x1 + 2 x2, i.e. direction (1,2);
+left null space = line along (-2,1); rank 1). Note the orthogonal pairs are visible
+here: row space (1,2) is perpendicular to null space (-2,1); column space (1,2) is
+perpendicular to left null space (-2,1).
 
 ### Block 1 — eliminate once (math left, graph right)
 
@@ -577,15 +667,28 @@ RIGHT: `new_figure_2d` with BOTH lines on one graph: the column-space line along
 (1,2) and the null-space line along (−2,1), labeled. Caption: "one matrix, two
 different lines."
 
-### Block 2 — read all three spaces off the reduced form (single wide block)
+### Block 2 — read all FOUR spaces off the reduced form (single wide block)
 
-Verbatim, one compact three-row layout (three narrow columns or one aligned list):
+Verbatim, one compact four-row layout (four narrow columns or one aligned list):
 > **Column space** — what it can reach: the line along (1, 2). Targets on it are
 > solvable; targets off it are not.
 > **Null space** — what it squashes to zero: the line along (−2, 1). This is the
 > freedom: add any multiple of (−2, 1) to a solution and it is still a solution.
-> **Row space** — its genuinely different rules: one rule, x1 + 2·x2 (rank 1).
+> **Row space** — its genuinely different rules: one rule, x1 + 2·x2 (rank 1),
+> which points along (1, 2).
+> **Left null space** — the ways the rows cancel: the line along (−2, 1) (row 2
+> minus 2·row 1 gives all zeros).
 > Counting rule check: 1 real rule + 1 free variable = 2 unknowns. ✓
+>
+> Notice the **orthogonal pairs**: the row space (1, 2) is perpendicular to the null
+> space (−2, 1) — their dot product 1·(−2) + 2·1 = 0. The column space (1, 2) is
+> perpendicular to the left null space (−2, 1) the same way. Two perpendicular
+> pairs, all on one little 2 by 2.
+
+The RIGHT graph from Block 1 already shows the (1,2) line and the (−2,1) line — those
+two lines ARE all four spaces (column space and row space share the (1,2) line here;
+null space and left null space share the (−2,1) line), and they are perpendicular.
+Add a caption to that effect if it fits.
 
 ### Banner — between the 1D and 2D examples
 
@@ -614,14 +717,23 @@ Verbatim caption:
 > rule that collapses to a zero row. Two real rules survive out of three, so the
 > spaces are now two-dimensional: not lines, but whole PLANES.
 
-Then three short labeled lines (verbatim):
+Then FOUR short labeled lines (verbatim):
 > **Column space** — a plane: everything the matrix can reach is the flat sheet
 > spanned by the two surviving columns (2, 1, 3) and (1, 1, 2). Two independent
 > directions, so a plane, not a line.
 > **Null space** — a line: everything squashed to zero runs along (-1, -1, 1). One
 > free variable, so a single line — and it points straight through the plane.
+> **Row space** — a plane: the two surviving reduced rows, rank 2.
+> **Left null space** — a line: the row-combination that cancels is along (-1, -1, 1)
+> (row 3 minus row 1 minus row 2 gives all zeros). It is perpendicular to the
+> column-space plane — it is exactly the line poking through it in the picture.
 > **Counting rule check:** 2 real rules + 1 free variable = 3 unknowns. ✓ The line
 > (1 dimension) and the plane (2 dimensions) add up to all of 3D space.
+
+(VERIFIED for this 3×3: left null space = line along (-1,-1,1) = null space of Aᵀ =
+the normal to the column-space plane. So the null-space line already drawn in the 3D
+graph doubles as the left-null-space direction — same line, and it is the plane's
+perpendicular.)
 
 RIGHT (graph): a 3D figure (`new_figure_3d(rng~6)`) showing:
 - the column-space PLANE via `add_plane_3d(fig, -1, -1, 1, 0, color, "column space
@@ -644,6 +756,174 @@ through it. Rotate to see the line pierce the plane."
 > question: when the target b is OUTSIDE the column space and there is no exact
 > answer, what is the CLOSEST we can get? That single question is how line-of-best-
 > fit, GPS, and camera apps all work.
+
+---
+
+## Screen 7 — Work it yourself: all four spaces of a big matrix
+
+The capstone: the student computes ALL FOUR spaces of a genuinely big, NON-symmetric
+matrix, doing the row reduction themselves in the workbench. Uses the Logistics
+many-plans flow matrix (7x7), the SAME network from Topic 5.5:
+  A = [[-1,-1,0,0,0,0,0],
+       [ 1, 0,-1,-1,0,0,0],
+       [ 0, 1, 0, 0,-1,-1,-1],
+       [ 0, 0, 1, 0, 0, 0, 0],
+       [ 0, 0, 0, 1, 1, 0, 0],
+       [ 0, 0, 0, 0, 0, 1, 0],
+       [ 0, 0, 0, 0, 0, 0, 1]]
+VERIFIED: rank 6; NOT symmetric (so the transpose genuinely matters, unlike Screen
+6). RREF of A has pivots in columns 1-4,6,7 (column 5 free). null space = line along
+(-1, 1, 0, -1, 1, 0, 0) (the free shipping-plan direction from Topic 5.5). RREF of
+Aᵀ leaves row 7 free; left null space = line along (1, 1, 1, 1, 1, 1, 1). Dimensions:
+column space 6, row space 6, null space 1, left null space 1; counting 6 + 1 = 7.
+
+Uses the interactive space_workbench (topics/t06_spaces/space_workbench.py). TWO
+workbenches: one on A, one on Aᵀ. Colors as elsewhere: column green (#37b24d), null
+blue (#4dabf7), row purple (#9775fa), left null orange (#f76707).
+
+### Block 1 — intro (text only, verbatim)
+
+> This is the shipping network from Topic 5.5 — seven routes, seven balance rules —
+> stripped down to its 7-by-7 matrix. This time YOU find all four of its spaces. It
+> is bigger than anything you've reduced by hand, so here's the plan: do the first
+> few row operations yourself to get the feel, then let **Do one step** finish the
+> job (or jump straight to the answer with **Run to reduced form**). Watch the
+> pivots appear, then read each space off the result.
+
+### Block 2 — reduce A yourself (interactive)
+
+Heading: **Step 1 — reduce A to find the column space, null space, and row space.**
+Load A into space_workbench with key "t06_big_A", n=7, matrix_label="A". Suggest in a
+caption: "Try a few manual row operations first, then use Do one step to finish."
+
+After it, the read-off (verbatim), gated is not needed — show it below the workbench:
+> **Column space** (green) — 6 pivots appear, in columns 1, 2, 3, 4, 6, and 7. So
+> the column space is spanned by those 6 columns of the ORIGINAL A. It is
+> 6-dimensional — too big to draw, but its dimension is the rank, 6.
+> **Null space** (blue) — only column 5 has no pivot, so there is one free variable
+> (route x5). Reading it off gives the single direction (-1, 1, 0, -1, 1, 0, 0) — the
+> exact free shipping-plan direction from Topic 5.5. The null space is a line.
+> **Row space** (purple) — the 6 nonzero reduced rows, a 6-dimensional space.
+
+Show the null-space direction as one st.latex, blue:
+  \text{null space} = \color{#4dabf7}{x_5\begin{bmatrix}-1\\1\\0\\-1\\1\\0\\0\end{bmatrix}}
+
+### Block 3 — reduce Aᵀ yourself (interactive)
+
+Heading: **Step 2 — reduce Aᵀ to find the left null space.**
+Verbatim lead-in:
+> The last space needs the transpose. Unlike the neat matrices on the last screen,
+> this one is NOT symmetric — Aᵀ is genuinely different from A, so this step really
+> does new work. Flip A to Aᵀ (swap rows and columns) and reduce it below.
+Load Aᵀ into space_workbench with key "t06_big_AT", n=7, matrix_label="A^{T}".
+(Aᵀ = [[-1,1,0,0,0,0,0],[-1,0,1,0,0,0,0],[0,-1,0,1,0,0,0],[0,-1,0,0,1,0,0],
+[0,0,-1,0,1,0,0],[0,0,-1,0,0,1,0],[0,0,-1,0,0,0,1]] — A with rows and columns
+swapped.)
+
+After it, read-off (verbatim):
+> **Left null space** (orange) — reducing Aᵀ leaves one free variable, giving the
+> single direction (1, 1, 1, 1, 1, 1, 1). This one has a beautiful meaning: it says
+> "add up all seven balance equations" — and they cancel to zero, because across the
+> whole network total flow in equals total flow out. The left null space is the
+> conservation law itself. It is a line.
+
+Show it as one st.latex, orange:
+  \text{left null space} = \color{#f76707}{y_1\begin{bmatrix}1\\1\\1\\1\\1\\1\\1\end{bmatrix}}
+
+### Block 4 — the four-space summary + counting (text only, verbatim)
+
+> **All four spaces of the 7-by-7:**
+> - Column space: 6-dimensional (what the network can produce).
+> - Row space: 6-dimensional (its genuinely different rules).
+> - Null space: 1-dimensional, the line along (-1, 1, 0, -1, 1, 0, 0).
+> - Left null space: 1-dimensional, the line along (1, 1, 1, 1, 1, 1, 1).
+>
+> Counting rule: 6 real rules + 1 free variable = 7 unknowns. ✓ And because this
+> matrix is NOT symmetric, the null space and the left null space are genuinely
+> different directions — not the same line, the way they were on the symmetric
+> examples last screen. That is the normal situation; symmetry was the special case.
+
+### Block 5 — closing (verbatim)
+
+> You just found all four fundamental spaces of a real 7-by-7 system by hand. Every
+> matrix, no matter how big, has exactly these four — two that live in the input
+> space (row space and null space) and two in the output space (column space and
+> left null space), each pair orthogonal. That is the complete anatomy of a matrix,
+> and you can now dissect any one you meet.
+
+---
+
+## Screen 8 — The four spaces of a transformation
+
+Bridges Topic 2 (transformations) to Topic 6: the four spaces reveal whether a
+transformation LOSES information. Five 2×2 matrices from Topic 2. STATIC, with small
+graphs (no workbench). VERIFIED spaces:
+- Identity [[1,0],[0,1]], Rotation 90 [[0,-1],[1,0]], Shear [[1,1],[0,1]],
+  Scale x2 [[2,0],[0,2]]: ALL rank 2 (invertible). Column space = all of 2D; null
+  space = just the origin (only the zero vector); left null space = just the origin.
+- Collapse (singular) [[1,2],[2,4]]: rank 1. Column space = line along (1,2); null
+  space = line along (-2,1); left null space = line along (-2,1).
+
+### Block 1 — the idea (text only, verbatim)
+
+> Back in Topic 2 you watched matrices transform space — rotating, shearing,
+> scaling, or flattening it. Now you can ask a sharp question about each one: does it
+> LOSE any information? The four spaces answer it. If a transformation can be undone,
+> nothing is lost: it reaches the whole plane (its column space is everything) and
+> only the zero vector maps to zero (its null space is just the origin). If it
+> flattens space, information is lost: a whole line of inputs gets crushed to zero.
+> Here are five transformations from Topic 2, sorted by that question.
+
+### Block 2 — the invertible four (grouped; small graphs)
+
+Verbatim lead-in:
+> **Four that lose nothing: identity, rotation, shear, and scale.** Each of these can
+> be undone (each has an inverse), and all four tell the same four-space story:
+> - **Column space = the whole plane.** Their two columns point in different
+>   directions, so mixing them reaches every point in 2D. Every target is reachable.
+> - **Null space = just the origin.** Nothing except the zero vector gets sent to
+>   zero — no information is crushed.
+> - **Row space = the whole plane** as well, and the **left null space = just the
+>   origin**. Full rank (2), zero free variables: 2 + 0 = 2.
+
+Show the four matrices compactly (a row of four small labeled matrices via st.latex
+or st.columns(4)): Identity [[1,0],[0,1]], Rotation 90 [[0,-1],[1,0]], Shear
+[[1,1],[0,1]], Scale x2 [[2,0],[0,2]]. For each (or as one representative graph), a
+small new_figure_2d showing the two columns as arrows landing in different directions
+with the whole plane lightly shaded (column space = everything) and the origin marked
+"null space = just this point." Keep the graphs small; one graph per matrix in
+st.columns(4), or a single representative graph with a caption that the other three
+behave the same way (rank 2, fill the plane). Caption (verbatim): "All four fill the
+plane and crush nothing — that is exactly what makes them invertible."
+
+### Block 3 — the collapse (singular; full treatment, graph)
+
+Verbatim:
+> **One that loses information: the collapse.** The matrix [[1,2],[2,4]] has a second
+> column that is just twice the first, so it flattens the whole plane onto a single
+> line. Watch what happens to its four spaces:
+> - **Column space = a line** (along (1, 2)). Everything the matrix produces lands on
+>   this one line — most of the plane is now unreachable.
+> - **Null space = a line** (along (-2, 1)). A WHOLE line of inputs gets crushed to
+>   zero — that is the information being lost. (This is why a singular matrix has no
+>   inverse: once a line is crushed to a point, you cannot undo it.)
+> - Rank 1, one free variable: 1 + 1 = 2. The column space (1 dimension) plus the
+>   null space (1 dimension) still account for all of 2D.
+
+Graph: new_figure_2d showing the column-space line along (1,2) (labeled "column space
+— everything lands here") and the null-space line along (-2,1) (labeled "null space —
+crushed to zero"), the two lines through the origin. Optionally show a couple of
+sample vectors collapsing onto the (1,2) line.
+
+### Block 4 — the lesson (text only, verbatim)
+
+> Here is the whole point, tying three topics together: a transformation is
+> **invertible** exactly when it loses nothing — when its column space is the whole
+> space and its null space is just the origin (Topic 4's "the determinant is not
+> zero" is the same fact). The moment a transformation crushes even one line to zero,
+> its null space grows, its column space shrinks, and it can no longer be undone. The
+> four spaces are the complete report card on what a matrix does — and whether you
+> can get back what you started with.
 
 ---
 

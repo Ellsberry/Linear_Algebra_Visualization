@@ -1,4 +1,4 @@
-"""Screen 5 -- One matrix, all three spaces."""
+"""Screen 6 -- One matrix, all four spaces."""
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
@@ -21,6 +21,8 @@ One elimination and everything is visible: one pivot row (one real rule), one
 zero row (one redundant rule), one free variable.
 """
 
+_SPACES_HEADING = "**Read all four spaces off the reduced form.**"
+
 _SPACES_TEXT = """
 **Column space** -- what it can reach: the line along (1, 2). Targets on it are
 solvable; targets off it are not.
@@ -28,10 +30,35 @@ solvable; targets off it are not.
 **Null space** -- what it squashes to zero: the line along (−2, 1). This is the
 freedom: add any multiple of (−2, 1) to a solution and it is still a solution.
 
-**Row space** -- its genuinely different rules: one rule, x1 + 2·x2 (rank 1).
+**Row space** -- its genuinely different rules: one rule, x1 + 2·x2 (rank 1),
+which points along (1, 2).
+
+**Left null space** -- the ways the rows cancel: the line along (−2, 1) (row 2
+minus 2·row 1 gives all zeros).
 
 Counting rule check: 1 real rule + 1 free variable = 2 unknowns. ✓
+
+Notice the **orthogonal pairs**: the row space (1, 2) is perpendicular to the null
+space (−2, 1) -- their dot product 1·(−2) + 2·1 = 0. The column space (1, 2) is
+perpendicular to the left null space (−2, 1) the same way. Two perpendicular
+pairs, all on one little 2 by 2.
 """
+
+_SPACES_CAPTION = """
+The two lines drawn above ARE all four spaces: column space and row space share
+the (1, 2) line; null space and left null space share the (−2, 1) line -- and the
+two lines are perpendicular.
+"""
+
+_SYM_2X2 = (
+    "<p style='font-weight:700;color:#f76707;'>A note on the transpose: to get the "
+    "left null space you normally flip the matrix to A-transpose (Aᵀ) and reduce "
+    "that. But this matrix is <u>symmetric</u> -- flip it across its diagonal and "
+    "it looks identical, so Aᵀ = A. When a matrix is symmetric, transposing changes "
+    "nothing, and its left null space is exactly the same as its null space -- here, "
+    "both are the line along (−2, 1). (The next screen uses a matrix that is NOT "
+    "symmetric, where the transpose really matters.)</p>"
+)
 
 _BANNER_TEXT = """
 **Now let's go bigger.** The example above lived in 2D, so each space was a line.
@@ -62,9 +89,23 @@ directions, so a plane, not a line.
 **Null space** -- a line: everything squashed to zero runs along (-1, -1, 1). One
 free variable, so a single line -- and it points straight through the plane.
 
+**Row space** -- a plane: the two surviving reduced rows, rank 2.
+
+**Left null space** -- a line: the row-combination that cancels is along (-1, -1, 1)
+(row 3 minus row 1 minus row 2 gives all zeros). It is perpendicular to the
+column-space plane -- it is exactly the line poking through it in the picture.
+
 **Counting rule check:** 2 real rules + 1 free variable = 3 unknowns. ✓ The line
 (1 dimension) and the plane (2 dimensions) add up to all of 3D space.
 """
+
+_SYM_3X3 = (
+    "<p style='font-weight:700;color:#f76707;'>This 3 by 3 is symmetric too "
+    "(Aᵀ = A), so again the left null space matches the null space -- both are the "
+    "line along (−1, −1, 1). That is why the left-null line in the picture is the "
+    "same line poking through the plane. Symmetry is the special case; when a "
+    "matrix is not symmetric, the left null space is genuinely its own space.</p>"
+)
 
 _PLANE_CAPTION = """
 One matrix, in 3D: the column space is a plane, the null space is a line
@@ -98,8 +139,12 @@ def render_together():
         st.plotly_chart(fig, width="stretch")
         st.caption("one matrix, two different lines")
 
-    # Block 2 -- read all three spaces off the reduced form
+    # Block 2 -- read all four spaces off the reduced form
+    st.markdown(_SPACES_HEADING)
     st.markdown(_SPACES_TEXT)
+    st.markdown(_SYM_2X2, unsafe_allow_html=True)
+    st.latex(r"A^{T} = \begin{bmatrix} 1 & 2 \\ 2 & 4 \end{bmatrix} = A")
+    st.caption(_SPACES_CAPTION)
 
     # Banner -- between the 1D and 2D examples
     st.info(_BANNER_TEXT)
@@ -113,6 +158,8 @@ def render_together():
         st.latex(_RREF2_LATEX)
         st.markdown(_RREF2_CAPTION)
         st.markdown(_SPACES2_TEXT)
+        st.markdown(_SYM_3X3, unsafe_allow_html=True)
+        st.latex(r"A^{T} = \begin{bmatrix} 2 & 1 & 3 \\ 1 & 1 & 2 \\ 3 & 2 & 5 \end{bmatrix} = A")
     with right2:
         fig2 = plot.new_figure_3d(rng=6)
         plot.add_plane_3d(fig2, -1, -1, 1, 0, "#4dabf7", "column space (a plane)")
