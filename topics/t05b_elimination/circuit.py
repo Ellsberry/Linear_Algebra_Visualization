@@ -176,7 +176,7 @@ _E3B_AUG = [
     [ 6,  3,  0,  0,  0,  0,  0, 24],   # Loop 1: R1 I1 + R2 I2 = V1
     [ 0, -3,  2,  2,  0,  0,  0,  0],   # Loop 2: R3 I3 + R4 I4 - R2 I2 = 0
     [ 0,  0,  0, -2,  2,  6,  0,  0],   # Loop 3: R5 I5 + R6 I6 - R4 I4 = 0
-    [ 0,  0,  0,  0,  0,  6, -6, 18],   # Loop 4: R6 I6 - R7 I7 = V2
+    [ 0,  0,  0,  0,  0, -6,  6, -18],  # Loop 4: R7 I7 - R6 I6 = -V2
 ]
 _E3B_ROW_LABELS = ["KCL node P", "KCL node Q", "KCL node S", "Loop 1 (battery V1)",
                    "Loop 2", "Loop 3", "Loop 4 (battery V2)"]
@@ -222,8 +222,8 @@ def _circuit_diagram_p2():
                        showarrow=False, font=dict(size=14), xanchor="center")
 
     # --- Battery V2 (right vertical, centered at y=4, mirrored) ---
-    _wire(10.52, bmy - 0.3, 11.48, bmy - 0.3)   # short bar (-, negative), near ground
-    _wire(10.72, bmy + 0.3, 11.28, bmy + 0.3)   # long bar (+, positive), near top rail
+    _wire(10.52, bmy + 0.3, 11.48, bmy + 0.3)   # long bar (+, positive), near top rail
+    _wire(10.72, bmy - 0.3, 11.28, bmy - 0.3)   # short bar (-, negative), near ground
     fig.add_annotation(x=11.75, y=bmy + 0.55, text="<b>+</b>",
                        showarrow=False, font=dict(size=18, color="crimson"),
                        xanchor="center")
@@ -460,7 +460,7 @@ def _example_three():
             "R1*I1 + R2*I2 = V1",
             "R3*I3 + R4*I4 - R2*I2 = 0",
             "R5*I5 + R6*I6 - R4*I4 = 0",
-            "R6*I6 - R7*I7 = V2",
+            "R7*I7 - R6*I6 = -V2",
         ],
         closing_md=("**One definite answer.** I = (3, 2, 1, 2, -1, 1, -2) A. The "
                     "negative currents (I₅, I₇) flow opposite the arrows we drew -- "

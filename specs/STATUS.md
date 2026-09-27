@@ -563,6 +563,14 @@ Student writes the five circuit equations themselves (2 KCL + 3 KVL, symbolic fo
       `V1`/`V2` parse, and `parse_circuit_equation_p2()`. `parse_circuit_equation()`
       with no args is unchanged (Problem 1 still yields [2,0,8,0,0,36]). All 7
       Problem-2 equations verified to parse and match their target rows.
+- [x] **Circuit Problem 2 sign/polarity fix (this session):** the V2 battery symbol was
+      drawn with reversed plate lengths vs V1 (V1 long=+ on top, V2 opposite) —
+      corrected so both batteries use long line = + on top. Loop 4's equation rewritten
+      from `R6*I6 - R7*I7 = V2` to `R7*I7 - R6*I6 = -V2` (own element R7 first, matching
+      the clockwise own-element-first convention of Loops 1-3; V2 is a drop for the
+      clockwise loop at the far end, so -V2). `_E3B_AUG` Loop 4 row changed to
+      [0,0,0,0,0,-6,6,-18] (exactly -1x the old row — same equation, so the solution
+      I=(3,2,1,2,-1,1,-2) is unchanged) and the fill string updated to match.
 
 ### Screen 6 — Smoothie — `smoothie.py` (NEW, BUILT pending review; selector position updated to 6 this session in the Smoothie/Circuit swap, was 7)
 
