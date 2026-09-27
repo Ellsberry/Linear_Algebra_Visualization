@@ -545,6 +545,24 @@ Student writes the five circuit equations themselves (2 KCL + 3 KVL, symbolic fo
 - [x] **Workbench** (`workbench("t05b_e3", 5, ...)`) — reduces to unique solution I = (6, 2, 3, 3, 1) A.
 - [x] **Closing text:** "One definite answer" with solution; Topic 9 AC-circuit forward-link.
 - [x] Powered by `equation_builder` with `parse_fn=parse_circuit_equation`, `equiv_fn=rows_equivalent`, `fill_equations=[...]`, `placeholder="e.g. R1*I1 + R3*I3 = V"`.
+- [x] **Circuit Problem 2 added below Problem 1 (this session):** a second, harder
+      interactive circuit on the same screen — 4 loops, 2 batteries, 7 branch currents.
+      Topology: two-rail ladder, batteries at both ends (V1=24V left, V2=18V right),
+      three rungs creating 4 loops, nodes P/Q/S. Components R1=6, R2=3, R3=2, R4=2,
+      R5=2 (lamp), R6=6 (motor), R7=6. Student writes 7 equations (3 KCL at P/Q/S + 4
+      KVL loops), same equation-builder + branch-current method as Problem 1.
+      VERIFIED solution I = (3, 2, 1, 2, -1, 1, -2) A — I5 and I7 come out NEGATIVE
+      (real flow opposite the drawn arrow; the second battery pushes back), a
+      teaching point in the closing. New `_circuit_diagram_p2()` in Problem 1's visual
+      style (resistor boxes, motor M / lamp X circles, node dots, 7 current arrows,
+      4 loop ↻ markers, two batteries). Second `equation_builder` call keyed
+      `t05b_e3b`, n_unknowns=7.
+- [x] **`circuit_parser.py` extended for Problem 2 (this session):** parameterized so
+      it serves both circuits without breaking Problem 1. Added `N_VARS_P2=7`,
+      `SYMBOLS_P2` (R1..R7 + two batteries V1=24, V2=18), the `v\d*` token regex so
+      `V1`/`V2` parse, and `parse_circuit_equation_p2()`. `parse_circuit_equation()`
+      with no args is unchanged (Problem 1 still yields [2,0,8,0,0,36]). All 7
+      Problem-2 equations verified to parse and match their target rows.
 
 ### Screen 6 — Smoothie — `smoothie.py` (NEW, BUILT pending review; selector position updated to 6 this session in the Smoothie/Circuit swap, was 7)
 

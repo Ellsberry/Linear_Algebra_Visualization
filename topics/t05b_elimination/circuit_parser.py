@@ -18,6 +18,14 @@ SYMBOLS = {
     "r4": Fraction(4), "r5": Fraction(12), "v": Fraction(36),
 }
 
+N_VARS_P2 = 7  # I1..I7
+
+SYMBOLS_P2 = {
+    "r1": Fraction(6), "r2": Fraction(3), "r3": Fraction(2), "r4": Fraction(2),
+    "r5": Fraction(2), "r6": Fraction(6), "r7": Fraction(6),
+    "v1": Fraction(24), "v2": Fraction(18),
+}
+
 _SUBS = {"₀":"0","₁":"1","₂":"2","₃":"3","₄":"4",
          "₅":"5","₆":"6","₇":"7","₈":"8","₉":"9"}
 
@@ -36,13 +44,13 @@ def _normalize(s):
 
 
 def _split_juxtaposed(body):
-    parts = re.findall(r"r\d+|v|i\d+|\d+\.?\d*|\.\d+", body)
+    parts = re.findall(r"r\d+|v\d*|i\d+|\d+\.?\d*|\.\d+", body)
     if "".join(parts) != body:
         raise ParseError(f"could not read term '{body}'")
     return parts
 
 
-def _parse_side(expr):
+def _parse_side(expr, symbols=SYMBOLS, n_vars=N_VARS):
     if expr == "":
         return {}, Fraction(0)
     if expr[0] not in "+-":
@@ -65,14 +73,14 @@ def _parse_side(expr):
             mvar = re.fullmatch(r"i(\d+)", f)
             if mvar:
                 idx = int(mvar.group(1))
-                if idx < 1 or idx > N_VARS:
-                    raise ParseError(f"I{idx} out of range 1..{N_VARS}")
+                if idx < 1 or idx > n_vars:
+                    raise ParseError(f"I{idx} out of range 1..{n_vars}")
                 if var_idx is not None:
                     raise ParseError(f"two currents in one term '{tok}'")
                 var_idx = idx - 1
                 continue
-            if f in SYMBOLS:
-                coeff *= SYMBOLS[f]
+            if f in symbols:
+                coeff *= symbols[f]
                 continue
             mnum = re.fullmatch(r"\d+\.?\d*|\.\d+", f)
             if mnum:
@@ -86,20 +94,25 @@ def _parse_side(expr):
     return coeffs, const
 
 
-def parse_circuit_equation(s):
-    """Parse 'lhs = rhs' into [c1..c5, b] (Fractions), substituting symbol values."""
+def parse_circuit_equation(s, symbols=SYMBOLS, n_vars=N_VARS):
+    """Parse 'lhs = rhs' into [c1..cN, b] (Fractions), substituting symbol values."""
     s = _normalize(s)
     if s.count("=") != 1:
         raise ParseError("equation must contain exactly one '='")
     lhs, rhs = s.split("=")
-    lc, lk = _parse_side(lhs)
-    rc, rk = _parse_side(rhs)
-    row = [Fraction(0)] * N_VARS
+    lc, lk = _parse_side(lhs, symbols, n_vars)
+    rc, rk = _parse_side(rhs, symbols, n_vars)
+    row = [Fraction(0)] * n_vars
     for i, val in lc.items():
         row[i] += val
     for i, val in rc.items():
         row[i] -= val
     return row + [rk - lk]
+
+
+def parse_circuit_equation_p2(s):
+    """Convenience wrapper: parse_circuit_equation using Problem 2's symbols/n_vars."""
+    return parse_circuit_equation(s, symbols=SYMBOLS_P2, n_vars=N_VARS_P2)
 
 
 def rows_equivalent(r1, r2):
