@@ -1,7 +1,9 @@
 """Screen 3 -- Null space: every input the matrix squashes to zero."""
+import numpy as np
 import streamlit as st
 
 from engine import plotting as plot
+from engine import widgets as w
 
 from .space_workbench import space_workbench, space_load
 
@@ -118,11 +120,63 @@ def render_null():
         "space (the blue part)."
     )
     st.markdown("---")
+    st.markdown(
+        "You just found the null space of a big 4x4 by reducing it. Now take the "
+        "smallest interesting example -- a 2x2 -- where the null space is a line we can "
+        "actually draw and watch. Reduce it yourself, then see what 'squashed to zero' "
+        "looks like."
+    )
 
     # Block 1 -- the idea (text only)
     st.markdown(_INTRO)
 
     # Block 2 -- new drawable example A = [[1, 2], [2, 4]]
+    # The 2x2 workbench gets its own full-width row: space_workbench builds nested
+    # columns internally, which can't go inside the left column below.
+    st.markdown("**Reduce this 2x2 to find its null space.**")
+    _NULL_A2 = [[1, 2], [2, 4]]
+    if st.session_state.get("t06_null_wb2_last") is None:
+        space_load("t06_null_wb2", _NULL_A2)
+        st.session_state["t06_null_wb2_last"] = "loaded"
+    space_workbench("t06_null_wb2", 2, matrix_label="A")
+    st.markdown(
+        "One step (R2 -> R2 - 2 R1) reduces it to [[1, 2], [0, 0]]: one pivot (x1), one "
+        "free variable (x2). The surviving rule is x1 + 2 x2 = 0. Read a null-space "
+        "vector off that rule and try it below."
+    )
+
+    # Block 2a -- fill in the blue (null-space) part of the parametric equation
+    st.markdown("**Fill in the blue part of the parametric equation:**")
+    # lay out  x  =  [0;0]  + x2 ·  [ box ; box ]  as one row
+    eq = st.columns([0.8, 1.2, 1.2, 1.4])
+    with eq[0]:
+        st.latex(r"x =")
+    with eq[1]:
+        st.latex(r"\underbrace{\begin{bmatrix} 0 \\ 0 \end{bmatrix}}_{\text{particular}}")
+    with eq[2]:
+        st.latex(r"+\; x_2 \cdot")
+    with eq[3]:
+        b1 = st.number_input("top entry", value=0.0, step=1.0,
+                             key="t06_null_fill_1", label_visibility="collapsed")
+        b2 = st.number_input("bottom entry", value=0.0, step=1.0,
+                             key="t06_null_fill_2", label_visibility="collapsed")
+    st.caption("Type the two numbers of the null-space direction (the blue vector), "
+               "then it checks whether the matrix squashes it to zero.")
+
+    # live check (no button -- updates as they type)
+    A_ = np.array([[1, 2], [2, 4]], float)
+    v_ = np.array([b1, b2], float)
+    Av_ = A_ @ v_
+    if np.allclose(v_, 0):
+        st.info("Both zero so far -- the zero vector is always in the null space, but "
+                "find a NONZERO direction.")
+    elif np.allclose(Av_, 0):
+        st.success(f"Correct! A·({b1:g}, {b2:g}) = (0, 0) -- that vector is in the null "
+                   f"space. (Any nonzero multiple of (-2, 1) works.)")
+    else:
+        st.error(f"Not yet: A·({b1:g}, {b2:g}) = ({Av_[0]:g}, {Av_[1]:g}), not (0, 0). "
+                 f"The rule x1 + 2 x2 = 0 means x1 = -2 x2.")
+
     left, right = st.columns([0.5, 0.5], gap="large")
     with left:
         st.latex(_SYSTEM_LATEX)
@@ -138,6 +192,58 @@ def render_null():
         plot.add_line_2d(fig, 2, -1, 0, "rgba(160,160,160,0.6)",
                          "column space (from the last screen)")
         st.plotly_chart(fig, width="stretch")
+
+    # Block 2b -- watch the rocket get squashed (Before / After toggle)
+    A2 = np.array([[1, 2], [2, 4]])
+    st.markdown("**Watch the rocket get squashed.** This matrix flattens the whole "
+                "plane onto the column-space line. The null-space direction (-2, 1) "
+                "is the direction everything gets crushed along -- points that differ "
+                "by it land on the same spot, which is how information is lost.")
+    view = st.radio("View", ["Before", "After squashing"], horizontal=True,
+                    key="t06_null_squash")
+    # Scale 1.0 keeps the squashed nose (y = 7.92) inside the rng=8 view.
+    R = plot._ROCKET * 1.0
+    sq_left, sq_right = st.columns([0.5, 0.5], gap="large")
+    with sq_right:
+        fig_sq = plot.new_figure_2d(rng=8)
+        if view == "Before":
+            plot.shade_polygon(fig_sq, list(zip(R[0], R[1])),
+                               "rgba(255,146,43,0.85)", "rocket",
+                               line_color="#e8590c", line_width=2)
+            plot.add_vector_2d(fig_sq, (0, 0), (-2, 1), "rgba(160,160,160,0.6)",
+                               "null space (-2, 1): inputs along here vanish")
+        else:
+            R2 = A2 @ R
+            plot.add_line_2d(fig_sq, 2, -1, 0, "rgba(160,160,160,0.6)",
+                             "column space (1, 2): where all outputs land")
+            plot.shade_polygon(fig_sq, list(zip(R2[0], R2[1])),
+                               "rgba(255,146,43,0.85)", "squashed rocket = A·(rocket)",
+                               line_color="#e8590c", line_width=3)
+        st.plotly_chart(fig_sq, width="stretch")
+    with sq_left:
+        if view == "Before":
+            st.caption("This arrow is the NULL SPACE -- the input directions the "
+                       "matrix sends to zero. It is NOT the line the rocket flattens "
+                       "onto; watch where the rocket lands, which is a different "
+                       "(output) direction.")
+        st.markdown("Why two different directions? The **null space (-2, 1)** is "
+                    "which INPUTS vanish; the **column space (1, 2)** is where OUTPUTS "
+                    "land. They point different ways because one lives in the input "
+                    "space and the other in the output space -- that is the whole "
+                    "point: a matrix can crush one set of directions (inputs) while "
+                    "piling everything onto another (outputs).")
+        for name, idx in [("nose", 0), ("right fin tip", 3),
+                          ("left fin tip", 8), ("base", 5)]:
+            v = R[:, idx]
+            st.markdown(f"{name}:")
+            st.latex(w.bmatrix(A2) + r"\cdot" + w.bmatrix(v.reshape(-1, 1))
+                     + " = " + w.bmatrix((A2 @ v).reshape(-1, 1)))
+        st.caption("Every vertex lands on the line (1, 2) -- the rocket is flattened "
+                   "onto the column space.")
+        if view == "After squashing":
+            st.caption("The rocket is flattened onto the line (1, 2) -- a whole "
+                       "dimension is gone. Everything along (-2, 1) was crushed to "
+                       "nothing: that direction is the null space.")
 
     # Block 3 -- embedded smoothie recap (static, no toggle)
     left2, right2 = st.columns([0.5, 0.5], gap="large")

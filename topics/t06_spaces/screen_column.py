@@ -69,6 +69,22 @@ there: no solution.
 _REACHABLE_A = [[1.5, 0.5], [0.0, 1.0]]
 _SINGULAR_A = [[1.0, 1.0], [1.0, 1.0]]
 
+# Preset inputs x that land the reachable-pose rocket in each quadrant.
+_ROCKET_X = {
+    "Send to Q1": [2.0, 2.0],
+    "Send to Q2": [-3.0, 2.0],
+    "Send to Q3": [-2.0, -2.0],
+    "Send to Q4": [3.0, -2.0],
+}
+
+# Same four inputs for Block 3, with neutral labels (that matrix only reaches a line).
+_ROCKET3_X = {
+    "Try input A": [3.0, 0.0],
+    "Try input B": [1.0, 0.0],
+    "Try input C": [-1.0, 0.0],
+    "Try input D": [-3.0, 0.0],
+}
+
 _REACHABLE_TEXT = """
 The two actuator columns point different ways. Mixing them reaches
 the entire plane — the column space is the whole plane, so EVERY target b is
@@ -148,6 +164,25 @@ def render_column():
                 + " = " + w.bmatrix(rb2.reshape(-1, 1))
             )
             st.markdown(_REACHABLE_CAPTION)
+        xchoice = st.radio("Send the rocket (choose input x):",
+                           ["Send to Q1", "Send to Q2", "Send to Q3", "Send to Q4",
+                            "Pick your own x"],
+                           key="t06_cs_xchoice")
+        if xchoice == "Pick your own x":
+            xa, xb = st.columns(2)
+            with xa:
+                x1 = st.number_input("x1", value=2.0, step=1.0, key="t06_cs_x1")
+            with xb:
+                x2 = st.number_input("x2", value=2.0, step=1.0, key="t06_cs_x2")
+            x = np.array([x1, x2])
+        else:
+            x = np.array(_ROCKET_X[xchoice])
+        b = A @ x
+        st.latex(w.bmatrix(A) + r"\cdot" + w.bmatrix(x.reshape(-1, 1))
+                 + " = " + w.bmatrix(b.reshape(-1, 1)))
+        if not reachable and xchoice in ("Send to Q2", "Send to Q4"):
+            st.caption("On this matrix every input lands on the line -- "
+                       "the rocket can't reach Q2/Q4.")
     with right:
         fig = plot.new_figure_2d(rng=8)
         plot.add_vector_2d(fig, (0, 0), A[:, 0], "#ff6b6b", "actuator 1 (column 1)")
@@ -161,6 +196,10 @@ def render_column():
             plot.add_line_2d(fig, 1, -1, 0, "#20c997", "column space = this line")
             plot.add_point_2d(fig, (4, 2), "#ff6b6b",
                               "b = (4, 2) -- unreachable, outside the column space")
+        rocket = plot._ROCKET * 0.6 + b.reshape(-1, 1)
+        plot.shade_polygon(fig, list(zip(rocket[0], rocket[1])),
+                           "rgba(255,146,43,0.85)", "rocket at b = A·x",
+                           line_color="#e8590c", line_width=2)
         st.plotly_chart(fig, width="stretch")
 
     # Block 3 -- new worked example A = [[1, 2], [2, 4]]
@@ -177,6 +216,25 @@ def render_column():
             w.bmatrix(A2) + r"\cdot" + w.bmatrix(x1.reshape(-1, 1)) + " = " + w.bmatrix(p1.reshape(-1, 1))
             + r"\qquad" + w.bmatrix(A2) + r"\cdot" + w.bmatrix(x2.reshape(-1, 1)) + " = " + w.bmatrix(p2.reshape(-1, 1))
         )
+        xchoice3 = st.radio("Send the rocket (choose input x):",
+                            ["Try input A", "Try input B", "Try input C", "Try input D",
+                             "Pick your own x"],
+                            key="t06_cs3_xchoice")
+        if xchoice3 == "Pick your own x":
+            xa3, xb3 = st.columns(2)
+            with xa3:
+                cx1 = st.number_input("x1", value=2.0, step=1.0, key="t06_cs3_x1")
+            with xb3:
+                cx2 = st.number_input("x2", value=2.0, step=1.0, key="t06_cs3_x2")
+            x3 = np.array([cx1, cx2])
+        else:
+            x3 = np.array(_ROCKET3_X[xchoice3])
+        b3 = A2 @ x3
+        st.latex(w.bmatrix(A2) + r"\cdot" + w.bmatrix(x3.reshape(-1, 1))
+                 + " = " + w.bmatrix(b3.reshape(-1, 1)))
+        st.caption("Notice: whatever x you choose, the rocket lands on the line (1, 2). "
+                   "This matrix is singular -- its column space is just that line, "
+                   "so the rocket can never leave it.")
     with right2:
         fig2 = plot.new_figure_2d(rng=10)
         plot.add_line_2d(fig2, 2, -1, 0, "#4dabf7", "column space: line along (1, 2)", rng=10)
@@ -184,6 +242,10 @@ def render_column():
         plot.add_point_2d(fig2, (3, 5), "#ff6b6b", "b = (3, 5) -- unreachable")
         plot.add_point_2d(fig2, (-3, -6), "#ffa94d", "A·(3, -3)")
         plot.add_point_2d(fig2, (4, 8), "#ffa94d", "A·(-2, 3)")
+        rocket3 = plot._ROCKET * 0.6 + b3.reshape(-1, 1)
+        plot.shade_polygon(fig2, list(zip(rocket3[0], rocket3[1])),
+                           "rgba(255,146,43,0.85)", "rocket at b = A·x",
+                           line_color="#e8590c", line_width=2)
         st.plotly_chart(fig2, width="stretch")
 
     # Block 4 -- closing text
