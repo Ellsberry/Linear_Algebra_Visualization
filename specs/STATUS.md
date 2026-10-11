@@ -856,6 +856,70 @@ with color-coded RREF); the descriptions below predate that change.
 
 ---
 
+## Topic 6.5 — Putting It Together (`topics/t06b_consolidate/`) — ALL 4 SCREENS BUILT, pending review
+
+**Spec:** `specs/topic6b_consolidate.md`. 4 screens (1 inverse → 2 transpose →
+3 complete solution → 4 rules table + projection bridge). `TITLE = "6.5 · Putting It
+Together"`, `SLUG = "consolidate"`.
+
+- [x] Package created: `__init__.py` (verbatim OVERVIEW + horizontal 4-screen
+      `st.radio`, key `t06b_screen`, dispatching to the four render functions)
+- [x] Registered in `app.py` `TOPICS` **between** `t06_spaces` and `t07_projection`
+- [x] **Screen 1 — The inverse A⁻¹** (`screen_inverse.py` → `render_inverse()`, keys
+      `t06b_inv_`): Block 1 verbatim "no matrix division" intro, five-line solving
+      chain as ONE aligned LaTeX block, bold bright-green (`#37b24d`) LEFT-multiply /
+      non-commutative note. Block 2 `st.columns([0.5, 0.5])`: left = `editable_matrix`
+      A (dim=2) and b (rows=2, cols=1), defaults A=[[2,1],[1,3]], b=(3,5) loaded once
+      via a `t06b_inv_last` flag (manual edits persist); live `det A`, A⁻¹ (yellow
+      entries), x = A⁻¹b (green entries) = (0.8, 1.4), and check line A x = b ✓.
+      Right = live identity readout A⁻¹A = I ✓ (blue entries). det = 0 → no A⁻¹/x
+      lines and the verbatim break message (`st.error`). Block 3 verbatim inverse rule.
+      All math live via numpy; per-entry coloring inside every bmatrix (`_cbmatrix`
+      helper, rounds to avoid "-0.00"); no `use_container_width`.
+      Builder-added (not in spec, flagged for review): right-column heading "Check:
+      does A⁻¹ really undo A?" and det = 0 right-column line "No A⁻¹ exists, so there
+      is nothing to check."
+- [x] **Screen 2 — The transpose Aᵀ** (`screen_transpose.py` → `render_transpose()`,
+      keys `t06b_tr_`): Block 1 verbatim "what the transpose is" intro. Block 2
+      `st.columns([0.5, 0.5])`: left = `editable_matrix` A (rows=2, cols=3), default
+      A=[[1,2,3],[4,5,6]] loaded once via a `t06b_tr_last` flag; right = live read-only
+      Aᵀ (`editable=False, value=A.T`, rows=3, cols=2, label `$A^{T}$` so the
+      superscript renders in the widget's markdown label). Live shape labels from
+      `A.shape` (A is m×n = 2×3, Aᵀ is n×m = 3×2) + verbatim caption (static — says
+      (1, 2, 3) even if row 1 is edited). Block 3: bold bright-green (`#37b24d`)
+      symmetric lead sentence + rest of paragraph plain, verbatim projection bridge,
+      then live AᵀA = Aᵀ·A (blue per-entry coloring inside the bmatrix, via the shared
+      `_cbmatrix` from `screen_inverse.py`) with a live `st.caption` that it comes out
+      k×k square and symmetric whatever shape A was (symmetry checked with
+      `np.allclose`). Default AᵀA = [[17,22,27],[22,29,36],[27,36,45]].
+      Builder-added (not in spec, flagged): the AᵀA caption wording.
+- [x] **Screen 3 — The complete solution** (`screen_complete.py` → `render_complete()`,
+      keys `t06b_comp_`): Block 1 verbatim "idea in words" intro incl. the
+      **x = x_particular + (null-space part)** line. Block 2 "Work one": locked system
+      A=[[1,2,2],[2,4,5]], b=(6,14) shown as equations (left) + color-coded
+      RREF[A|b] (right; pivot cols yellow, free col blue, per entry) with a live caption
+      (pivots cols 1 & 3, free x2, r=2, m=2, n=3). All values computed live by an
+      in-module numpy Gauss-Jordan `_rref` + `_solve_parts` (no sympy) — VERIFIED to
+      give RREF=[[1,2,0,2],[0,0,1,2]], x_p=(2,0,2), v=(−2,1,0). Fill-in reuses
+      screen_null's tight layout (outer `[0.62, 0.38]`, inner `[0.16, 0.26, 0.24, 0.34]`
+      gap="small"): `x = [2;0;2] + x2·[ _ ; _ ; _ ]`, blanks `t06b_comp_v0/v1/v2`,
+      particular fixed. Live check (no button): zero → info; A·v = 0 → success + clean
+      complete-solution LaTeX with the null part in blue via `_ccol` (per-entry color,
+      compact `:g` numbers to match the particular vector); else → error showing A·v.
+      Any nonzero multiple of (−2,1,0) is accepted. Block 3 verbatim "why both parts".
+      Builder-added (flagged): "Work one." heading, RREF caption, fill-in prompt, and
+      the info/success/error + post-success caption wording (adapted from screen_null).
+- [x] **Screen 4 — The rules, and what's next** (`screen_rules.py` → `render_rules()`):
+      static reference text, no widgets, no live math. Block 1 verbatim m/n/r intro;
+      Block 2 tool-rules table (A⁻¹ / Aᵀ / AᵀA, 4 columns); Block 3 solution-count table
+      (4 rank rows) + the three footer facts as a markdown list; Block 4 verbatim
+      projection bridge in `st.info`. All text and both tables were extracted
+      programmatically from the spec (byte-exact, not retyped). Tables are MARKDOWN
+      strings in `st.markdown` (NOT `st.table` — pandas/NumPy crash).
+- [ ] Not yet manually verified in the running app.
+
+---
+
 ## Topic 7 — Projection & Least Squares (`topics/t07_projection/`) — BUILT this session, pending review
 
 **Spec:** `specs/topic7_projection.md`. 6 screens (0 perpendicularity primer →
@@ -890,7 +954,7 @@ verified in-app.
 
 ## Core curriculum status
 
-**Topics 0, 1–5, and 5.5 are FULLY COMPLETE** — all refactored to the dark-mode layout, all screens built and verified, all engines shared and tested. The core curriculum (matrix operations → vectors → transformations → determinant → inverse → linear systems → elimination & inversion) is done. **Topics 6 (Vector Spaces), 7 (Projection & Least Squares), and 8 (Eigenvalues & Eigenvectors) are BUILT, pending in-app review.** Topic selector is now a **5-column** grid (was 3); Topic 0 renamed "0 · Matrix math".
+**Topics 0, 1–5, and 5.5 are FULLY COMPLETE** — all refactored to the dark-mode layout, all screens built and verified, all engines shared and tested. The core curriculum (matrix operations → vectors → transformations → determinant → inverse → linear systems → elimination & inversion) is done. **Topics 6 (Vector Spaces), 7 (Projection & Least Squares), and 8 (Eigenvalues & Eigenvectors) are BUILT, pending in-app review.** **Topic 6.5 (Putting It Together) is BUILT** — all 4 screens, pending in-app review. Topic selector is now a **5-column** grid (was 3); Topic 0 renamed "0 · Matrix math".
 
 ---
 
